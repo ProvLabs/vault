@@ -64,18 +64,21 @@ Processing model (safe “collect-then-mutate”):
    for later blocks.
 
    * Dequeue paused vaults without reconciling them (they count against the visit budget).
-2. **Dequeue** each collected `(timeout, vault)` before processing (prevents iterator invalidation).
+2. **Mutate after the walk completes** (prevents iterator invalidation): each collected
+   `(timeout, vault)` is dequeued as part of the atomic write that settles or retires it, never before,
+   so a failed transition leaves the entry queued for a later block. An entry whose vault account
+   cannot be loaded is dequeued as cleanup.
 3. **For each vault**:
 
    * Compute `periodDuration` as `timeout - PeriodStart` (fallback to `now - PeriodStart` if needed).
    * **Check ability to pay/refund** over `periodDuration` via `CanPayInterestDuration`.
 
-     * If **insufficient** → mark **depleted**.
-     * If **sufficient** → execute `PerformVaultInterestTransfer` (emits `EventVaultReconcile`) and mark **reconciled**.
-4. **Advance state**:
-
-   * For **reconciled** vaults → `SafeEnqueuePayoutTimeout` (starts new period and enqueues next timeout).
-   * For **depleted** vaults → `handleDepletedVaults` (sets `current_rate = "0"`; interest disabled, desired preserved).
+     * If **insufficient** → **retire** the vault: set `current_rate = "0"` (interest disabled, desired
+       preserved) and drop its timeout entry in one atomic write. A failed rate update leaves the entry
+       queued as it was found, so the vault is retried on a later block rather than leaving the queue
+       with a rate it cannot pay.
+     * If **sufficient** → execute `PerformVaultInterestTransfer` (emits `EventVaultReconcile`) and
+       `SafeEnqueuePayoutTimeout` (starts a new period and enqueues the next timeout).
 
 **Never reconciles paused vaults.** Pausing already dequeues the vault; any entry still present
 (filed under another key, or a vault paused after the walk began) is dequeued on sight so it does not
@@ -134,13 +137,37 @@ To prevent a large queue from consuming excessive block time and memory, a maxim
 This advances vaults from the **verification set**:
 
 1. **Collect keys** from `PayoutVerificationSet`, visiting at most `MaxPayoutVerificationsPerBlock`
-   (currently 100) entries per block; paused vaults are removed from the set without being processed
-   (they count against the visit budget), and a failed removal is logged and retried on a later block.
-2. **Remove** each from the set (before processing).
-3. **Partition** into:
+   (currently 100) entries per block and resuming after the entry the previous block stopped on, so
+   retained entries cannot monopolize the budget; paused vaults are removed from the set without being
+   processed (they count against the visit budget), and a failed removal is retried on a later block.
+2. **Transition each collected vault individually**, classified by whether it can cover the
+   **forecast window** (see below):
 
-   * **Payable**: can cover the **forecast window** (see below) → re-enqueue next timeout (`SafeEnqueuePayoutTimeout`).
-   * **Depleted**: cannot cover forecast → disable interest (`current_rate = "0"`; desired preserved).
+   * **Payable** → enqueue the next timeout (`SafeEnqueuePayoutTimeout`).
+   * **Depleted** → disable interest (`current_rate = "0"`; desired preserved).
+   * **Unforecastable** (the payout-ability check itself errored, e.g. an unreadable NAV) → defer to
+     the next timeout window with `PeriodStart` preserved, so a persistent error backs off to one
+     retry per window instead of re-failing on every block.
+
+**The set entry is the retry token.** A vault is removed from `PayoutVerificationSet` only in the same
+atomic write that promotes it into the `PayoutTimeoutQueue`, zeroes a rate it can no longer cover, or
+defers it — never before. Any per-vault failure discards that write, so the vault keeps its entry and
+is retried on a later block rather than falling out of both collections and accruing interest and AUM
+fees that nothing is left to settle. An entry whose account is present but cannot be read as a vault
+also stays in the set: it cannot be filed in the timeout queue, whose entries must key off a real
+vault's `period_timeout`, so the entry is the only remaining record that the vault is owed a reconcile.
+Because the sweep resumes after the last entry visited rather than restarting each block, retained
+entries are revisited once per sweep and every other vault is still reached within one sweep of the set.
+
+**An orphaned entry is dropped.** If the account behind an entry no longer exists there is no vault to
+transition and no future block can resolve it, so the entry is removed outright instead of spending a
+slot of the visit budget on every sweep forever. This mirrors the orphan cleanup
+`handleVaultInterestTimeouts` already performs on the `PayoutTimeoutQueue`. The distinction from the
+unreadable case above is deliberate: a missing account is proof there is nothing left to settle, while a
+decode failure could still be masking a live vault.
+
+Per-vault failures are always logged and swallowed; only a failure to walk the set is returned, since
+an error out of `EndBlocker` would halt the chain.
 
 ---
 
@@ -213,7 +240,7 @@ Any non-zero delay also carries a jitter of `request_id % SwapOutRetryJitterSpre
 
 * **AutoReconcilePayoutDuration = 24 hours**
   Used when deciding if a vault remains **payable**.
-  `handleReconciledVaults` calls `partitionVaults` which uses `CanPayInterestDuration` over this window:
+  `handleReconciledVaults` classifies each vault with `CanPayInterestDuration` over this window:
 
   * **Positive interest** → must have reserves ≥ forecasted interest.
   * **Negative interest** → principal must be > 0.

@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"math"
 	"math/big"
 	"time"
 
@@ -672,6 +671,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 
 func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 	v1, v2 := NewVaultInfo(1), NewVaultInfo(2)
+	orphanAddr := sdk.AccAddress("orphanVaultAddr_____")
 
 	testBlockTime := time.Now().UTC().Truncate(time.Second)
 
@@ -772,6 +772,81 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectErr:      false,
 			expectedEvents: sdk.Events{},
 		},
+		{
+			name: "entry whose account is present but not a vault stays in the verification set",
+			setup: func() {
+				s.Require().NoError(
+					s.k.PayoutVerificationSet.Set(s.ctx, s.adminAddr),
+					"seeding the verification set with a non-vault address should not error",
+				)
+			},
+			postCheck: func() {
+				s.assertInPayoutVerificationQueue(s.adminAddr, true)
+				s.Assert().Zero(s.countPayoutTimeoutsForVault(s.adminAddr), "an unreadable entry must not be promoted to the payout timeout queue")
+			},
+			expectErr:      false,
+			expectedEvents: sdk.Events{},
+		},
+		{
+			name: "orphaned entry whose vault account no longer exists is removed from the verification set",
+			setup: func() {
+				s.Require().False(
+					s.simApp.AccountKeeper.HasAccount(s.ctx, orphanAddr),
+					"the orphan address must have no account for this case to exercise the cleanup",
+				)
+				s.Require().NoError(
+					s.k.PayoutVerificationSet.Set(s.ctx, orphanAddr),
+					"seeding the verification set with an accountless address should not error",
+				)
+			},
+			postCheck: func() {
+				s.assertInPayoutVerificationQueue(orphanAddr, false)
+				s.Assert().Zero(s.countPayoutTimeoutsForVault(orphanAddr), "an orphaned entry must not be promoted to the payout timeout queue")
+			},
+			expectErr:      false,
+			expectedEvents: sdk.Events{},
+		},
+		{
+			name: "vault whose payout forecast errors is deferred to the next timeout window",
+			setup: func() {
+				createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), 0, true, true)
+				s.requireUnpriceableVault(v1.vaultAddr)
+			},
+			postCheck: func() {
+				s.assertInPayoutVerificationQueue(v1.vaultAddr, false)
+				s.assertSinglePayoutTimeoutAt(v1.vaultAddr, testBlockTime.Unix()+keeper.AutoReconcileTimeout)
+			},
+			expectErr:      false,
+			expectedEvents: sdk.Events{},
+		},
+		{
+			name: "payable vault that cannot be persisted stays in the verification set",
+			setup: func() {
+				createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), 0, true, true)
+				s.requireUnpersistableVault(v1.vaultAddr)
+			},
+			postCheck: func() {
+				s.assertInPayoutVerificationQueue(v1.vaultAddr, true)
+				s.Assert().Zero(s.countPayoutTimeoutsForVault(v1.vaultAddr), "a failed promotion must not enqueue a payout timeout")
+			},
+			expectErr:      false,
+			expectedEvents: sdk.Events{},
+		},
+		{
+			name: "depleted vault that cannot be persisted stays in the verification set",
+			setup: func() {
+				createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), 0, false, true)
+				s.requireUnpersistableVault(v1.vaultAddr)
+			},
+			postCheck: func() {
+				vault, err := s.k.GetVault(s.ctx, v1.vaultAddr)
+				s.Require().NoError(err, "GetVault should not error after a failed demotion")
+				s.Assert().Equal("0.1", vault.CurrentInterestRate, "a failed demotion must not zero the current rate")
+				s.assertInPayoutVerificationQueue(v1.vaultAddr, true)
+			},
+			expectErr:      false,
+			expectedEvents: sdk.Events{},
+		},
 	}
 
 	for _, tc := range tests {
@@ -802,68 +877,30 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_handlePayableVaults() {
-	v1, v2 := NewVaultInfo(1), NewVaultInfo(2)
+func (s *TestSuite) TestKeeper_HandleReconciledVaults_FailedTransitionIsRetriedOnALaterBlock() {
+	v1 := NewVaultInfo(1)
 	testBlockTime := time.Now().UTC().Truncate(time.Second)
-
-	assertSingleTimeoutAt := func(addr sdk.AccAddress, expected int64) {
-		count := 0
-		found := false
-		err := s.k.PayoutTimeoutQueue.WalkDue(s.ctx, math.MaxInt64, func(t uint64, a sdk.AccAddress) (bool, error) {
-			if a.Equals(addr) {
-				count++
-				if t == uint64(expected) {
-					found = true
-				}
-			}
-			return false, nil
-		})
-		s.Require().NoError(err, "WalkDue should not error for address %s", addr)
-		s.Assert().True(found, "missing timeout entry at expected time %d for address %s", expected, addr)
-		s.Assert().Equal(1, count, "should be exactly one timeout entry for vault %s", addr)
-	}
+	initialRate := "0.1"
 
 	tests := []struct {
-		name      string
-		setup     func() []*types.VaultAccount
-		postCheck func(vaults []*types.VaultAccount)
+		name             string
+		fundReserves     bool
+		assertTransition func()
 	}{
 		{
-			name: "single payable vault",
-			setup: func() []*types.VaultAccount {
-				vault := createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), 0, true, true)
-				return []*types.VaultAccount{vault}
-			},
-			postCheck: func(vaults []*types.VaultAccount) {
-				addr := vaults[0].GetAddress()
-				vault, err := s.k.GetVault(s.ctx, addr)
-				s.Require().NoError(err, "single payable: GetVault should not error")
-				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
-				s.Assert().Equal(expectedExpireTime, vault.PeriodTimeout, "single payable: PeriodTimeout mismatch")
-				assertSingleTimeoutAt(addr, expectedExpireTime)
+			name:         "payable vault is promoted once it can be persisted again",
+			fundReserves: true,
+			assertTransition: func() {
+				s.assertSinglePayoutTimeoutAt(v1.vaultAddr, testBlockTime.Unix()+keeper.AutoReconcileTimeout)
 			},
 		},
 		{
-			name: "multiple payable vaults",
-			setup: func() []*types.VaultAccount {
-				vault1 := createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), 0, true, true)
-				vault2 := createVaultWithInterest(s, v2, "0.2", testBlockTime.Unix(), 0, true, true)
-				return []*types.VaultAccount{vault1, vault2}
-			},
-			postCheck: func(vaults []*types.VaultAccount) {
-				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
-
-				addr1 := vaults[0].GetAddress()
-				v1r, err := s.k.GetVault(s.ctx, addr1)
-				s.Require().NoError(err, "multiple payable (vault 1): GetVault should not error")
-				s.Assert().Equal(expectedExpireTime, v1r.PeriodTimeout, "multiple payable (vault 1): PeriodTimeout mismatch")
-				assertSingleTimeoutAt(addr1, expectedExpireTime)
-
-				addr2 := vaults[1].GetAddress()
-				v2r, err := s.k.GetVault(s.ctx, addr2)
-				s.Require().NoError(err, "multiple payable (vault 2): GetVault should not error")
-				s.Assert().Equal(expectedExpireTime, v2r.PeriodTimeout, "multiple payable (vault 2): PeriodTimeout mismatch")
-				assertSingleTimeoutAt(addr2, expectedExpireTime)
+			name:         "depleted vault is zeroed once it can be persisted again",
+			fundReserves: false,
+			assertTransition: func() {
+				vault, err := s.k.GetVault(s.ctx, v1.vaultAddr)
+				s.Require().NoError(err, "GetVault should not error after the retried demotion")
+				s.Assert().Equal(types.ZeroInterestRate, vault.CurrentInterestRate, "the retried demotion should zero the current rate")
 			},
 		},
 	}
@@ -872,76 +909,109 @@ func (s *TestSuite) TestKeeper_handlePayableVaults() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			s.ctx = s.ctx.WithBlockTime(testBlockTime)
-			vaults := tc.setup()
-			s.k.TestAccessor_handlePayableVaults(s.T(), s.ctx, vaults)
-			if tc.postCheck != nil {
-				tc.postCheck(vaults)
+			createVaultWithInterest(s, v1, initialRate, testBlockTime.Unix(), 0, tc.fundReserves, true)
+			s.requireUnpersistableVault(v1.vaultAddr)
+
+			s.Require().NoError(
+				s.k.TestAccessor_handleReconciledVaults(s.T(), s.ctx, keeper.MaxPayoutVerificationsPerBlock),
+				"handleReconciledVaults should not error while the vault cannot be persisted",
+			)
+			s.assertInPayoutVerificationQueue(v1.vaultAddr, true)
+			s.Assert().Zero(s.countPayoutTimeoutsForVault(v1.vaultAddr), "a failed transition must leave the vault unpromoted")
+
+			s.writeVaultDesiredRate(v1.vaultAddr, initialRate)
+
+			s.Require().NoError(
+				s.k.TestAccessor_handleReconciledVaults(s.T(), s.ctx, keeper.MaxPayoutVerificationsPerBlock),
+				"handleReconciledVaults should not error once the vault can be persisted",
+			)
+			s.assertInPayoutVerificationQueue(v1.vaultAddr, false)
+			tc.assertTransition()
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_HandleReconciledVaults_RetainedEntryDoesNotStarveOtherVaults() {
+	infos := []VaultInfo{NewVaultInfo(1), NewVaultInfo(2), NewVaultInfo(3)}
+	testBlockTime := time.Now().UTC().Truncate(time.Second)
+
+	tests := []struct {
+		name              string
+		retainedIdx       int
+		retainedIsPayable bool
+	}{
+		{
+			name:              "retained payable vault does not hold the budget against the others",
+			retainedIdx:       0,
+			retainedIsPayable: true,
+		},
+		{
+			name:              "retained depleted vault does not hold the budget against the others",
+			retainedIdx:       2,
+			retainedIsPayable: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			for i, info := range infos {
+				fundReserves := i != tc.retainedIdx || tc.retainedIsPayable
+				createVaultWithInterest(s, info, "0.1", testBlockTime.Unix(), 0, fundReserves, true)
+			}
+			s.requireUnpersistableVault(infos[tc.retainedIdx].vaultAddr)
+
+			for block := range infos {
+				s.Require().NoError(
+					s.k.TestAccessor_handleReconciledVaults(s.T(), s.ctx, 1),
+					"handleReconciledVaults should not error on pass %d", block+1,
+				)
+			}
+
+			s.Assert().Equal(1, s.countPayoutVerificationEntries(), "only the retained vault should remain in the verification set")
+			for i, info := range infos {
+				s.assertInPayoutVerificationQueue(info.vaultAddr, i == tc.retainedIdx)
 			}
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_handleDepletedVaults() {
-	v1, v2 := NewVaultInfo(1), NewVaultInfo(2)
-	initialRate := "0.1"
+func (s *TestSuite) TestKeeper_promotePayableVault() {
+	v1 := NewVaultInfo(1)
+	testBlockTime := time.Now().UTC().Truncate(time.Second)
+	expectedTimeout := testBlockTime.Unix() + keeper.AutoReconcileTimeout
 
 	tests := []struct {
-		name           string
-		setup          func() []*types.VaultAccount
-		postCheck      func(vaults []*types.VaultAccount)
-		expectedEvents sdk.Events
+		name      string
+		setup     func() *types.VaultAccount
+		postCheck func(vault *types.VaultAccount)
 	}{
 		{
-			name: "single depleted vault",
-			setup: func() []*types.VaultAccount {
-				vault := createVaultWithInterest(s, v1, initialRate, 0, 0, false, true)
-				return []*types.VaultAccount{vault}
+			name: "payable vault is enqueued and leaves the verification set",
+			setup: func() *types.VaultAccount {
+				return createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), 0, true, true)
 			},
-			postCheck: func(vaults []*types.VaultAccount) {
-				addr := vaults[0].GetAddress()
-				updatedVault, err := s.k.GetVault(s.ctx, addr)
-				s.Require().NoError(err, "single depleted: GetVault should not error")
-				s.Assert().Equal(types.ZeroInterestRate, updatedVault.CurrentInterestRate, "single depleted: interest rate should be zeroed")
-				s.Assert().Equal(initialRate, updatedVault.DesiredInterestRate, "single depleted: desired rate should remain unchanged")
-			},
-			expectedEvents: sdk.Events{
-				sdk.NewEvent(
-					"provlabs.vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("desired_rate", initialRate),
-					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
-				),
+			postCheck: func(vault *types.VaultAccount) {
+				promoted, err := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(err, "GetVault should not error after promotion")
+				s.Assert().Equal(expectedTimeout, promoted.PeriodTimeout, "promoted vault should record the next payout timeout")
+				s.assertSinglePayoutTimeoutAt(vault.GetAddress(), expectedTimeout)
+				s.assertInPayoutVerificationQueue(vault.GetAddress(), false)
 			},
 		},
 		{
-			name: "multiple depleted vaults",
-			setup: func() []*types.VaultAccount {
-				vault1 := createVaultWithInterest(s, v1, initialRate, 0, 0, false, true)
-				vault2 := createVaultWithInterest(s, v2, "0.2", 0, 0, false, true)
-				return []*types.VaultAccount{vault1, vault2}
+			name: "vault that cannot be persisted stays in the verification set and is not enqueued",
+			setup: func() *types.VaultAccount {
+				vault := createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), 0, true, true)
+				return s.requireUnpersistableVault(vault.GetAddress())
 			},
-			postCheck: func(vaults []*types.VaultAccount) {
-				for _, v := range vaults {
-					addr := v.GetAddress()
-					updatedVault, err := s.k.GetVault(s.ctx, addr)
-					s.Require().NoError(err, "multiple depleted: GetVault should not error for address %s", addr)
-					s.Assert().Equal(types.ZeroInterestRate, updatedVault.CurrentInterestRate, "multiple depleted: interest rate should be zeroed for address %s", addr)
-					s.Assert().Equal(v.DesiredInterestRate, updatedVault.DesiredInterestRate, "multiple depleted: desired rate mismatch for address %s", addr)
-				}
-			},
-			expectedEvents: sdk.Events{
-				sdk.NewEvent(
-					"provlabs.vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("desired_rate", initialRate),
-					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
-				),
-				sdk.NewEvent(
-					"provlabs.vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("desired_rate", "0.2"),
-					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
-				),
+			postCheck: func(vault *types.VaultAccount) {
+				unpromoted, err := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(err, "GetVault should not error after a failed promotion")
+				s.Assert().Zero(unpromoted.PeriodTimeout, "a failed promotion must not record a payout timeout")
+				s.Assert().Zero(s.countPayoutTimeoutsForVault(vault.GetAddress()), "a failed promotion must not enqueue a payout timeout")
+				s.assertInPayoutVerificationQueue(vault.GetAddress(), true)
 			},
 		},
 	}
@@ -949,20 +1019,172 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			vaults := tc.setup()
+			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			vault := tc.setup()
+			s.k.TestAccessor_promotePayableVault(s.T(), s.ctx, vault)
+			tc.postCheck(vault)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_demoteDepletedVault() {
+	v1 := NewVaultInfo(1)
+	initialRate := "0.1"
+
+	tests := []struct {
+		name           string
+		setup          func() *types.VaultAccount
+		postCheck      func(vault *types.VaultAccount)
+		expectedEvents sdk.Events
+	}{
+		{
+			name: "depleted vault has its rate zeroed and leaves the verification set",
+			setup: func() *types.VaultAccount {
+				return createVaultWithInterest(s, v1, initialRate, 0, 0, false, true)
+			},
+			postCheck: func(vault *types.VaultAccount) {
+				demoted, err := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(err, "GetVault should not error after demotion")
+				s.Assert().Equal(types.ZeroInterestRate, demoted.CurrentInterestRate, "depleted vault should have its current rate zeroed")
+				s.Assert().Equal(initialRate, demoted.DesiredInterestRate, "depleted vault should keep its desired rate")
+				s.assertInPayoutVerificationQueue(vault.GetAddress(), false)
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent(
+					"provlabs.vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
+					sdk.NewAttribute("desired_rate", initialRate),
+					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name: "vault that cannot be persisted keeps its rate and stays in the verification set",
+			setup: func() *types.VaultAccount {
+				vault := createVaultWithInterest(s, v1, initialRate, 0, 0, false, true)
+				return s.requireUnpersistableVault(vault.GetAddress())
+			},
+			postCheck: func(vault *types.VaultAccount) {
+				undemoted, err := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(err, "GetVault should not error after a failed demotion")
+				s.Assert().Equal(initialRate, undemoted.CurrentInterestRate, "a failed demotion must not zero the current rate")
+				s.assertInPayoutVerificationQueue(vault.GetAddress(), true)
+			},
+			expectedEvents: sdk.Events{},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := tc.setup()
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			s.k.TestAccessor_handleDepletedVaults(s.T(), s.ctx, vaults)
+			s.k.TestAccessor_demoteDepletedVault(s.T(), s.ctx, vault)
 
 			s.Assert().Equal(
 				normalizeEvents(tc.expectedEvents),
 				normalizeEvents(s.ctx.EventManager().Events()),
-				"test case %s: emitted events mismatch", tc.name,
+				"emitted events mismatch",
 			)
+			tc.postCheck(vault)
+		})
+	}
+}
 
-			if tc.postCheck != nil {
-				tc.postCheck(vaults)
-			}
+func (s *TestSuite) TestKeeper_deferPayoutVerification() {
+	v1 := NewVaultInfo(1)
+	testBlockTime := time.Now().UTC().Truncate(time.Second)
+	periodStart := testBlockTime.Add(-time.Hour).Unix()
+	expectedTimeout := testBlockTime.Unix() + keeper.AutoReconcileTimeout
+
+	tests := []struct {
+		name      string
+		setup     func() *types.VaultAccount
+		postCheck func(vault *types.VaultAccount)
+	}{
+		{
+			name: "deferred vault moves to the next timeout window with its period start preserved",
+			setup: func() *types.VaultAccount {
+				return createVaultWithInterest(s, v1, "0.1", periodStart, 0, true, true)
+			},
+			postCheck: func(vault *types.VaultAccount) {
+				deferred, err := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(err, "GetVault should not error after deferral")
+				s.Assert().Equal(expectedTimeout, deferred.PeriodTimeout, "deferred vault should be filed at the next payout timeout")
+				s.Assert().Equal(periodStart, deferred.PeriodStart, "deferral must preserve the period start so accrued interest is not lost")
+				s.assertSinglePayoutTimeoutAt(vault.GetAddress(), expectedTimeout)
+				s.assertInPayoutVerificationQueue(vault.GetAddress(), false)
+			},
+		},
+		{
+			name: "vault that cannot be persisted stays in the verification set",
+			setup: func() *types.VaultAccount {
+				vault := createVaultWithInterest(s, v1, "0.1", periodStart, 0, true, true)
+				return s.requireUnpersistableVault(vault.GetAddress())
+			},
+			postCheck: func(vault *types.VaultAccount) {
+				s.Assert().Zero(s.countPayoutTimeoutsForVault(vault.GetAddress()), "a failed deferral must not enqueue a payout timeout")
+				s.assertInPayoutVerificationQueue(vault.GetAddress(), true)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			vault := tc.setup()
+			vault.PeriodStart = periodStart
+			s.k.TestAccessor_deferPayoutVerification(s.T(), s.ctx, vault)
+			tc.postCheck(vault)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_retireDepletedVault() {
+	v1 := NewVaultInfo(1)
+	initialRate := "0.1"
+
+	tests := []struct {
+		name      string
+		setup     func(dueTime int64) *types.VaultAccount
+		postCheck func(vault *types.VaultAccount, dueTime int64)
+	}{
+		{
+			name: "depleted vault has its rate zeroed and its due timeout dequeued",
+			setup: func(dueTime int64) *types.VaultAccount {
+				return s.createVaultWithDueInterestTimeout(v1, dueTime, false)
+			},
+			postCheck: func(vault *types.VaultAccount, _ int64) {
+				retired, err := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(err, "GetVault should not error after retirement")
+				s.Assert().Equal(types.ZeroInterestRate, retired.CurrentInterestRate, "retired vault should have its current rate zeroed")
+				s.Assert().Zero(s.countPayoutTimeoutsForVault(vault.GetAddress()), "a retired vault should have no payout timeout left")
+			},
+		},
+		{
+			name: "vault that cannot be persisted keeps its rate and its timeout stays queued",
+			setup: func(dueTime int64) *types.VaultAccount {
+				vault := s.createVaultWithDueInterestTimeout(v1, dueTime, false)
+				return s.requireUnpersistableVault(vault.GetAddress())
+			},
+			postCheck: func(vault *types.VaultAccount, dueTime int64) {
+				notRetired, err := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(err, "GetVault should not error after a failed retirement")
+				s.Assert().Equal(initialRate, notRetired.CurrentInterestRate, "a failed retirement must not zero the current rate")
+				s.assertSinglePayoutTimeoutAt(vault.GetAddress(), dueTime)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			dueTime := s.ctx.BlockTime().Unix()
+			vault := tc.setup(dueTime)
+			s.k.TestAccessor_retireDepletedVault(s.T(), s.ctx, vault, dueTime)
+			tc.postCheck(vault, dueTime)
 		})
 	}
 }

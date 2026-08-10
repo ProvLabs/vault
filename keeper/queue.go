@@ -149,14 +149,15 @@ func (k Keeper) haltVaultAccrual(ctx sdk.Context, vault *types.VaultAccount) err
 // ReschedulePayoutTimeout updates a vault's payout timeout to the next window (now + AutoReconcileTimeout)
 // without resetting the PeriodStart. This is used for transient reconciliation failures to
 // preserve accrued interest while preventing block-to-block retry loops.
+//
+// The dequeue shares the atomic write, so a failure leaves the vault queued under its old timeout.
 func (k Keeper) ReschedulePayoutTimeout(ctx sdk.Context, vault *types.VaultAccount, oldTimeout int64) error {
-	// Dequeue on the main context first to ensure it's removed even if the atomic part fails.
-	if err := k.PayoutTimeoutQueue.Dequeue(ctx, oldTimeout, vault.GetAddress()); err != nil {
-		return fmt.Errorf("failed to dequeue old payout timeout: %w", err)
-	}
-
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
+
+	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, oldTimeout, v.GetAddress()); err != nil {
+		return fmt.Errorf("failed to dequeue old payout timeout: %w", err)
+	}
 
 	currentBlockTime := cacheCtx.BlockTime().Unix()
 	v.PeriodTimeout = currentBlockTime + AutoReconcileTimeout
@@ -177,14 +178,15 @@ func (k Keeper) ReschedulePayoutTimeout(ctx sdk.Context, vault *types.VaultAccou
 // RescheduleFeeTimeout updates a vault's fee timeout to the next window (now + AutoReconcileTimeout)
 // without resetting the FeePeriodStart. This is used for transient reconciliation failures to
 // preserve accrued fees while preventing block-to-block retry loops.
+//
+// The dequeue shares the atomic write, so a failure leaves the vault queued under its old timeout.
 func (k Keeper) RescheduleFeeTimeout(ctx sdk.Context, vault *types.VaultAccount, oldTimeout int64) error {
-	// Dequeue on the main context first to ensure it's removed even if the atomic part fails.
-	if err := k.FeeTimeoutQueue.Dequeue(ctx, oldTimeout, vault.GetAddress()); err != nil {
-		return fmt.Errorf("failed to dequeue old fee timeout: %w", err)
-	}
-
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
+
+	if err := k.FeeTimeoutQueue.Dequeue(cacheCtx, oldTimeout, v.GetAddress()); err != nil {
+		return fmt.Errorf("failed to dequeue old fee timeout: %w", err)
+	}
 
 	currentBlockTime := cacheCtx.BlockTime().Unix()
 	v.FeePeriodTimeout = currentBlockTime + AutoReconcileTimeout

@@ -219,6 +219,64 @@ func (s *TestSuite) assertInPayoutVerificationQueue(vaultAddr sdk.AccAddress, sh
 	s.Assert().Equal(shouldContain, isInQueue, "vault should be enqueued in payout verification queue at expected period start")
 }
 
+// assertSinglePayoutTimeoutAt asserts the vault has exactly one PayoutTimeoutQueue entry and that it is
+// keyed at the expected timeout.
+func (s *TestSuite) assertSinglePayoutTimeoutAt(vaultAddr sdk.AccAddress, expected int64) {
+	count := 0
+	found := false
+	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			count++
+			found = found || timeout == uint64(expected)
+		}
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the payout timeout queue should not error")
+	s.Assert().True(found, "missing payout timeout entry at %d for vault %s", expected, vaultAddr)
+	s.Assert().Equal(1, count, "there should be exactly one payout timeout entry for vault %s", vaultAddr)
+}
+
+// countPayoutTimeoutsForVault returns how many PayoutTimeoutQueue entries exist for a vault,
+// regardless of the timeout they are keyed under.
+func (s *TestSuite) countPayoutTimeoutsForVault(vaultAddr sdk.AccAddress) int {
+	count := 0
+	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			count++
+		}
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the payout timeout queue should not error")
+	return count
+}
+
+// writeVaultDesiredRate writes a desired interest rate straight through the auth keeper, bypassing the
+// validation SetVaultAccount performs, so tests can install a rate the module would reject and later
+// repair it. It returns the stored vault.
+func (s *TestSuite) writeVaultDesiredRate(vaultAddr sdk.AccAddress, rate string) *types.VaultAccount {
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault should not error for vault %s", vaultAddr)
+	s.Require().NotNil(vault, "vault %s should exist before its desired rate is rewritten", vaultAddr)
+	vault.DesiredInterestRate = rate
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	return vault
+}
+
+// requireUnpersistableVault installs an unparsable desired interest rate so the account still loads and
+// prices normally while any later SetVaultAccount fails validation. It returns the stored vault.
+func (s *TestSuite) requireUnpersistableVault(vaultAddr sdk.AccAddress) *types.VaultAccount {
+	return s.writeVaultDesiredRate(vaultAddr, "not-a-rate")
+}
+
+// requireUnpriceableVault corrupts a held-denom NAV entry so GetTVV cannot value the vault, forcing the
+// payout-ability forecast to error while the account itself stays valid.
+func (s *TestSuite) requireUnpriceableVault(vaultAddr sdk.AccAddress) {
+	s.Require().NoError(
+		s.k.TestAccessor_corruptVaultNAV(s.T(), s.ctx, vaultAddr, "heldasset"),
+		"corrupting the NAV entry should not error for vault %s", vaultAddr,
+	)
+}
+
 // assertInReconciliationQueues asserts whether a vault is present in the payout timeout queue,
 // the fee timeout queue, and the payout verification set, matching the expectation flag.
 func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shouldContain bool) {
@@ -241,9 +299,9 @@ func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shoul
 	s.assertInPayoutVerificationQueue(vaultAddr, shouldContain)
 }
 
-// createVaultWithDueInterestTimeout creates a funded vault with a due PayoutTimeoutQueue
-// entry at dueTime, optionally paused, for exercising the per-block visit budget.
-func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime int64, paused bool) {
+// createVaultWithDueInterestTimeout creates a funded vault with a due PayoutTimeoutQueue entry at
+// dueTime, optionally paused, and returns the stored vault.
+func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime int64, paused bool) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(info.underlying, s.adminAddr)
 	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 		Admin:           s.adminAddr.String(),
@@ -273,6 +331,8 @@ func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime in
 		s.k.PayoutTimeoutQueue.Enqueue(s.ctx, dueTime, info.vaultAddr),
 		"enqueuing due payout timeout should not error for vault %s", info.vaultAddr,
 	)
+
+	return vault
 }
 
 // createVaultWithDueFeeTimeout creates a funded vault with a due FeeTimeoutQueue entry at

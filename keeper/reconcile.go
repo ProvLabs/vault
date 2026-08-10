@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -585,7 +586,6 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
 	var pausedKeys []collections.Pair[uint64, sdk.AccAddress]
-	var depleted []*types.VaultAccount
 
 	visited := 0
 	err := k.PayoutTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
@@ -637,10 +637,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 		}
 
 		if !canPay {
-			depleted = append(depleted, vault)
-			if err := k.PayoutTimeoutQueue.Dequeue(ctx, timeoutUnix, addr); err != nil {
-				k.getLogger(ctx).Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
-			}
+			k.retireDepletedVault(ctx, vault, timeoutUnix)
 			continue
 		}
 
@@ -651,8 +648,28 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 		}
 	}
 
-	k.handleDepletedVaults(ctx, depleted)
 	return nil
+}
+
+// retireDepletedVault zeroes the current interest rate of a due vault that can no longer cover its
+// payout window, preserving the desired rate, and dequeues the timeout it was walked under in the same
+// atomic write. A failure leaves the timeout queued as it was found rather than rescheduling it, since
+// a reschedule drops the entry before re-filing it.
+func (k Keeper) retireDepletedVault(ctx sdk.Context, vault *types.VaultAccount, walkedTimeout int64) {
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+
+	if err := k.UpdateInterestRates(cacheCtx, v, types.ZeroInterestRate, v.DesiredInterestRate); err != nil {
+		k.getLogger(ctx).Error("failed to update interest rates for depleted vault, leaving its timeout queued", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, walkedTimeout, v.GetAddress()); err != nil {
+		k.getLogger(ctx).Error("CRITICAL: failed to dequeue interest timeout for depleted vault, leaving its timeout queued", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	write()
 }
 
 // atomicallyReconcileInterest performs the interest transfer, dequeues the current
@@ -716,24 +733,22 @@ func (k Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultA
 	return vault, true
 }
 
-// handleReconciledVaults processes vaults from the payout verification queue using a safe
-// "collect-then-mutate" pattern.
-//
-// It first collects keys for non-paused vaults, visiting at most limit entries per block and
-// leaving the remainder in the set for later blocks. It then iterates the collected keys,
-// removing each from the set before partitioning them into payable vs depleted groups.
-// Paused vaults are removed from the set rather than skipped so they cannot consume the budget.
+// handleReconciledVaults advances vaults out of the payout verification set with a safe
+// "collect-then-mutate" pattern, visiting at most limit entries per block, resuming where the previous
+// block stopped, and removing paused vaults without processing them. A set entry is the vault's retry
+// token, cleared only in the same atomic write that transitions it. Only a Walk failure is returned.
 func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 	var keysToProcess []sdk.AccAddress
 	var pausedKeys []sdk.AccAddress
-	var vaultsToProcess []*types.VaultAccount
 
 	visited := 0
-	err := k.PayoutVerificationSet.Walk(ctx, nil, func(addr sdk.AccAddress) (bool, error) {
+	var lastVisited sdk.AccAddress
+	err := k.PayoutVerificationSet.Walk(ctx, k.payoutVerificationSweepRange(ctx), func(addr sdk.AccAddress) (bool, error) {
 		if visited == limit {
 			return true, nil
 		}
 		visited++
+		lastVisited = addr
 		v, ok := k.tryGetVault(ctx, addr)
 		if ok && v.Paused {
 			pausedKeys = append(pausedKeys, addr)
@@ -746,6 +761,11 @@ func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 		return fmt.Errorf("walk failed: %w", err)
 	}
 
+	if visited < limit {
+		lastVisited = nil
+	}
+	k.setPayoutVerificationCursor(ctx, lastVisited)
+
 	for _, addr := range pausedKeys {
 		if err := k.PayoutVerificationSet.Remove(ctx, addr); err != nil {
 			k.getLogger(ctx).Error("failed to remove paused vault from payout verification set", "vault", addr.String(), "err", err)
@@ -753,61 +773,134 @@ func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 	}
 
 	for _, addr := range keysToProcess {
-		if err := k.PayoutVerificationSet.Remove(ctx, addr); err != nil {
-			k.getLogger(ctx).Error("CRITICAL: failed to remove from payout verification set, skipping", "vault", addr.String(), "err", err)
-			continue
-		}
-
-		v, ok := k.tryGetVault(ctx, addr)
-		if ok && !v.Paused {
-			vaultsToProcess = append(vaultsToProcess, v)
-		}
+		k.transitionVerifiedVault(ctx, addr)
 	}
 
-	payable, depleted := k.partitionVaults(ctx, vaultsToProcess)
-	k.handlePayableVaults(ctx, payable)
-	k.handleDepletedVaults(ctx, depleted)
 	return nil
 }
 
-// partitionVaults splits the provided vaults into payable and depleted groups for the
-// AutoReconcilePayoutDuration forecast window using CanPayInterestDuration.
-func (k Keeper) partitionVaults(ctx sdk.Context, vaults []*types.VaultAccount) ([]*types.VaultAccount, []*types.VaultAccount) {
-	var payable []*types.VaultAccount
-	var depleted []*types.VaultAccount
-	for _, v := range vaults {
-		ok, err := k.CanPayInterestDuration(ctx, v, AutoReconcilePayoutDuration)
-		if err != nil {
-			k.getLogger(ctx).Error("failed to check payout ability", "vault", v.GetAddress().String(), "err", err)
-			continue
+// payoutVerificationSweepRange resumes the verification walk after the entry the previous block
+// stopped on, so entries retained by a failed transition cannot monopolize the per-block budget: every
+// entry is reached within one sweep of the set no matter how many ahead of it keep failing. An
+// unreadable or exhausted cursor starts a fresh sweep from the beginning of the set.
+func (k Keeper) payoutVerificationSweepRange(ctx sdk.Context) *collections.Range[sdk.AccAddress] {
+	sweep := new(collections.Range[sdk.AccAddress])
+
+	cursor, err := k.PayoutVerificationCursor.Get(ctx)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			k.getLogger(ctx).Error("failed to read payout verification cursor, restarting the sweep", "err", err)
 		}
-		if ok {
-			payable = append(payable, v)
-		} else {
-			depleted = append(depleted, v)
-		}
+		return sweep
 	}
-	return payable, depleted
+	if len(cursor) == 0 {
+		return sweep
+	}
+
+	return sweep.StartExclusive(cursor)
 }
 
-// handlePayableVaults updates timeout tracking for vaults that remain payable after reconciliation.
-// It sets PeriodTimeout to now + AutoReconcileTimeout, persists the vault, and enqueues the timeout.
-func (k Keeper) handlePayableVaults(ctx sdk.Context, payouts []*types.VaultAccount) {
-	for _, v := range payouts {
-		if err := k.SafeEnqueuePayoutTimeout(ctx, v); err != nil {
-			k.getLogger(ctx).Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
-		}
+// setPayoutVerificationCursor records the entry the next sweep resumes after. A nil address means the
+// sweep reached the end of the set, so the next one starts over.
+func (k Keeper) setPayoutVerificationCursor(ctx sdk.Context, addr sdk.AccAddress) {
+	if err := k.PayoutVerificationCursor.Set(ctx, addr); err != nil {
+		k.getLogger(ctx).Error("failed to record the payout verification cursor", "err", err)
 	}
 }
 
-// handleDepletedVaults disables interest for vaults that cannot cover the forecasted payout window
-// by setting the current rate to zero while preserving the desired rate.
-func (k Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.VaultAccount) {
-	for _, record := range failedPayouts {
-		if err := k.UpdateInterestRates(ctx, record, types.ZeroInterestRate, record.DesiredInterestRate); err != nil {
-			k.getLogger(ctx).Error("failed to update interest rates", "vault", record.GetAddress().String(), "err", err)
-		}
+// transitionVerifiedVault moves one verified vault to its next accrual state: payable vaults are
+// promoted into the PayoutTimeoutQueue, depleted vaults have their current rate zeroed, and a vault
+// whose forecast errors is deferred to the next timeout window. An entry whose account is gone can
+// never be transitioned, so it is dropped rather than re-walked forever; an account that is present but
+// unreadable keeps its entry, since a decode failure could otherwise strand a live vault.
+func (k Keeper) transitionVerifiedVault(ctx sdk.Context, addr sdk.AccAddress) {
+	vault, err := k.GetVault(ctx, addr)
+	if err != nil {
+		k.getLogger(ctx).Error("CRITICAL: payout verification entry has an unreadable vault, leaving it in the set", "vault", addr.String(), "err", err)
+		return
 	}
+	if vault == nil {
+		k.getLogger(ctx).Error("CRITICAL: payout verification entry has no vault account, removing the orphaned entry", "vault", addr.String())
+		if removeErr := k.PayoutVerificationSet.Remove(ctx, addr); removeErr != nil {
+			k.getLogger(ctx).Error("CRITICAL: failed to remove orphaned payout verification entry, retrying next block", "vault", addr.String(), "err", removeErr)
+		}
+		return
+	}
+
+	canPay, err := k.CanPayInterestDuration(ctx, vault, AutoReconcilePayoutDuration)
+	if err != nil {
+		k.getLogger(ctx).Error("failed to check payout ability, deferring to the next timeout window", "vault", addr.String(), "err", err)
+		k.deferPayoutVerification(ctx, vault)
+		return
+	}
+
+	if canPay {
+		k.promotePayableVault(ctx, vault)
+		return
+	}
+
+	k.demoteDepletedVault(ctx, vault)
+}
+
+// promotePayableVault enqueues the next payout timeout for a vault that remains payable and clears its
+// verification entry in the same atomic write, so a failed enqueue leaves the vault queued for
+// verification on a later block.
+func (k Keeper) promotePayableVault(ctx sdk.Context, vault *types.VaultAccount) {
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+
+	if err := k.SafeEnqueuePayoutTimeout(cacheCtx, v); err != nil {
+		k.getLogger(ctx).Error("failed to enqueue timeout, leaving vault in the payout verification set", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	if err := k.PayoutVerificationSet.Remove(cacheCtx, v.GetAddress()); err != nil {
+		k.getLogger(ctx).Error("CRITICAL: failed to remove promoted vault from the payout verification set, retrying next block", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	write()
+}
+
+// demoteDepletedVault zeroes the current interest rate of a vault that cannot cover the forecast payout
+// window, preserving the desired rate, and clears its verification entry in the same atomic write. A
+// failed rate update keeps the entry so the vault is revisited on a later block.
+func (k Keeper) demoteDepletedVault(ctx sdk.Context, vault *types.VaultAccount) {
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+
+	if err := k.UpdateInterestRates(cacheCtx, v, types.ZeroInterestRate, v.DesiredInterestRate); err != nil {
+		k.getLogger(ctx).Error("failed to update interest rates, leaving vault in the payout verification set", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	if err := k.PayoutVerificationSet.Remove(cacheCtx, v.GetAddress()); err != nil {
+		k.getLogger(ctx).Error("CRITICAL: failed to remove depleted vault from the payout verification set, retrying next block", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	write()
+}
+
+// deferPayoutVerification files a vault whose payout forecast could not be computed at the next timeout
+// window, preserving PeriodStart, and clears its verification entry in the same atomic write. The
+// time-keyed queue bounds its retries to one per window rather than one per block; a failed deferral
+// keeps the entry.
+func (k Keeper) deferPayoutVerification(ctx sdk.Context, vault *types.VaultAccount) {
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+
+	if err := k.ReschedulePayoutTimeout(cacheCtx, v, v.PeriodTimeout); err != nil {
+		k.getLogger(ctx).Error("failed to defer payout verification, leaving vault in the payout verification set", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	if err := k.PayoutVerificationSet.Remove(cacheCtx, v.GetAddress()); err != nil {
+		k.getLogger(ctx).Error("CRITICAL: failed to remove deferred vault from the payout verification set, retrying next block", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	write()
 }
 
 // handleVaultFeeTimeouts checks vaults with expired fee periods and reconciles them.

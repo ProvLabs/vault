@@ -21,18 +21,32 @@ func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Co
 	return k.handleReconciledVaults(sdkCtx, limit)
 }
 
-// TestAccessor_handlePayableVaults exposes this keeper's handlePayableVaults function for unit tests.
-func (k Keeper) TestAccessor_handlePayableVaults(t *testing.T, ctx context.Context, payouts []*types.VaultAccount) {
+// TestAccessor_promotePayableVault exposes this keeper's promotePayableVault function for unit tests.
+func (k Keeper) TestAccessor_promotePayableVault(t *testing.T, ctx context.Context, vault *types.VaultAccount) {
 	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	k.handlePayableVaults(sdkCtx, payouts)
+	k.promotePayableVault(sdkCtx, vault)
 }
 
-// TestAccessor_handleDepletedVaults exposes this keeper's handleDepletedVaults function for unit tests.
-func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Context, failedPayouts []*types.VaultAccount) {
+// TestAccessor_demoteDepletedVault exposes this keeper's demoteDepletedVault function for unit tests.
+func (k Keeper) TestAccessor_demoteDepletedVault(t *testing.T, ctx context.Context, vault *types.VaultAccount) {
 	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	k.handleDepletedVaults(sdkCtx, failedPayouts)
+	k.demoteDepletedVault(sdkCtx, vault)
+}
+
+// TestAccessor_deferPayoutVerification exposes this keeper's deferPayoutVerification function for unit tests.
+func (k Keeper) TestAccessor_deferPayoutVerification(t *testing.T, ctx context.Context, vault *types.VaultAccount) {
+	t.Helper()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.deferPayoutVerification(sdkCtx, vault)
+}
+
+// TestAccessor_retireDepletedVault exposes this keeper's retireDepletedVault function for unit tests.
+func (k Keeper) TestAccessor_retireDepletedVault(t *testing.T, ctx context.Context, vault *types.VaultAccount, walkedTimeout int64) {
+	t.Helper()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.retireDepletedVault(sdkCtx, vault, walkedTimeout)
 }
 
 // TestAccessor_handleVaultInterestTimeouts exposes this keeper's handleVaultInterestTimeouts function for unit tests.

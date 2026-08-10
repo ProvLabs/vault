@@ -194,10 +194,13 @@ func TestAppImportExport(t *testing.T) {
 			stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
 			stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
 		},
-		authzkeeper.StoreKey:    {authzkeeper.GrantQueuePrefix},
-		feegrant.StoreKey:       {feegrant.FeeAllowanceQueueKeyPrefix},
-		slashingtypes.StoreKey:  {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
-		vaulttypes.StoreKey:     {vaulttypes.VaultPayoutVerificationSetPrefix},
+		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
+		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
+		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
+		vaulttypes.StoreKey: {
+			vaulttypes.VaultPayoutVerificationSetPrefix,
+			vaulttypes.VaultPayoutVerificationCursorPrefix,
+		},
 		attributetypes.StoreKey: {attributetypes.AttributeAddrLookupKeyPrefix},
 	}
 

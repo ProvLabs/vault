@@ -71,6 +71,12 @@ var (
 	TotalValuesKeyPrefix = collections.NewPrefix(12)
 	// TotalValuesName is a human-readable name for the materialized total value collection.
 	TotalValuesName = "vault_total_values"
+
+	// VaultPayoutVerificationCursorPrefix is the prefix for the address the payout verification sweep
+	// resumes after. Progress tracking, not vault state, so it is not exported to genesis.
+	VaultPayoutVerificationCursorPrefix = collections.NewPrefix(9)
+	// VaultPayoutVerificationCursorName is a human-readable name for the payout verification cursor.
+	VaultPayoutVerificationCursorName = "vault_payout_verification_cursor"
 )
 
 var (

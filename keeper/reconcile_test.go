@@ -262,7 +262,10 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 
 	s.Run("Case 2: Partial Collection (Insufficient Underlying Liquidity)", func() {
 		outstanding := sdk.NewInt64Coin(underlyingDenom, 1_000_000)
-		markerLiquidity := sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000))
+		markerLiquidity := sdk.NewCoins(
+			sdk.NewInt64Coin(underlyingDenom, 100_000),
+			sdk.NewInt64Coin(heldDenom, 1_000_000),
+		)
 		vault := setupVaultWithHeldAssetAndOutstandingFee(outstanding, markerLiquidity, nil)
 		vault.CurrentInterestRate = "0"
 		vault.DesiredInterestRate = "0"
@@ -274,7 +277,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 
 		updatedVault, err := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().NoError(err, "failed to get updated vault")
-		s.Require().Equal(sdkmath.NewInt(900_000), updatedVault.OutstandingAumFee.Amount, "outstanding fee should be the 1,000,000 liability minus the marker's 100,000 of underlying liquidity collected in Case 2")
+		s.Require().Equal(sdkmath.NewInt(900_000), updatedVault.OutstandingAumFee.Amount, "outstanding fee should be the 1,000,000 liability minus the marker's 100,000 of underlying liquidity collected in Case 2, uncapped because the illiquid held asset keeps gross TVV above the liability")
 
 		provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
 		s.Require().NoError(err, "failed to get AUM fee address")
@@ -2444,7 +2447,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OversizedTVVDegradesToErr
 	s.Require().ErrorContains(err, "overflow", "error should originate from the CalculateAUMFee recover guard")
 }
 
-func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OutstandingFeeOverflowDegradesToError() {
+func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OutstandingFeeAtIntegerCeilingIsCappedAtGrossTVV() {
 	s.SetupTest()
 	shareDenom := "fee.shares"
 	underlyingDenom := "uylds.fcc.receipt"
@@ -2461,9 +2464,111 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OutstandingFeeOverflowDeg
 	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
 	s.SetCtxBlockTime(now)
 
-	err := s.k.PerformVaultFeeTransfer(s.ctx, vault)
-	s.Require().Error(err, "an outstanding fee at the 256-bit ceiling must degrade to an error, not panic the BeginBlock fee hook")
-	s.Require().ErrorContains(err, "overflow", "error should originate from the SafeAdd guard on outstanding AUM fee")
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address from GetAUMFeeAddress")
+
+	err = s.k.PerformVaultFeeTransfer(s.ctx, vault)
+	s.Require().NoError(err, "an outstanding fee at the 256-bit ceiling must be capped at gross TVV rather than failing the BeginBlock fee hook")
+
+	collected := s.simApp.BankKeeper.GetBalance(s.ctx, provlabsAddr, underlyingDenom)
+	s.Assert().Equal(underlying.String(), collected.String(), "the capped liability equals the gross TVV and the principal marker holds all of it, so the whole gross TVV must be collected")
+	s.Assert().True(vault.OutstandingAumFee.IsZero(), "collecting the full capped liability must leave nothing outstanding, got %s", vault.OutstandingAumFee)
+	s.Assert().Equal(now.Unix(), vault.FeePeriodStart, "fee period must advance after the capped fee is collected")
+}
+
+func (s *TestSuite) TestKeeper_capAumFeeLiability() {
+	ceiling := maxValidNAVPrice()
+
+	tests := []struct {
+		name            string
+		carried         sdkmath.Int
+		accrued         sdkmath.Int
+		grossTVV        sdkmath.Int
+		expected        sdkmath.Int
+		expectForfeited bool
+	}{
+		{
+			name:            "nothing carried and nothing accrued stays at zero",
+			carried:         sdkmath.ZeroInt(),
+			accrued:         sdkmath.ZeroInt(),
+			grossTVV:        sdkmath.NewInt(1_000_000),
+			expected:        sdkmath.ZeroInt(),
+			expectForfeited: false,
+		},
+		{
+			name:            "carried plus accrued below gross TVV accumulates untouched",
+			carried:         sdkmath.NewInt(300_000),
+			accrued:         sdkmath.NewInt(200_000),
+			grossTVV:        sdkmath.NewInt(1_000_000),
+			expected:        sdkmath.NewInt(500_000),
+			expectForfeited: false,
+		},
+		{
+			name:            "carried plus accrued exactly equal to gross TVV forfeits nothing",
+			carried:         sdkmath.NewInt(900_000),
+			accrued:         sdkmath.NewInt(100_000),
+			grossTVV:        sdkmath.NewInt(1_000_000),
+			expected:        sdkmath.NewInt(1_000_000),
+			expectForfeited: false,
+		},
+		{
+			name:            "accrual that overshoots the remaining headroom is trimmed to gross TVV",
+			carried:         sdkmath.NewInt(900_000),
+			accrued:         sdkmath.NewInt(250_000),
+			grossTVV:        sdkmath.NewInt(1_000_000),
+			expected:        sdkmath.NewInt(1_000_000),
+			expectForfeited: true,
+		},
+		{
+			name:            "carried balance already above gross TVV is pulled back down to it",
+			carried:         sdkmath.NewInt(5_000_000),
+			accrued:         sdkmath.NewInt(1),
+			grossTVV:        sdkmath.NewInt(1_000_000),
+			expected:        sdkmath.NewInt(1_000_000),
+			expectForfeited: true,
+		},
+		{
+			name:            "carried balance at the 256-bit ceiling caps without overflowing",
+			carried:         ceiling,
+			accrued:         sdkmath.NewInt(1_000),
+			grossTVV:        sdkmath.NewInt(1_000_000),
+			expected:        sdkmath.NewInt(1_000_000),
+			expectForfeited: true,
+		},
+		{
+			name:            "accrual at the 256-bit ceiling caps without overflowing",
+			carried:         sdkmath.ZeroInt(),
+			accrued:         ceiling,
+			grossTVV:        sdkmath.NewInt(1_000_000),
+			expected:        sdkmath.NewInt(1_000_000),
+			expectForfeited: true,
+		},
+		{
+			name:            "gross TVV at the 256-bit ceiling leaves a ceiling carry intact",
+			carried:         ceiling,
+			accrued:         sdkmath.ZeroInt(),
+			grossTVV:        ceiling,
+			expected:        ceiling,
+			expectForfeited: false,
+		},
+		{
+			name:            "an empty vault forfeits the entire liability",
+			carried:         sdkmath.NewInt(750_000),
+			accrued:         sdkmath.NewInt(25_000),
+			grossTVV:        sdkmath.ZeroInt(),
+			expected:        sdkmath.ZeroInt(),
+			expectForfeited: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			capped, forfeited := s.k.TestAccessor_capAumFeeLiability(s.T(), tc.carried, tc.accrued, tc.grossTVV)
+			s.Assert().Equal(tc.expected.String(), capped.String(), "capped liability for carried %s plus accrued %s against gross TVV %s", tc.carried, tc.accrued, tc.grossTVV)
+			s.Assert().Equal(tc.expectForfeited, forfeited, "forfeiture flag for carried %s plus accrued %s against gross TVV %s", tc.carried, tc.accrued, tc.grossTVV)
+			s.Assert().False(capped.GT(tc.grossTVV), "capped liability %s must never exceed gross TVV %s", capped, tc.grossTVV)
+		})
+	}
 }
 
 func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_RejectedTransferLeavesFeeOutstanding() {
@@ -2526,6 +2631,74 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_RejectedTransferLeavesFee
 				sdk.NewCoin(underlyingDenom, tc.expectedOutstanding),
 				int64(feePeriod/time.Second),
 			))
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_CapsOutstandingFeeAtGrossTVV() {
+	const (
+		underlyingDenom = "aumu"
+		shareDenom      = "vaumu"
+	)
+	halfYear := time.Duration(interest.SecondsPerYear/2) * time.Second
+	deposit := sdkmath.NewInt(1_000_000)
+	halfYearFeeAtMaxBips := sdkmath.NewInt(500_000)
+
+	tests := []struct {
+		name                string
+		halfYearPeriods     int
+		expectedOutstanding sdkmath.Int
+	}{
+		{
+			name:                "one uncollectable period accrues half the vault value",
+			halfYearPeriods:     1,
+			expectedOutstanding: halfYearFeeAtMaxBips,
+		},
+		{
+			name:                "two uncollectable periods accrue exactly the vault value",
+			halfYearPeriods:     2,
+			expectedOutstanding: deposit,
+		},
+		{
+			name:                "a third uncollectable period is capped at the vault value",
+			halfYearPeriods:     3,
+			expectedOutstanding: deposit,
+		},
+		{
+			name:                "a decade of uncollectable periods stays capped at the vault value",
+			halfYearPeriods:     20,
+			expectedOutstanding: deposit,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault, _ := s.setupRestrictedVaultWithDeposit(underlyingDenom, shareDenom, deposit)
+			vault.AumFeeBips = 10_000
+			s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", s.ctx.BlockTime().Unix(), 0)
+			s.revokeTechFeeAttribute()
+
+			for period := 1; period <= tc.halfYearPeriods; period++ {
+				s.SetCtxBlockTime(s.ctx.BlockTime().Add(halfYear))
+				s.Require().NoError(s.k.PerformVaultFeeTransfer(s.ctx, vault),
+					"an uncollectable AUM fee must not fail the transfer on half-year period %d", period)
+				s.Require().Equal(s.ctx.BlockTime().Unix(), vault.FeePeriodStart,
+					"fee period must advance on half-year period %d so no period is charged twice", period)
+			}
+
+			grossTVV, err := s.k.GetTVV(s.ctx, *vault)
+			s.Require().NoError(err, "failed to compute gross TVV for vault %s", vault.GetAddress())
+			s.Require().Equal(deposit.String(), grossTVV.String(),
+				"no fee could be collected, so the whole deposit should still back the gross TVV")
+			s.Require().Equal(tc.expectedOutstanding.String(), vault.OutstandingAumFee.Amount.String(),
+				"the fee collector must never be owed more than the %s%s the vault holds", grossTVV, underlyingDenom)
+
+			netTVV, err := s.k.GetNetTVV(s.ctx, *vault)
+			s.Require().NoError(err, "failed to compute net TVV for vault %s", vault.GetAddress())
+			s.Require().Equal(grossTVV.Sub(tc.expectedOutstanding).String(), netTVV.String(),
+				"net TVV must be gross minus the capped liability rather than a zero floored over an oversized liability")
+			s.assertBalance(vault.PrincipalMarkerAddress(), underlyingDenom, deposit)
 		})
 	}
 }

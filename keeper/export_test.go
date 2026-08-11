@@ -167,6 +167,12 @@ func (k Keeper) TestAccessor_sendAUMFee(t *testing.T, ctx context.Context, vault
 	return k.sendAUMFee(sdk.UnwrapSDKContext(ctx), vault, recipient, fee)
 }
 
+// TestAccessor_capAumFeeLiability exposes the capAumFeeLiability function for unit tests.
+func (k Keeper) TestAccessor_capAumFeeLiability(t *testing.T, carried, accrued, grossTVV sdkmath.Int) (sdkmath.Int, bool) {
+	t.Helper()
+	return capAumFeeLiability(carried, accrued, grossTVV)
+}
+
 // TestAccessor_removeDrainedSettlementNAV exposes this keeper's removeDrainedSettlementNAV function for unit tests.
 func (k Keeper) TestAccessor_removeDrainedSettlementNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetDenom, direction string) error {
 	t.Helper()

@@ -354,7 +354,8 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 // A rejected fee transfer is treated the same way as an insufficient balance: the error is
 // logged, the full fee stays in OutstandingAumFee, and the fee period still advances. This
 // keeps an uncollectable fee (for example a restricted underlying whose fee collector lost its
-// required attribute) from failing reconciliation and bricking every vault operation.
+// required attribute) from failing reconciliation and bricking every vault operation. The
+// outstanding total is capped at the gross TVV, so an uncollectable fee's excess is forfeited.
 //
 // An EventVaultFeeCollected is emitted upon success.
 func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
@@ -373,15 +374,22 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return fmt.Errorf("failed to calculate accrued AUM fee payment: %w", err)
 	}
 
-	totalOutstandingAmount, err := vault.OutstandingAumFee.Amount.SafeAdd(newFeePayment.Amount)
-	if err != nil {
-		return fmt.Errorf("failed to add new fee payment %s to outstanding AUM fee %s: %w", newFeePayment, vault.OutstandingAumFee, err)
-	}
-	totalOutstanding := sdk.NewCoin(vault.UnderlyingAsset, totalOutstandingAmount)
-	if totalOutstanding.IsZero() {
+	carriedOutstanding := vault.OutstandingAumFee.Amount
+	if carriedOutstanding.IsZero() && newFeePayment.Amount.IsZero() {
 		vault.FeePeriodStart = currentBlockTime
 		return nil
 	}
+
+	totalOutstandingAmount, excessForfeited := capAumFeeLiability(carriedOutstanding, newFeePayment.Amount, tvv)
+	if excessForfeited {
+		k.getLogger(ctx).Error("outstanding AUM fee exceeds gross vault value, capping and forfeiting the excess",
+			"vault", vault.GetAddress().String(),
+			"carried_outstanding", vault.OutstandingAumFee.String(),
+			"accrued_fee", newFeePayment.String(),
+			"gross_tvv", sdk.NewCoin(vault.UnderlyingAsset, tvv).String(),
+		)
+	}
+	totalOutstanding := sdk.NewCoin(vault.UnderlyingAsset, totalOutstandingAmount)
 
 	provlabsAddr, err := k.GetAUMFeeAddress(ctx)
 	if err != nil {
@@ -429,6 +437,14 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	))
 
 	return nil
+}
+
+// capAumFeeLiability adds the newly accrued fee to the balance carried from prior periods, bounded
+// by the vault's gross TVV, and reports whether any excess was forfeited to honor that bound.
+func capAumFeeLiability(carried, accrued, grossTVV sdkmath.Int) (sdkmath.Int, bool) {
+	boundedCarried := sdkmath.MinInt(carried, grossTVV)
+	boundedAccrued := sdkmath.MinInt(accrued, grossTVV.Sub(boundedCarried))
+	return boundedCarried.Add(boundedAccrued), boundedCarried.LT(carried) || boundedAccrued.LT(accrued)
 }
 
 // sendAUMFee transfers the fee from the vault's principal marker to the fee collector inside a

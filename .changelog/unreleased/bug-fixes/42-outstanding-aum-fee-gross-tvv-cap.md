@@ -1,0 +1,1 @@
+* Cap `OutstandingAumFee` at the vault's gross total vault value so a persistently uncollectable AUM fee cannot accumulate into a claim larger than the vault holds [#42](https://github.com/provlabs/vault/issues/42).

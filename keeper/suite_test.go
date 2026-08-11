@@ -287,9 +287,9 @@ func (s *TestSuite) requireUnvaluableVault(vaultAddr sdk.AccAddress) {
 	)
 }
 
-// assertInReconciliationQueues asserts whether a vault is present in the payout timeout queue,
-// the fee timeout queue, and the payout verification set, matching the expectation flag.
-func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shouldContain bool) {
+// assertInPayoutTimeoutQueue asserts whether a vault address holds an entry in the payout
+// timeout queue, under any timeout key, matching the expectation flag.
+func (s *TestSuite) assertInPayoutTimeoutQueue(vaultAddr sdk.AccAddress, shouldContain bool) {
 	payoutQueued := false
 	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
 		payoutQueued = payoutQueued || addr.Equals(vaultAddr)
@@ -297,15 +297,25 @@ func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shoul
 	})
 	s.Require().NoError(err, "walking the payout timeout queue should not error")
 	s.Assert().Equal(shouldContain, payoutQueued, "payout timeout queue membership for vault %s", vaultAddr)
+}
 
+// assertInFeeTimeoutQueue asserts whether a vault address holds an entry in the fee timeout
+// queue, under any timeout key, matching the expectation flag.
+func (s *TestSuite) assertInFeeTimeoutQueue(vaultAddr sdk.AccAddress, shouldContain bool) {
 	feeQueued := false
-	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+	err := s.k.FeeTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
 		feeQueued = feeQueued || addr.Equals(vaultAddr)
 		return false, nil
 	})
 	s.Require().NoError(err, "walking the fee timeout queue should not error")
 	s.Assert().Equal(shouldContain, feeQueued, "fee timeout queue membership for vault %s", vaultAddr)
+}
 
+// assertInReconciliationQueues asserts whether a vault is present in the payout timeout queue,
+// the fee timeout queue, and the payout verification set, matching the expectation flag.
+func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shouldContain bool) {
+	s.assertInPayoutTimeoutQueue(vaultAddr, shouldContain)
+	s.assertInFeeTimeoutQueue(vaultAddr, shouldContain)
 	s.assertInPayoutVerificationQueue(vaultAddr, shouldContain)
 }
 

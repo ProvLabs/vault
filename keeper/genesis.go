@@ -91,6 +91,23 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		}
 	}
 
+	for _, addr := range genState.PayoutVerificationSet {
+		vaultAddr, err := sdk.AccAddressFromBech32(addr)
+		if err != nil {
+			panic(fmt.Errorf("invalid address in payout verification set: %w", err))
+		}
+		if _, ok := k.tryGetVault(ctx, vaultAddr); !ok {
+			panic(fmt.Errorf("payout verification set entry for non-existent vault %s", addr))
+		}
+		if err := k.PayoutVerificationSet.Set(ctx, vaultAddr); err != nil {
+			panic(fmt.Errorf("failed to set payout verification for %s: %w", addr, err))
+		}
+	}
+
+	if err := k.restorePayoutVerificationSet(ctx); err != nil {
+		panic(fmt.Errorf("failed to restore payout verification set: %w", err))
+	}
+
 	for _, entry := range genState.FeeTimeoutQueue {
 		addr, err := sdk.AccAddressFromBech32(entry.Addr)
 		if err != nil {
@@ -161,6 +178,54 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 }
 
+// restorePayoutVerificationSet re-derives payout verification set membership from imported vault
+// state. A vault mid-interest-cycle is tracked in exactly one of two places: the payout timeout
+// queue when it holds a scheduled timeout, or the verification set when it awaits the next
+// affordability check. SafeAddPayoutVerification clears the timeout as it moves a vault into the
+// set, so a set member carries PeriodStart != 0 and PeriodTimeout == 0 and owns no queue entry —
+// enough to rebuild membership without reading the genesis field.
+//
+// Deriving rather than trusting the field alone repairs any genesis exported before
+// payout_verification_set existed. Without it an idle vault exported from the set lands in neither
+// structure, so no blocker ever visits it again: its interest keeps accruing while the
+// CanPayInterestDuration check that zeroes an unaffordable rate never runs.
+//
+// A paused vault is skipped because pausing clears both periods and both queue entries, and
+// membership is idempotent, so a genesis that carries the field derives the same entries.
+func (k Keeper) restorePayoutVerificationSet(ctx sdk.Context) error {
+	queued := make(map[string]bool)
+	if err := k.PayoutTimeoutQueue.Walk(ctx, func(_ uint64, vaultAddr sdk.AccAddress) (stop bool, err error) {
+		queued[vaultAddr.String()] = true
+		return false, nil
+	}); err != nil {
+		return fmt.Errorf("failed to walk payout timeout queue: %w", err)
+	}
+
+	vaultAddrs, err := k.GetVaults(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to list vaults: %w", err)
+	}
+
+	for _, vaultAddr := range vaultAddrs {
+		vault, ok := k.tryGetVault(ctx, vaultAddr)
+		if !ok {
+			continue
+		}
+		if vault.Paused || vault.PeriodStart == 0 || vault.PeriodTimeout != 0 || queued[vaultAddr.String()] {
+			continue
+		}
+		k.getLogger(ctx).Info("restoring payout verification entry derived from imported vault state",
+			"vault", vaultAddr.String(),
+			"period_start", vault.PeriodStart,
+		)
+		if err := k.PayoutVerificationSet.Set(ctx, vaultAddr); err != nil {
+			return fmt.Errorf("failed to restore payout verification entry for vault %s: %w", vaultAddr, err)
+		}
+	}
+
+	return nil
+}
+
 // validateShareSupplyInvariant returns an error when a vault's total_shares is below the local bank supply of its share denom
 func (k Keeper) validateShareSupplyInvariant(ctx sdk.Context, vault *types.VaultAccount) error {
 	_, err := k.availableBridgeMintCapacity(ctx, vault)
@@ -194,6 +259,16 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	})
 	if err != nil {
 		panic(fmt.Errorf("failed to walk payout timeout queue: %w", err))
+	}
+
+	payoutVerificationSet := make([]string, 0)
+
+	err = k.PayoutVerificationSet.Walk(ctx, nil, func(vaultAddr sdk.AccAddress) (stop bool, err error) {
+		payoutVerificationSet = append(payoutVerificationSet, vaultAddr.String())
+		return false, nil
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to walk payout verification set: %w", err))
 	}
 
 	feeTimeoutQueue := make([]types.QueueEntry, 0)
@@ -230,11 +305,12 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	return &types.GenesisState{
-		Vaults:              vaults,
-		PayoutTimeoutQueue:  paymentTimeoutQueue,
-		FeeTimeoutQueue:     feeTimeoutQueue,
-		PendingSwapOutQueue: *pendingSwapOutQueue,
-		Params:              params,
-		Navs:                navs,
+		Vaults:                vaults,
+		PayoutTimeoutQueue:    paymentTimeoutQueue,
+		PayoutVerificationSet: payoutVerificationSet,
+		FeeTimeoutQueue:       feeTimeoutQueue,
+		PendingSwapOutQueue:   *pendingSwapOutQueue,
+		Params:                params,
+		Navs:                  navs,
 	}
 }

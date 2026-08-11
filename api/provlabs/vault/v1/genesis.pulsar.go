@@ -2257,14 +2257,61 @@ func (x *_GenesisState_6_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_GenesisState_7_list)(nil)
+
+type _GenesisState_7_list struct {
+	list *[]string
+}
+
+func (x *_GenesisState_7_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_7_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_GenesisState_7_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_7_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_7_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message GenesisState at list field PayoutVerificationSet as it is not of Message kind"))
+}
+
+func (x *_GenesisState_7_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_7_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_GenesisState_7_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_GenesisState                        protoreflect.MessageDescriptor
-	fd_GenesisState_vaults                 protoreflect.FieldDescriptor
-	fd_GenesisState_payout_timeout_queue   protoreflect.FieldDescriptor
-	fd_GenesisState_pending_swap_out_queue protoreflect.FieldDescriptor
-	fd_GenesisState_fee_timeout_queue      protoreflect.FieldDescriptor
-	fd_GenesisState_params                 protoreflect.FieldDescriptor
-	fd_GenesisState_navs                   protoreflect.FieldDescriptor
+	md_GenesisState                         protoreflect.MessageDescriptor
+	fd_GenesisState_vaults                  protoreflect.FieldDescriptor
+	fd_GenesisState_payout_timeout_queue    protoreflect.FieldDescriptor
+	fd_GenesisState_pending_swap_out_queue  protoreflect.FieldDescriptor
+	fd_GenesisState_fee_timeout_queue       protoreflect.FieldDescriptor
+	fd_GenesisState_params                  protoreflect.FieldDescriptor
+	fd_GenesisState_navs                    protoreflect.FieldDescriptor
+	fd_GenesisState_payout_verification_set protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -2276,6 +2323,7 @@ func init() {
 	fd_GenesisState_fee_timeout_queue = md_GenesisState.Fields().ByName("fee_timeout_queue")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
 	fd_GenesisState_navs = md_GenesisState.Fields().ByName("navs")
+	fd_GenesisState_payout_verification_set = md_GenesisState.Fields().ByName("payout_verification_set")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -2379,6 +2427,12 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if len(x.PayoutVerificationSet) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_7_list{list: &x.PayoutVerificationSet})
+		if !f(fd_GenesisState_payout_verification_set, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -2406,6 +2460,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.Params != nil
 	case "provlabs.vault.v1.GenesisState.navs":
 		return len(x.Navs) != 0
+	case "provlabs.vault.v1.GenesisState.payout_verification_set":
+		return len(x.PayoutVerificationSet) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -2434,6 +2490,8 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Params = nil
 	case "provlabs.vault.v1.GenesisState.navs":
 		x.Navs = nil
+	case "provlabs.vault.v1.GenesisState.payout_verification_set":
+		x.PayoutVerificationSet = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -2480,6 +2538,12 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_6_list{list: &x.Navs}
 		return protoreflect.ValueOfList(listValue)
+	case "provlabs.vault.v1.GenesisState.payout_verification_set":
+		if len(x.PayoutVerificationSet) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_7_list{})
+		}
+		listValue := &_GenesisState_7_list{list: &x.PayoutVerificationSet}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -2520,6 +2584,10 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_6_list)
 		x.Navs = *clv.list
+	case "provlabs.vault.v1.GenesisState.payout_verification_set":
+		lv := value.List()
+		clv := lv.(*_GenesisState_7_list)
+		x.PayoutVerificationSet = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -2574,6 +2642,12 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_6_list{list: &x.Navs}
 		return protoreflect.ValueOfList(value)
+	case "provlabs.vault.v1.GenesisState.payout_verification_set":
+		if x.PayoutVerificationSet == nil {
+			x.PayoutVerificationSet = []string{}
+		}
+		value := &_GenesisState_7_list{list: &x.PayoutVerificationSet}
+		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -2605,6 +2679,9 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "provlabs.vault.v1.GenesisState.navs":
 		list := []*VaultNAVEntry{}
 		return protoreflect.ValueOfList(&_GenesisState_6_list{list: &list})
+	case "provlabs.vault.v1.GenesisState.payout_verification_set":
+		list := []string{}
+		return protoreflect.ValueOfList(&_GenesisState_7_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -2706,6 +2783,12 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if len(x.PayoutVerificationSet) > 0 {
+			for _, s := range x.PayoutVerificationSet {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -2734,6 +2817,15 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.PayoutVerificationSet) > 0 {
+			for iNdEx := len(x.PayoutVerificationSet) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.PayoutVerificationSet[iNdEx])
+				copy(dAtA[i:], x.PayoutVerificationSet[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PayoutVerificationSet[iNdEx])))
+				i--
+				dAtA[i] = 0x3a
+			}
 		}
 		if len(x.Navs) > 0 {
 			for iNdEx := len(x.Navs) - 1; iNdEx >= 0; iNdEx-- {
@@ -3084,6 +3176,38 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PayoutVerificationSet", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PayoutVerificationSet = append(x.PayoutVerificationSet, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -3328,7 +3452,6 @@ func (x *VaultNAVEntry) GetNav() *VaultNAV {
 }
 
 // GenesisState defines the vault module's genesis state.
-// NOTE: payout verification queue is not imported or exported.  It will always be empty after endblocker processes it.
 type GenesisState struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3350,6 +3473,8 @@ type GenesisState struct {
 	Params *Params `protobuf:"bytes,5,opt,name=params,proto3" json:"params,omitempty"`
 	// navs contains the internal NAV table entries for all vaults at genesis.
 	Navs []*VaultNAVEntry `protobuf:"bytes,6,rep,name=navs,proto3" json:"navs,omitempty"`
+	// payout_verification_set contains bech32 addresses of vaults awaiting their next interest affordability check.
+	PayoutVerificationSet []string `protobuf:"bytes,7,rep,name=payout_verification_set,json=payoutVerificationSet,proto3" json:"payout_verification_set,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -3414,6 +3539,13 @@ func (x *GenesisState) GetNavs() []*VaultNAVEntry {
 	return nil
 }
 
+func (x *GenesisState) GetPayoutVerificationSet() []string {
+	if x != nil {
+		return x.PayoutVerificationSet
+	}
+	return nil
+}
+
 var File_provlabs_vault_v1_genesis_proto protoreflect.FileDescriptor
 
 var file_provlabs_vault_v1_genesis_proto_rawDesc = []byte{
@@ -3453,7 +3585,7 @@ var file_provlabs_vault_v1_genesis_proto_rawDesc = []byte{
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x33, 0x0a, 0x03, 0x6e, 0x61, 0x76, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61,
 	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x4e, 0x41, 0x56, 0x42,
-	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x03, 0x6e, 0x61, 0x76, 0x22, 0xcd, 0x03, 0x0a, 0x0c, 0x47,
+	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x03, 0x6e, 0x61, 0x76, 0x22, 0x85, 0x04, 0x0a, 0x0c, 0x47,
 	0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x3d, 0x0a, 0x06, 0x76,
 	0x61, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x70, 0x72,
 	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
@@ -3482,20 +3614,24 @@ var file_provlabs_vault_v1_genesis_proto_rawDesc = []byte{
 	0x0a, 0x04, 0x6e, 0x61, 0x76, 0x73, 0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x70,
 	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
 	0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x4e, 0x41, 0x56, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x04,
-	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x04, 0x6e, 0x61, 0x76, 0x73, 0x42, 0xc4, 0x01, 0x0a, 0x15, 0x63,
-	0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03,
-	0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61,
-	0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72,
-	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72,
-	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56,
-	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x04, 0x6e, 0x61, 0x76, 0x73, 0x12, 0x36, 0x0a, 0x17, 0x70, 0x61,
+	0x79, 0x6f, 0x75, 0x74, 0x5f, 0x76, 0x65, 0x72, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x5f, 0x73, 0x65, 0x74, 0x18, 0x07, 0x20, 0x03, 0x28, 0x09, 0x52, 0x15, 0x70, 0x61, 0x79,
+	0x6f, 0x75, 0x74, 0x56, 0x65, 0x72, 0x69, 0x66, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x53,
+	0x65, 0x74, 0x42, 0xc4, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c,
+	0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65,
+	0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62,
+	0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76,
+	0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca,
+	0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74,
+	0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (

@@ -146,6 +146,70 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedErr: "fee timeout queue entry at index 0 has time 9223372036854775808 which exceeds max int64",
 		},
 		{
+			name: "valid payout verification set",
+			genState: types.GenesisState{
+				Params:                types.DefaultParams(),
+				Vaults:                []types.VaultAccount{validVault},
+				PayoutVerificationSet: []string{validAddr},
+			},
+		},
+		{
+			name: "invalid address in payout verification set",
+			genState: types.GenesisState{
+				Params:                types.DefaultParams(),
+				PayoutVerificationSet: []string{invalidAddr},
+			},
+			expectedErr: "invalid payout verification set address at index 0",
+		},
+		{
+			name: "payout verification set address is not an imported vault",
+			genState: types.GenesisState{
+				Params:                types.DefaultParams(),
+				PayoutVerificationSet: []string{validAddr},
+			},
+			expectedErr: "payout verification set address at index 0 is not an imported vault",
+		},
+		{
+			name: "duplicate payout verification set entry",
+			genState: types.GenesisState{
+				Params:                types.DefaultParams(),
+				Vaults:                []types.VaultAccount{validVault},
+				PayoutVerificationSet: []string{validAddr, validAddr},
+			},
+			expectedErr: "duplicate payout verification set entry for vault",
+		},
+		{
+			name: "vault in both the payout verification set and the payout timeout queue",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{
+					func() types.VaultAccount {
+						v := validVault
+						v.PeriodTimeout = 100
+						return v
+					}(),
+				},
+				PayoutTimeoutQueue:    []types.QueueEntry{{Time: 100, Addr: validAddr}},
+				PayoutVerificationSet: []string{validAddr},
+			},
+			expectedErr: "is in both the payout verification set and the payout timeout queue",
+		},
+		{
+			name: "payout verification set vault carries a scheduled period timeout",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{
+					func() types.VaultAccount {
+						v := validVault
+						v.PeriodTimeout = 100
+						return v
+					}(),
+				},
+				PayoutVerificationSet: []string{validAddr},
+			},
+			expectedErr: "has period timeout 100, expected 0",
+		},
+		{
 			name: "invalid vault address in pending swap out queue",
 			genState: types.GenesisState{
 				Params: types.DefaultParams(),

@@ -534,6 +534,195 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenFeeTimeoutHasUnknownVault() {
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault in fee timeout queue")
 }
 
+func (s *TestSuite) TestVaultGenesis_RoundTrip_PayoutVerificationSet() {
+	shareDenom := "verifyshare"
+	underlying := "verifyunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	vault := makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())
+	vault.PeriodStart = time.Now().Add(-time.Hour).Unix()
+
+	genesis := &types.GenesisState{
+		Params:                types.DefaultParams(),
+		Vaults:                []types.VaultAccount{vault},
+		PayoutVerificationSet: []string{vaultAddr.String()},
+	}
+
+	s.Require().NoError(genesis.Validate(), "a genesis carrying a verification-set vault with no scheduled timeout should validate")
+	s.k.InitGenesis(s.ctx, genesis)
+	s.assertInPayoutVerificationQueue(vaultAddr, true)
+	s.assertInPayoutTimeoutQueue(vaultAddr, false)
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Equal([]string{vaultAddr.String()}, exported.PayoutVerificationSet,
+		"ExportGenesis should carry the payout verification set membership for vault %s", vaultAddr)
+	s.Require().NoError(exported.Validate(), "ExportGenesis output should pass stateless validation")
+
+	s.SetupTest()
+	s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, exported) },
+		"importing the exported genesis into a fresh chain should succeed")
+	s.assertInPayoutVerificationQueue(vaultAddr, true)
+	s.assertInPayoutTimeoutQueue(vaultAddr, false)
+}
+
+func (s *TestSuite) TestVaultGenesis_RestoresPayoutVerificationSetFromVaultState() {
+	shareDenom := "restoreshare"
+	underlying := "restoreunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	periodStart := time.Now().Add(-time.Hour).Unix()
+	periodTimeout := time.Now().Add(time.Hour).Unix()
+
+	tests := []struct {
+		name              string
+		periodStart       int64
+		periodTimeout     int64
+		paused            bool
+		expectVerifying   bool
+		expectTimeoutHeld bool
+	}{
+		{
+			name:            "open interest period with no scheduled timeout is restored to the verification set",
+			periodStart:     periodStart,
+			expectVerifying: true,
+		},
+		{
+			name:              "vault holding a scheduled timeout stays in the payout timeout queue",
+			periodStart:       periodStart,
+			periodTimeout:     periodTimeout,
+			expectTimeoutHeld: true,
+		},
+		{
+			name: "vault with no accrual period is left out of both structures",
+		},
+		{
+			name:        "paused vault is left out of both structures",
+			periodStart: periodStart,
+			paused:      true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			vault := makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())
+			vault.PeriodStart = tc.periodStart
+			vault.PeriodTimeout = tc.periodTimeout
+			vault.Paused = tc.paused
+
+			genesis := &types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{vault},
+			}
+			if tc.periodTimeout != 0 {
+				genesis.PayoutTimeoutQueue = []types.QueueEntry{
+					{Time: uint64(tc.periodTimeout), Addr: vaultAddr.String()},
+				}
+			}
+
+			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
+				"importing a genesis with no payout_verification_set field should succeed")
+
+			s.assertInPayoutVerificationQueue(vaultAddr, tc.expectVerifying)
+			s.assertInPayoutTimeoutQueue(vaultAddr, tc.expectTimeoutHeld)
+		})
+	}
+}
+
+func (s *TestSuite) TestVaultGenesis_RestoredVerificationSetVaultResumesAutomaticReconciliation() {
+	shareDenom := "resumeshare"
+	underlying := sdk.NewInt64Coin("resumeunder", 1_000_000)
+	blockTime := time.Unix(1_700_000_000, 0).UTC()
+
+	vaultAddr, vault := s.setupReconcileVault("0.05", blockTime.Add(-time.Hour).Unix(), false,
+		underlying, shareDenom, sdk.NewInt64Coin(shareDenom, 1_000), blockTime)
+
+	s.Require().NoError(s.k.SafeAddPayoutVerification(s.ctx, vault),
+		"moving vault %s into the payout verification set should not error", vaultAddr)
+	s.assertInPayoutVerificationQueue(vaultAddr, true)
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Contains(exported.PayoutVerificationSet, vaultAddr.String(),
+		"ExportGenesis should carry vault %s in the payout verification set", vaultAddr)
+
+	exported.PayoutVerificationSet = nil
+	s.Require().NoError(s.k.PayoutVerificationSet.Remove(s.ctx, vaultAddr),
+		"clearing the live set to emulate a pre-fix export should not error")
+	s.assertInPayoutVerificationQueue(vaultAddr, false)
+
+	s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, exported) },
+		"importing a genesis exported before payout_verification_set existed should succeed")
+	s.assertInPayoutVerificationQueue(vaultAddr, true)
+
+	s.SetCtxBlockTime(blockTime.Add(time.Minute))
+	s.Require().NoError(s.k.EndBlocker(s.ctx), "EndBlocker should not error for the restored vault")
+
+	s.assertInPayoutVerificationQueue(vaultAddr, false)
+	s.assertInPayoutTimeoutQueue(vaultAddr, true)
+}
+
+func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPayoutVerificationSet() {
+	shareDenom := "badverifyshare"
+	underlying := "badverifyunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	unknownVaultAddr := types.GetVaultAddress("baddenom")
+
+	tests := []struct {
+		name                  string
+		periodTimeout         int64
+		payoutTimeoutQueue    []types.QueueEntry
+		payoutVerificationSet []string
+		expectedPanic         string
+	}{
+		{
+			name:                  "address is not valid bech32",
+			payoutVerificationSet: []string{"invalid-bech32"},
+			expectedPanic:         "invalid vault genesis state: invalid payout verification set address at index 0: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:                  "address is not an imported vault",
+			payoutVerificationSet: []string{unknownVaultAddr.String()},
+			expectedPanic:         fmt.Sprintf("invalid vault genesis state: payout verification set address at index 0 is not an imported vault: %s", unknownVaultAddr),
+		},
+		{
+			name:                  "duplicate entry for the same vault",
+			payoutVerificationSet: []string{vaultAddr.String(), vaultAddr.String()},
+			expectedPanic:         fmt.Sprintf("invalid vault genesis state: duplicate payout verification set entry for vault: %s", vaultAddr),
+		},
+		{
+			name:                  "vault is also in the payout timeout queue",
+			periodTimeout:         1_700_000_000,
+			payoutTimeoutQueue:    []types.QueueEntry{{Time: 1_700_000_000, Addr: vaultAddr.String()}},
+			payoutVerificationSet: []string{vaultAddr.String()},
+			expectedPanic:         fmt.Sprintf("invalid vault genesis state: vault %s is in both the payout verification set and the payout timeout queue", vaultAddr),
+		},
+		{
+			name:                  "vault carries a scheduled period timeout",
+			periodTimeout:         1_700_000_000,
+			payoutVerificationSet: []string{vaultAddr.String()},
+			expectedPanic:         fmt.Sprintf("invalid vault genesis state: payout verification set vault %s has period timeout %d, expected 0", vaultAddr, 1_700_000_000),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			vault := makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())
+			vault.PeriodTimeout = tc.periodTimeout
+
+			genesis := &types.GenesisState{
+				Params:                types.DefaultParams(),
+				Vaults:                []types.VaultAccount{vault},
+				PayoutTimeoutQueue:    tc.payoutTimeoutQueue,
+				PayoutVerificationSet: tc.payoutVerificationSet,
+			}
+
+			s.Require().PanicsWithError(tc.expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should reject a payout verification set whose %s", tc.name)
+		})
+	}
+}
+
 // TestVaultGenesis_RoundTrip_NAVs verifies the internal NAV table survives a
 // genesis export/import round trip.
 func (s *TestSuite) TestVaultGenesis_RoundTrip_NAVs() {

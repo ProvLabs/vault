@@ -70,6 +70,8 @@ A set of vaults queued for **payout verification** (e.g., after rate changes or 
 - **Key:** `sdk.AccAddress` (vault address)  
 - **Value:** none (keyset)  
 
+A vault mid-interest-cycle is tracked in at most one of this set and the [Payout Timeout Queue](#payout-timeout-queue-prefix-2), never both: `SafeAddPayoutVerification` clears the vault's `period_timeout` and dequeues its timeout entry as it adds the vault here, and `SafeEnqueuePayoutTimeout` is only reached from paths that have already removed the vault from this set. A member therefore always carries `period_start != 0` and `period_timeout = 0`. `GenesisState.Validate` asserts both halves of that invariant. See [Genesis Notes](#genesis-notes) for how membership survives an export/import round trip.
+
 
 ### Payout Timeout Queue (prefix 2)
 
@@ -186,6 +188,10 @@ Given a **share denom**, the corresponding vault account address is derived dete
 The module defines a minimal `GenesisState` with validation and relies on import/export logic to include **vault accounts** (from `x/auth`) and active **queue entries** (timeouts and pending swap-outs). It also carries the module **Params** (`tech_fee_address`, `default_aum_fee_bips`, `gov_only_vault_creation`); an omitted `tech_fee_address` falls back to the chain-specific default, and the other two take their genesis values as given, so a chain that wants governance-gated vault creation must set `gov_only_vault_creation` in genesis or with an `UpdateParams` proposal.  
 Genesis must preserve `total_shares`, `bridge_address`, and `bridge_enabled`. `InitGenesis` enforces the `total_shares >= local marker supply` invariant per vault — the check lives there, not in `GenesisState.Validate`, because only the keeper can read x/bank's supply — and panics on an import that violates it. Migrations carry the same obligation: they must never lower `total_shares` below the local supply of the share denom.  
 Genesis validation also enforces the single-denom model: every NAV entry's `price` denom must equal the owning vault's underlying asset, and `VaultAccount` validation requires `payment_denom` to be empty or equal to the underlying asset.
+
+`GenesisState` carries `payout_verification_set` so [Payout Verification Set](#payout-verification-set-prefix-1) membership round-trips, and `InitGenesis` additionally *re-derives* it: any imported vault that is unpaused, has `period_start != 0` and `period_timeout = 0`, and holds no payout timeout entry is restored to the set. Deriving it repairs genesis files exported before the field existed, where a vault in the set landed in neither structure on import — no blocker visited it again, so its interest kept accruing while the affordability check that zeroes an unaffordable rate never ran. The derivation is idempotent, so a genesis that carries the field produces the same membership.
+
+Validation deliberately does not require that *every* vault with an open accrual period appear in one of the two structures. `handleDepletedVaults` zeroes a vault's interest rate without clearing its period, so a depleted vault legitimately exports with `period_start != 0` and no entry in either; `InitGenesis` re-arms it rather than rejecting the import.
 
 ### State Migration (v1 → v2)
 

@@ -682,7 +682,7 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	s.simApp.MarkerKeeper.SetMarker(s.ctx, activeMarker)
 
 	initialTVV := int64(500)
-	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
+	s.fundPrincipal(vault, sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))
 	initialShares := utils.ShareScalar.MulRaw(initialTVV)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)), "should mint initial share supply")
 
@@ -731,7 +731,7 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttrib
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	initialTVV := int64(500)
-	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
+	s.fundPrincipal(vault, sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))
 	initialShares := utils.ShareScalar.MulRaw(initialTVV)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)), "should mint initial share supply")
 
@@ -782,7 +782,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	initialTVV := int64(500)
-	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
+	s.fundPrincipal(vault, sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))
 	initialShares := utils.ShareScalar.MulRaw(initialTVV)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)), "should mint initial share supply")
 	vault, err = s.k.GetVault(s.ctx, vault.GetAddress())

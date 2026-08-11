@@ -1,1 +1,0 @@
-* Remove paused vaults from the payout timeout, fee timeout, and payout verification queues so they no longer consume the per-block visit budget and starve active vaults [PR 257](https://github.com/provlabs/vault/pull/257).

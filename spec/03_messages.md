@@ -131,6 +131,7 @@ A deposit is also rejected when the vault's net TVV is zero while shares are out
 Redeems shares from a vault in exchange for the vault's underlying asset.
 Payouts are always made in the underlying asset.
 Swap-outs are queued with respect to `withdrawal_delay_seconds`.
+The vault is reconciled before the redemption is priced, so `min_swap_out_value` and `max_swap_out_value` gate the current net valuation. They are enforced only at admission; the payout is re-priced at maturity without a second limit check.
 
 * **Request:** `MsgSwapOutRequest { owner, vault_address, assets (shares) }`
 * **Response:** `MsgSwapOutResponse { request_id }`

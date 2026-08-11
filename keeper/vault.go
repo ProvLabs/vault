@@ -361,6 +361,9 @@ func (k *Keeper) checkPayoutRestrictions(ctx sdk.Context, vault *types.VaultAcco
 // underlying asset, escrows the user's shares, and enqueues a pending withdrawal request
 // to be processed by the EndBlocker.
 // It returns the unique ID of the newly queued request.
+//
+// The vault is reconciled before pricing so the swap-out limits gate the current net valuation.
+// The limits are checked only at admission; the payout is re-priced at maturity without a second check.
 func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (uint64, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
@@ -380,6 +383,10 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 
 	if shares.Denom != vault.TotalShares.Denom {
 		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.TotalShares.Denom)
+	}
+
+	if err = k.reconcileVault(ctx, vault); err != nil {
+		return 0, fmt.Errorf("failed to reconcile vault: %w", err)
 	}
 
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount)

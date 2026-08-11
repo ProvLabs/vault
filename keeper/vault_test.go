@@ -10,6 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
+	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"
@@ -523,6 +524,110 @@ func (s *TestSuite) TestSwapOut_FailsWithInsufficientShares() {
 	_, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sdk.NewCoin(shareDenom, sharesToRedeem))
 	s.Require().Error(err, "swap out should fail with insufficient shares")
 	s.Require().ErrorContains(err, "insufficient funds", "error should mention insufficient funds for shares")
+}
+
+func (s *TestSuite) TestSwapOut_FailsWhenReconcileFails() {
+	underlyingDenom := "reconcilefail"
+	shareDenom := "reconcilefailvault"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	initialTVV := int64(1_000)
+	s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, initialTVV))), "should fund vault principal to give shares value")
+	initialShares := utils.ShareScalar.MulRaw(initialTVV)
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)), "should mint initial share supply")
+
+	sharesForRedeemer := utils.ShareScalar.MulRaw(100)
+	redeemerAddr := s.CreateAndFundAccount(sdk.Coin{})
+	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, vault.GetAddress(), redeemerAddr, shareDenom, sdk.NewCoins(sdk.NewCoin(shareDenom, sharesForRedeemer))), "should fund redeemer with shares")
+
+	vault.SwapOutEnabled = true
+	vault.CurrentInterestRate = "unparseable"
+	vault.PeriodStart = s.ctx.BlockTime().Unix() - 3600
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	sharesToRedeem := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(10))
+	_, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeem)
+	s.Require().Error(err, "swap out should fail when the pre-pricing reconcile fails")
+	s.Require().ErrorContains(err, "failed to reconcile vault", "error should name the failed reconcile")
+	s.Require().ErrorContains(err, "failed to calculate interest", "error should wrap the underlying interest calculation failure")
+
+	s.assertBalance(redeemerAddr, shareDenom, sharesForRedeemer)
+	s.assertBalance(vault.GetAddress(), shareDenom, math.ZeroInt())
+
+	s.Require().Zero(s.countPendingSwapOuts(), "a swap out rejected by a failed reconcile should not enqueue a pending request")
+}
+
+func (s *TestSuite) TestSwapOut_LimitsGateOnPostReconcileValuation() {
+	tests := []struct {
+		name            string
+		minSwapOutValue string
+		maxSwapOutValue string
+		expectedErr     string
+	}{
+		{
+			name:            "redemption that only clears the maximum on the un-reconciled valuation is refused",
+			maxSwapOutValue: "150",
+			expectedErr:     "is above the maximum allowed value",
+		},
+		{
+			name:            "redemption that only breaches the minimum on the un-reconciled valuation is admitted",
+			minSwapOutValue: "150",
+		},
+	}
+
+	for i, tc := range tests {
+		s.Run(tc.name, func() {
+			underlyingDenom := fmt.Sprintf("staleunder%d", i)
+			shareDenom := fmt.Sprintf("stalevault%d", i)
+			blockTime := time.Now().UTC()
+			s.ctx = s.ctx.WithBlockTime(blockTime)
+
+			vault := s.setupBaseVault(underlyingDenom, shareDenom)
+			vaultAddr := vault.GetAddress()
+
+			depositAmount := sdk.NewInt64Coin(underlyingDenom, 1_000)
+			redeemer := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+			s.Require().NoError(FundAccount(s.ctx, s.simApp, redeemer, sdk.NewCoins(depositAmount)),
+				"funding the redeemer with %s should succeed", depositAmount)
+			_, err := s.k.SwapIn(s.ctx, vaultAddr, redeemer, depositAmount)
+			s.Require().NoError(err, "swap-in should seed the vault with priced shares")
+
+			s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, vaultAddr,
+				sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 5_000))), "funding vault reserves should let a full year of interest settle")
+
+			vault, err = s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "GetVault should succeed after swap-in")
+			vault.CurrentInterestRate = "1.0"
+			vault.DesiredInterestRate = "1.0"
+			vault.PeriodStart = blockTime.Unix() - interest.SecondsPerYear
+			vault.MinSwapOutValue = tc.minSwapOutValue
+			vault.MaxSwapOutValue = tc.maxSwapOutValue
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+			redeemShares := sdk.NewCoin(shareDenom, s.simApp.BankKeeper.GetBalance(s.ctx, redeemer, shareDenom).Amount.QuoRaw(10))
+			staleValue, err := s.k.ConvertSharesToRedeemCoin(s.ctx, *vault, redeemShares.Amount)
+			s.Require().NoError(err, "pricing the redemption on the un-reconciled valuation should succeed")
+			s.Require().Equal(int64(100), staleValue.Amount.Int64(),
+				"a tenth of the share supply should price at a tenth of the un-accrued principal, on the admitted side of the 150 limit")
+
+			_, err = s.k.SwapOut(s.ctx, vaultAddr, redeemer, redeemShares)
+			if tc.expectedErr != "" {
+				s.Require().Error(err, "SwapOut should refuse a redemption that breaches the limit once accrued interest is reconciled")
+				s.Require().ErrorContains(err, tc.expectedErr, "error should name the breached swap-out limit")
+			} else {
+				s.Require().NoError(err, "SwapOut should admit a redemption that clears the limit once accrued interest is reconciled")
+			}
+
+			reconciled, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "GetVault should succeed after the swap-out attempt")
+			s.Require().Equal(blockTime.Unix(), reconciled.PeriodStart, "SwapOut should reconcile the vault before pricing the redemption")
+
+			reconciledValue, err := s.k.ConvertSharesToRedeemCoin(s.ctx, *reconciled, redeemShares.Amount)
+			s.Require().NoError(err, "pricing the redemption on the reconciled valuation should succeed")
+			s.Require().True(reconciledValue.Amount.GT(staleValue.Amount),
+				"reconciling should lift the redemption value from %s to above the 150 limit, but it priced at %s", staleValue, reconciledValue)
+		})
+	}
 }
 
 // TODO: https://github.com/ProvLabs/vault/issues/49

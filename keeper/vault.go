@@ -543,6 +543,9 @@ func (k *Keeper) SetWithdrawalDelay(ctx sdk.Context, vault *types.VaultAccount, 
 // the account: the caller chooses SetVaultAccount (validated) or SetAccount
 // (validation-skipped) depending on whether the vault may be in an invalid state.
 func (k *Keeper) applyPausedState(ctx sdk.Context, vault *types.VaultAccount, reason string, pausedBalance sdk.Coin) {
+	if pausedBalance.Amount.IsNil() {
+		pausedBalance.Amount = sdkmath.ZeroInt()
+	}
 	vault.PausedBalance = pausedBalance
 	vault.Paused = true
 	vault.PausedReason = reason
@@ -564,9 +567,10 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 	tvv, err := k.GetNetTVV(ctx, *vault)
 	if err != nil {
 		k.getLogger(ctx).Error("Failed to get net TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
+		tvv = sdkmath.ZeroInt()
 	}
 
-	k.applyPausedState(ctx, vault, reason, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv})
+	k.applyPausedState(ctx, vault, reason, sdk.NewCoin(vault.UnderlyingAsset, tvv))
 
 	if err := k.haltVaultAccrual(ctx, vault); err != nil {
 		k.getLogger(ctx).Error("failed to halt vault accrual during auto-pause", "vault_address", vault.GetAddress().String(), "error", err)

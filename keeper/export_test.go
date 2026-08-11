@@ -77,6 +77,13 @@ func (k Keeper) TestAccessor_autoPauseVault(t *testing.T, ctx context.Context, v
 	k.autoPauseVault(sdkCtx, vault, reason)
 }
 
+// TestAccessor_applyPausedState exposes this keeper's applyPausedState function for unit tests.
+func (k Keeper) TestAccessor_applyPausedState(t *testing.T, ctx context.Context, vault *types.VaultAccount, reason string, pausedBalance sdk.Coin) {
+	t.Helper()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.applyPausedState(sdkCtx, vault, reason, pausedBalance)
+}
+
 // TestAccessor_reconcileVault exposes this keeper's reconcileVault function for unit tests.
 func (k Keeper) TestAccessor_reconcileVault(t *testing.T, ctx context.Context, vault *types.VaultAccount) error {
 	t.Helper()

@@ -277,6 +277,16 @@ func (s *TestSuite) requireUnpriceableVault(vaultAddr sdk.AccAddress) {
 	)
 }
 
+// requireUnvaluableVault corrupts a held-denom NAV entry and drops the materialized total so any
+// valuation must recompute and fail, letting tests drive the GetTVV/GetNetTVV error branches.
+func (s *TestSuite) requireUnvaluableVault(vaultAddr sdk.AccAddress) {
+	s.requireUnpriceableVault(vaultAddr)
+	s.Require().NoError(
+		s.k.TotalValues.Remove(s.ctx, vaultAddr),
+		"removing the materialized total value should not error for vault %s", vaultAddr,
+	)
+}
+
 // assertInReconciliationQueues asserts whether a vault is present in the payout timeout queue,
 // the fee timeout queue, and the payout verification set, matching the expectation flag.
 func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shouldContain bool) {

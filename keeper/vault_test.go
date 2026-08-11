@@ -1088,6 +1088,81 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 	s.Require().True(hasReason, "event should include reason attribute")
 }
 
+func (s *TestSuite) TestApplyPausedState_PausedBalanceAmountIsNeverNil() {
+	under := "under-aps"
+	share := "share-aps"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(under, 1_000), s.adminAddr)
+
+	v, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: under})
+	s.Require().NoError(err, "CreateVault should succeed")
+
+	tests := []struct {
+		name           string
+		pausedBalance  sdk.Coin
+		expectedAmount math.Int
+	}{
+		{
+			name:           "nil amount is normalised to zero",
+			pausedBalance:  sdk.Coin{Denom: under, Amount: math.Int{}},
+			expectedAmount: math.ZeroInt(),
+		},
+		{
+			name:           "zero amount is preserved",
+			pausedBalance:  sdk.NewCoin(under, math.ZeroInt()),
+			expectedAmount: math.ZeroInt(),
+		},
+		{
+			name:           "positive amount is preserved",
+			pausedBalance:  sdk.NewInt64Coin(under, 750),
+			expectedAmount: math.NewInt(750),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			reason := "applying paused state"
+			s.k.TestAccessor_applyPausedState(s.T(), s.ctx, v, reason, tc.pausedBalance)
+
+			s.Require().False(v.PausedBalance.Amount.IsNil(), "paused balance amount must never be nil after applyPausedState; a nil math.Int panics on any read and applyPausedState is reachable from the EndBlocker")
+			s.Require().NoError(v.PausedBalance.Validate(), "paused balance %s should be a valid coin after applyPausedState", v.PausedBalance)
+			s.Assert().Equal(tc.expectedAmount, v.PausedBalance.Amount, "paused balance amount mismatch after applyPausedState")
+			s.Assert().Equal(under, v.PausedBalance.Denom, "paused balance denom should be the vault underlying asset")
+			s.Assert().True(v.Paused, "vault should be marked paused")
+			s.Assert().Equal(reason, v.PausedReason, "paused reason mismatch")
+			s.Assert().Equal(types.ZeroInterestRate, v.CurrentInterestRate, "applyPausedState should zero the current interest rate")
+		})
+	}
+}
+
+func (s *TestSuite) TestAutoPauseVault_ValuationFailureSnapshotsZeroPausedBalance() {
+	under := "under-apz"
+	share := "share-apz"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(under, 1_000), s.adminAddr)
+
+	v, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: under})
+	s.Require().NoError(err, "CreateVault should succeed")
+
+	vaultAddr := types.GetVaultAddress(share)
+	s.requireUnvaluableVault(vaultAddr)
+
+	_, err = s.k.GetNetTVV(s.ctx, *v)
+	s.Require().Error(err, "the vault must be unvaluable for this test to exercise the auto-pause valuation failure branch")
+
+	reason := "critical failure with a failing valuation"
+	s.Require().NotPanics(func() {
+		s.k.TestAccessor_autoPauseVault(s.T(), s.ctx, v, reason)
+	}, "auto-pausing on a failed valuation must not panic; it runs inside the EndBlocker where a panic halts the chain")
+
+	s.Require().False(v.PausedBalance.Amount.IsNil(), "auto-pause must snapshot a non-nil paused balance even when valuation fails")
+	s.Assert().Equal(sdk.NewCoin(under, math.ZeroInt()), v.PausedBalance, "a failed valuation should snapshot a zero paused balance in the underlying asset")
+
+	got, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault should succeed after auto-pause")
+	s.Assert().True(got.Paused, "vault should be persisted as paused")
+	s.Assert().Equal(reason, got.PausedReason, "persisted paused reason mismatch")
+	s.Assert().Equal(sdk.NewCoin(under, math.ZeroInt()), got.PausedBalance, "persisted paused balance mismatch after a failed valuation")
+}
+
 func (s *TestSuite) TestSetWithdrawalDelay() {
 	share := "jackthecatshare"
 	under := "georgethedogunder"

@@ -23,8 +23,8 @@ const (
 	// MaxWithdrawalDelay caps the swap-out withdrawal delay in seconds (2 years).
 	MaxWithdrawalDelay = 31_536_000 * 2
 
-	// MaxAbsInterestRate is the absolute ceiling on any interest rate's magnitude (100.0 == 10,000% APR),
-	// bounding the e^(rt) exponent so an admin-set rate cannot overflow the LegacyDec interest math.
+	// MaxAbsInterestRate is the absolute ceiling on any interest rate's magnitude (100.0 == 10,000% APR).
+	// It bounds r only; utils.ExpDec range-reduces the e^(rt) exponent, which elapsed time leaves unbounded.
 	MaxAbsInterestRate = "100.0"
 )
 
@@ -47,8 +47,8 @@ func ValidateWithdrawalDelay(delaySeconds uint64) error {
 }
 
 // ValidateInterestRateMagnitude returns an error if the absolute value of rate
-// exceeds the MaxAbsInterestRate ceiling. The check is symmetric: a large negative
-// rate overflows the e^(rt) series exactly as a large positive one does.
+// exceeds the MaxAbsInterestRate ceiling. The check is symmetric because a large
+// negative rate reclaims principal as aggressively as a large positive one pays out.
 func ValidateInterestRateMagnitude(rate sdkmath.LegacyDec) error {
 	if rate.Abs().GT(maxAbsInterestRateDec) {
 		return fmt.Errorf("interest rate %s exceeds maximum allowed magnitude %s", rate, MaxAbsInterestRate)

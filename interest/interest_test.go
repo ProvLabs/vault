@@ -97,6 +97,20 @@ func TestCalculateInterestEarned(t *testing.T) {
 			periodSeconds:    interest.SecondsPerYear,
 			expectedErrorMsg: "overflow",
 		},
+		{
+			name:             "22 days at the max negative rate reclaims under the full principal",
+			principal:        baseCoin(1_000_000_000),
+			rate:             "-" + types.MaxAbsInterestRate,
+			periodSeconds:    22 * interest.SecondsPerDay,
+			expectedInterest: sdkmath.NewInt(-997_588_236),
+		},
+		{
+			name:             "10 years at the max positive rate errors instead of silently under-paying",
+			principal:        baseCoin(1),
+			rate:             types.MaxAbsInterestRate,
+			periodSeconds:    interest.SecondsPerYear * 10,
+			expectedErrorMsg: "overflow",
+		},
 	}
 
 	for _, tc := range tests {
@@ -111,6 +125,33 @@ func TestCalculateInterestEarned(t *testing.T) {
 
 			require.NoErrorf(t, err, "test case %q: unexpected error", tc.name)
 			require.Truef(t, tc.expectedInterest.Equal(interestAmt), "test case %q: interest amount doesn't match; expected %s, got %s", tc.name, tc.expectedInterest.String(), interestAmt.String())
+		})
+	}
+}
+
+func TestCalculateInterestEarnedNeverReclaimsMoreThanPrincipal(t *testing.T) {
+	principal := sdk.NewCoin("uatom", sdkmath.NewInt(1_000_000_000))
+
+	tests := []struct {
+		name          string
+		rate          string
+		periodSeconds int64
+	}{
+		{name: "max negative rate just under the old sign crossover", rate: "-" + types.MaxAbsInterestRate, periodSeconds: 20 * interest.SecondsPerDay},
+		{name: "max negative rate at the old sign crossover", rate: "-" + types.MaxAbsInterestRate, periodSeconds: 21 * interest.SecondsPerDay},
+		{name: "max negative rate past the old sign crossover", rate: "-" + types.MaxAbsInterestRate, periodSeconds: 22 * interest.SecondsPerDay},
+		{name: "max negative rate over a full month", rate: "-" + types.MaxAbsInterestRate, periodSeconds: 30 * interest.SecondsPerDay},
+		{name: "max negative rate over a full year", rate: "-" + types.MaxAbsInterestRate, periodSeconds: interest.SecondsPerYear},
+		{name: "moderate negative rate over a decade", rate: "-1.0", periodSeconds: interest.SecondsPerYear * 10},
+		{name: "small negative rate over a century", rate: "-0.1", periodSeconds: interest.SecondsPerYear * 100},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			interestAmt, err := interest.CalculateInterestEarned(principal, tc.rate, tc.periodSeconds)
+			require.NoErrorf(t, err, "test case %q: unexpected error for rate=%s over %d seconds", tc.name, tc.rate, tc.periodSeconds)
+			require.Truef(t, interestAmt.IsNegative(), "test case %q: a negative rate must produce negative interest, got %s", tc.name, interestAmt)
+			require.Truef(t, interestAmt.Abs().LTE(principal.Amount), "test case %q: reclaim %s exceeds the %s principal, implying more than 100%% of the vault's underlying", tc.name, interestAmt.Abs(), principal.Amount)
 		})
 	}
 }

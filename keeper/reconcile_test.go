@@ -1690,7 +1690,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().True(found, "expected EventVaultReconcile to be emitted for composite principal TVV transfer")
 }
 
-func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_PartialLiquidation() {
+func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_LargeNegativeExponentRetainsRemainder() {
 	s.SetupTest()
 
 	shareDenom := "nvylds.shares.liquid"
@@ -1726,32 +1726,25 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Par
 	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
 
 	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
-	s.Require().NoError(err, "ReconcileVault should not error during partial liquidation")
+	s.Require().NoError(err, "ReconcileVault should not error at a deeply negative e^(rt) exponent")
+
+	expectedReclaim := sdkmath.NewInt(99_995)
+	expectedRemainder := smallPrincipal.Amount.Sub(expectedReclaim)
 
 	endMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom)
-	s.Require().True(endMarker.IsZero(), "Marker balance should be fully liquidated to zero")
+	s.Require().Equal(expectedRemainder, endMarker.Amount, "marker must retain the e^(rt) share of principal, not be swept to zero by an inverted exponent")
 
 	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom)
-	s.T().Logf("End vault balance: %s", endVault.String())
+	s.Require().Equal(underlying.Amount.Add(expectedReclaim), endVault.Amount, "vault should receive only the reclaimed portion of the marker balance")
 
-	events := normalizeEvents(s.ctx.EventManager().Events())
-	for _, ev := range events {
-		s.T().Logf("Event: %s", ev.Type)
-		for _, attr := range ev.Attributes {
-			s.T().Logf("  %s: %s", attr.Key, attr.Value)
-		}
-	}
-
-	expectedVaultBalance := underlying.Amount.Add(smallPrincipal.Amount)
-	s.Require().Equal(expectedVaultBalance, endVault.Amount, "Vault should receive exactly the available marker balance")
 	found := false
-	for _, ev := range events {
+	for _, ev := range normalizeEvents(s.ctx.EventManager().Events()) {
 		if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
 			found = true
 			for _, attr := range ev.Attributes {
 				if string(attr.Key) == "interest_earned" {
-					expectedStr := smallPrincipal.Amount.Neg().String() + underlying.Denom
-					s.Require().Equal(expectedStr, string(attr.Value), "Event interest_earned should reflect the capped liquidation amount")
+					expectedStr := expectedReclaim.Neg().String() + underlying.Denom
+					s.Require().Equal(expectedStr, string(attr.Value), "event interest_earned should reflect the uncapped reclaim amount")
 				}
 			}
 		}

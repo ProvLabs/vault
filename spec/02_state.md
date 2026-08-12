@@ -23,6 +23,7 @@ Vaults are strictly **single-denom**: the **underlying asset** is the only accep
   - [Pending Swap-Out by ID Index (prefix 6)](#pending-swap-out-by-id-index-prefix-6)
   - [AUM Fee Address (prefix 8)](#aum-fee-address-prefix-8)
   - [Internal NAV Table (prefix 11)](#internal-nav-table-prefix-11)
+  - [NAV Entry Counts (prefix 13)](#nav-entry-counts-prefix-13)
 - [Deterministic Vault Addressing](#deterministic-vault-addressing)
 - [Genesis Notes](#genesis-notes)
   - [State Migration (v1 → v2)](#state-migration-v1--v2)
@@ -35,7 +36,8 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 
 - Admin address, share denom, underlying asset, deprecated **payment denom** (inert; always equal to the underlying asset — enforced at creation, by validation, and by the v1→v2 migration for pre-existing vaults)  
 - Interest configuration: `CurrentInterestRate`, `DesiredInterestRate`, optional `MinInterestRate`/`MaxInterestRate` bounds  
-- Swap toggles, `WithdrawalDelaySeconds`, pause flags/reason and `PausedBalance` snapshot  
+- Swap toggles, `WithdrawalDelaySeconds` (capped at `MaxWithdrawalDelay`, two years, by account validation so genesis import and migration cannot exceed the bound the message handlers enforce), pause flags/reason and `PausedBalance` snapshot  
+- **Pause attribution:** `paused_by` (the address that took the current pause, empty for an automatic one) and `paused_forced` (true when the pause waived the strict reconcile and valuation gate). Both are cleared on unpause, and validation rejects an unpaused vault that still carries either. `MsgRepriceVault` reads them to decide whether the NAV authority may resume the vault itself.  
 - **Swap Limits:** `min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, and `max_swap_out_value` (measured in underlying asset)
 - **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
@@ -69,6 +71,8 @@ A set of vaults queued for **payout verification** (e.g., after rate changes or 
 - **Prefix:** `VaultPayoutVerificationSetPrefix` (1)  
 - **Key:** `sdk.AccAddress` (vault address)  
 - **Value:** none (keyset)  
+
+A vault mid-interest-cycle is tracked in at most one of this set and the [Payout Timeout Queue](#payout-timeout-queue-prefix-2), never both: `SafeAddPayoutVerification` clears the vault's `period_timeout` and dequeues its timeout entry as it adds the vault here, and `SafeEnqueuePayoutTimeout` is only reached from paths that have already removed the vault from this set. A member therefore always carries `period_start != 0` and `period_timeout = 0`. `GenesisState.Validate` asserts both halves of that invariant. See [Genesis Notes](#genesis-notes) for how membership survives an export/import round trip.
 
 
 ### Payout Timeout Queue (prefix 2)
@@ -134,13 +138,84 @@ The address authorized to receive collected AUM technology fees.
 
 ### Internal NAV Table (prefix 11)
 
-Per-vault price entries for asset denoms the vault holds or is authorized to acquire. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written only by the NAV authority (`MsgUpdateVaultNAV`) and removed either by the authority (`MsgRemoveVaultNAV`, restricted to denoms the vault does not hold) or by an outbound `MsgAcceptAsset` that drains the denom from the principal. Settlement never writes a price.
+Per-vault price entries for asset denoms the vault holds or is authorized to acquire. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written only by the NAV authority (`MsgUpdateVaultNAV`, which requires a paused vault to reprice a denom the vault holds, and `MsgRepriceVault`, which writes a batch of them and can unpause in the same state transition) and removed either by the authority (`MsgRemoveVaultNAV`, restricted to denoms the vault does not hold) or by an outbound `MsgAcceptAsset` that drains the denom from the principal. Settlement never writes a price.
 
 An entry may exist for a denom the vault does not hold: TVV values held balances against this table, so an unheld denom contributes nothing until the asset arrives at the principal marker.
 
 - **Prefix:** `NAVsKeyPrefix` (11)
 - **Key:** `(sdk.AccAddress vault, string denom)`
 - **Value:** `types.VaultNAV { denom, price, volume, source, updated_block_height, updated_time }` — `price` is the total value of `volume` units of `denom`; per-unit value is `price / volume`. The `price` denom must be the owning vault's underlying asset.
+
+`updated_block_height` and `updated_time` are stamped by the module on each `UpdateVaultNAV` and on every entry a `RepriceVault` batch writes. They are **informational only**. No valuation path compares them against block time, so an entry prices shares until the NAV authority restates it. Both fields survive a genesis export/import unchanged, so entry ages remain meaningful across a chain restart. See [NAV Freshness](01_concepts.md#nav-freshness) for the responsibility model.
+
+A vault may price at most `MaxVaultNAVEntries` (2000) denoms. The cap is enforced when an entry is created; repricing or removing an already-priced denom is always allowed, so a vault recorded above the cap by genesis or the migration can still be pruned back under it.
+
+The cap is **not** a gas bound. No metered path walks the NAV table: writing a price is a fixed number of store operations against the entry and its [count](#nav-entry-counts-prefix-13), reading TVV is a single read of the [materialized total](#materialized-total-vault-value-prefix-12), and unpausing reads that total rather than revaluing the table. What the cap bounds is the work nothing charges for:
+
+| Where the table is walked whole | What the cap limits |
+| --- | --- |
+| Genesis import and the v2→v3 migration | Deriving every vault's total value and NAV entry count walks each table once while the chain is starting or upgrading, under no gas meter |
+| The `total-value` invariant | Re-deriving a vault's total walks its table, and `x/crisis` runs invariants inside `EndBlock` on an invariant-enabled chain |
+| Genesis export | One exported entry per priced denom per vault |
+
+Each entry costs one NAV read plus one balance lookup in those walks, so a maxed table is 2000 of each — proportional and bounded, which is all the cap has to guarantee once no transaction pays for it.
+
+`MaxRepriceBatchSize` (1000) is a separate per-message bound on `RepriceVault`, so a maxed table takes two batches to restate. That is the flow the batch cap was written for: leaving `resume` unset carries an oversized restatement across several messages so the vault reopens exactly once.
+
+The cap is a hardcoded constant rather than a module parameter; raising it should become a governance decision (see [#76](https://github.com/ProvLabs/vault-internal/issues/76)).
+
+### NAV Entry Counts (prefix 13)
+
+The number of denoms each vault prices, so `MaxVaultNAVEntries` can be checked without walking the NAV table on every write. This is **derived state**: `SetVaultNAV` increments it when it creates an entry and `RemoveVaultNAV` decrements it, and the value is always reproducible by counting the vault's Internal NAV Table entries.
+
+- **Prefix:** `NAVCountsKeyPrefix` (13)
+- **Key:** `sdk.AccAddress` (vault)
+- **Value:** `uint64`
+
+A missing entry reads as zero. Genesis import and the v2→v3 migration derive every count from the NAV table, recording a pre-existing table above the cap as-is and logging it, so neither an import nor an upgrade fails over state that predates the cap.
+
+### Materialized Total Vault Value (prefix 12)
+
+Each vault's total value, denominated in its underlying asset. This is **derived state**: authoritative for reads, but always reproducible from the vault's principal balances and its Internal NAV table. It exists so reading TVV costs one store read instead of one per priced denom.
+
+Every path that moves a priced balance or changes a price folds its change into this entry — swap-in, swap-out payout, principal deposit/withdraw, interest and AUM fee transfers, settlement staging, and NAV writes and removals. The walk over the NAV table remains the definition of the number, and a registered invariant asserts the two agree (see [Invariants](#invariants)).
+
+**The walk is not a consensus path.** Deriving this entry costs one balance lookup per priced denom, so its cost grows without bound with the size of the vault's NAV table. Walking is therefore confined to the three places where it is both affordable and unavoidable:
+
+| Where | Why the walk is needed | Why it is affordable |
+| --- | --- | --- |
+| Vault creation | The principal address follows from the share denom, so `x/marker` can adopt an account already holding a balance no later path would report | A vault being created prices no denoms yet, so the walk reads the underlying balance and stops |
+| Genesis import and the v2→v3 migration | Imported state arrives with no incremental history to fold | Neither runs under a transaction gas meter |
+| The `total-value` invariant | Comparing against the derived value is the whole point | Runs on demand, outside block processing |
+
+Everywhere else — every transaction and every block hook — the materialized entry is authoritative and is kept current by the reporting paths above. Two conditions that a walk would previously have repaired are now refused instead, because repairing means walking:
+
+- **A missing entry** (`ErrNoMaterializedTotalValue`). Creation, genesis import, and the migration all seed one, and no path removes one, so a vault without an entry is corrupt rather than merely unseeded.
+- **A delta that would drive the total negative** (`ErrNegativeTotalValue`). Some path misreported, and repricing off a number known to be wrong is worse than refusing.
+
+In a transaction either condition fails the message. In a block hook the enclosing per-vault handler logs and reschedules, so one bad vault never stops the block. The invariant still reports both without repairing either.
+
+Unpausing **reads** this entry rather than re-deriving it. Repricings and principal movements during a pause each fold their own change in as they happen, so the entry is already current when the pause lifts.
+
+- **Prefix:** `TotalValuesKeyPrefix` (12)
+- **Key:** `sdk.AccAddress vault`
+- **Value:** `math.Int` — the vault's gross total value in `underlying_asset`, before the `outstanding_aum_fee` liability is deducted.
+
+---
+
+## Invariants
+
+Registered with `x/crisis` under the `vault` module route. A broken invariant panics, so these run only on invariant-enabled chains — that is, nodes started with a non-zero `--inv-check-period`. Registration is wired on the crisis keeper directly rather than through the module manager, whose `RegisterInvariants` is a no-op in the current SDK.
+
+Each assertion is one an outside account cannot forge. Anything an unprivileged sender could trigger would turn the invariant into a halt-on-demand, so those conditions are deliberately tolerated.
+
+Each route resolves the vault lookup the same way every other consumer does, so the set of vaults checked cannot drift from the set the migration and genesis import seed. A lookup entry whose address holds no account, or holds something other than a vault account, is inert — nothing else reads it and the vault it names owns no balances, shares, or NAV entries — so it is logged, counted into the invariant's message, and passed over rather than halting the chain over state no operator can act on.
+
+| Route | Assertion |
+| --- | --- |
+| `total-value` | Each vault's materialized total value equals the value derived by walking its NAV table and principal balances. Drift means some mutation path failed to report its change, so share pricing is running off a stale number. A vault whose walk cannot produce a number at all is logged and passed over, since there is no reference to compare against. |
+| `share-supply` | No vault's local share supply exceeds its `total_shares`. `total_shares` is the cross-chain supply-of-record that bridge mints are gated on, so local supply overtaking it means the bridge can mint shares nothing backs. |
+| `escrowed-shares` | A vault holds at least the shares its pending swap-outs account for. A shortfall means a payout can no longer be honored from escrow. A surplus is tolerated: share transfers to the vault account are unrestricted, so anyone can create one with a bank send. |
 
 ---
 
@@ -153,12 +228,24 @@ Given a **share denom**, the corresponding vault account address is derived dete
 
 ## Genesis Notes
 
-The module defines a minimal `GenesisState` with validation and relies on import/export logic to include **vault accounts** (from `x/auth`) and active **queue entries** (timeouts and pending swap-outs). There are **no module Params** in the vault genesis.  
-Genesis must preserve `total_shares`, `bridge_address`, and `bridge_enabled`, and validate that local marker supply does not exceed `total_shares`.  
+The module defines a minimal `GenesisState` with validation and relies on import/export logic to include **vault accounts** (from `x/auth`) and active **queue entries** (timeouts and pending swap-outs). It also carries the module **Params** (`tech_fee_address`, `default_aum_fee_bips`, `gov_only_vault_creation`); an omitted `tech_fee_address` falls back to the chain-specific default, and the other two take their genesis values as given, so a chain that wants governance-gated vault creation must set `gov_only_vault_creation` in genesis or with an `UpdateParams` proposal.  
+Genesis must preserve `total_shares`, `bridge_address`, and `bridge_enabled`. `InitGenesis` enforces the `total_shares >= local marker supply` invariant per vault — the check lives there, not in `GenesisState.Validate`, because only the keeper can read x/bank's supply — and panics on an import that violates it. Migrations carry the same obligation: they must never lower `total_shares` below the local supply of the share denom.  
 Genesis validation also enforces the single-denom model: every NAV entry's `price` denom must equal the owning vault's underlying asset, and `VaultAccount` validation requires `payment_denom` to be empty or equal to the underlying asset.
+
+`GenesisState` carries `payout_verification_set` so [Payout Verification Set](#payout-verification-set-prefix-1) membership round-trips, and `InitGenesis` additionally *re-derives* it: any imported vault that is unpaused, has `period_start != 0` and `period_timeout = 0`, and holds no payout timeout entry is restored to the set. Deriving it repairs genesis files exported before the field existed, where a vault in the set landed in neither structure on import — no blocker visited it again, so its interest kept accruing while the affordability check that zeroes an unaffordable rate never ran. The derivation is idempotent, so a genesis that carries the field produces the same membership.
+
+Validation deliberately does not require that *every* vault with an open accrual period appear in one of the two structures. `handleDepletedVaults` zeroes a vault's interest rate without clearing its period, so a depleted vault legitimately exports with `period_start != 0` and no entry in either; `InitGenesis` re-arms it rather than rejecting the import.
 
 ### State Migration (v1 → v2)
 
 The module's consensus version 1→2 migration flattens any pre-existing mixed-denom vaults into the single-denom model. For each vault it sets `payment_denom = underlying_asset`, re-denominates `outstanding_aum_fee` into the underlying asset, and defaults `nav_authority` to the admin when unset; it also rewrites any pending swap-out's redeem denom to the owning vault's underlying asset. No funds move and no accounts are deleted.
+
+### State Migration (v2 → v3)
+
+The module's consensus version 2→3 migration materializes every vault's total value (prefix 12), which became module state alongside the materialized-TVV read path. It derives each total from current balances and the NAV table and stores it. It also derives every vault's NAV entry count (prefix 13), the value `MaxVaultNAVEntries` is enforced against. No funds move and no vault configuration changes.
+
+Seeding is required rather than optional, and is the only chance a pre-v3 vault gets: no consensus path derives a missing entry, so an unseeded vault cannot be read, cannot be moved against, and reports as broken to the `total-value` invariant — and because `x/crisis` panics on a broken invariant, an invariant-enabled chain would halt. The migration is idempotent, since it recomputes from the same source on every run.
+
+It seeds from the vault lookup, resolving it through the same path the invariant uses, so the two cannot disagree about which vaults must have an entry. A vault it cannot value is logged and skipped: such a vault fails the invariant's own derivation too, so seeding could not have satisfied it, and aborting the upgrade over one bad vault would be worse than leaving the rest of the chain seeded. A lookup entry that resolves to no vault account is skipped by both for the same reason (see [Invariants](#invariants)).
 
 ---

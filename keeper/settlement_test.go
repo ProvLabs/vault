@@ -18,12 +18,11 @@ func (s *TestSuite) TestKeeper_RemoveDrainedSettlementNAV() {
 	seededVolume := sdkmath.NewInt(10)
 
 	tests := []struct {
-		name                string
-		seedNav             bool
-		fundPrincipal       sdk.Coins
-		direction           string
-		expectedErrContains string
-		expectNavRemoved    bool
+		name             string
+		seedNav          bool
+		fundPrincipal    sdk.Coins
+		direction        string
+		expectNavRemoved bool
 	}{
 		{
 			name:          "inbound settlement keeps the NAV entry the authority set",
@@ -44,9 +43,8 @@ func (s *TestSuite) TestKeeper_RemoveDrainedSettlementNAV() {
 			expectNavRemoved: true,
 		},
 		{
-			name:                "outbound settlement of a drained denom with no NAV entry surfaces the missing entry",
-			direction:           types.AssetDirectionOutbound,
-			expectedErrContains: "failed to remove internal NAV for drained denom",
+			name:      "outbound settlement of a drained denom with no NAV entry is waved through",
+			direction: types.AssetDirectionOutbound,
 		},
 	}
 
@@ -63,7 +61,7 @@ func (s *TestSuite) TestKeeper_RemoveDrainedSettlementNAV() {
 				s.setVaultNAV(vault, asset, seededPrice, seededVolume.Int64())
 			}
 			if !tc.fundPrincipal.IsZero() {
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, tc.fundPrincipal), "failed to fund principal with %s", tc.fundPrincipal)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, principalAddr, tc.fundPrincipal), "failed to fund principal with %s", tc.fundPrincipal)
 			}
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -76,10 +74,6 @@ func (s *TestSuite) TestKeeper_RemoveDrainedSettlementNAV() {
 				}
 			}
 
-			if tc.expectedErrContains != "" {
-				s.Require().ErrorContains(err, tc.expectedErrContains, "removeDrainedSettlementNAV should fail for case %q", tc.name)
-				return
-			}
 			s.Require().NoError(err, "removeDrainedSettlementNAV should succeed for denom %s direction %s", asset, tc.direction)
 
 			if tc.expectNavRemoved {
@@ -90,6 +84,13 @@ func (s *TestSuite) TestKeeper_RemoveDrainedSettlementNAV() {
 			}
 
 			s.Assert().Empty(removedEvents, "non-draining settlement should not emit EventNAVRemoved for case %q", tc.name)
+
+			if !tc.seedNav {
+				_, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+				s.Assert().ErrorIs(err, collections.ErrNotFound, "an absent NAV entry for %s should stay absent instead of failing the settlement for case %q", asset, tc.name)
+				return
+			}
+
 			stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
 			s.Require().NoError(err, "NAV entry for %s should still exist after settlement", asset)
 			s.Assert().Equal(seededPrice, stored.Price, "settlement must not rewrite the NAV price the authority set for case %q", tc.name)
@@ -191,7 +192,7 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 			deposit: true,
 			seed: func(vault *types.VaultAccount) sdk.Coins {
 				s.requireSimpleMarker(free)
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
 				return sdk.NewCoins()
 			},
 			denom: free,
@@ -202,7 +203,7 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 			deposit: true,
 			seed: func(vault *types.VaultAccount) sdk.Coins {
 				s.requireSimpleMarker(free)
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
 				return sdk.NewCoins(sdk.NewInt64Coin(free, 10))
 			},
 			denom: free,
@@ -213,7 +214,7 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 			deposit: true,
 			seed: func(vault *types.VaultAccount) sdk.Coins {
 				s.requireRestrictedMarker(restricted)
-				s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
+				s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
 				return sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))
 			},
 			denom: restricted,
@@ -224,8 +225,8 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 			deposit: false,
 			seed: func(vault *types.VaultAccount) sdk.Coins {
 				s.requireRestrictedMarker(restricted)
-				s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
-				s.Require().NoError(s.simApp.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), vault.GetAddress(), vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to seed principal with %s", restricted)
+				s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
+				s.Require().NoError(s.sendCoinsBypass(markertypes.WithBypass(s.ctx), vault.GetAddress(), vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to seed principal with %s", restricted)
 				return sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))
 			},
 			denom: restricted,
@@ -276,7 +277,7 @@ func (s *TestSuite) TestKeeper_ReturnToPrincipal_BypassIsLoadBearing() {
 	vaultAddr := vault.GetAddress()
 
 	s.requireRestrictedMarker(restricted)
-	s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vaultAddr, restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
+	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vaultAddr, restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
 
 	amt := sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))
 

@@ -27,6 +27,29 @@ func TestGenesisState_Validate(t *testing.T) {
 		OutstandingAumFee:   sdk.NewInt64Coin("under", 0),
 	}
 
+	validSwapOut := types.PendingSwapOut{
+		Owner:        validAddr,
+		VaultAddress: validAddr,
+		Shares:       sdk.NewInt64Coin("share", 100),
+		RedeemDenom:  "under",
+	}
+	pendingSwapOutGenesis := func(time int64, swapOut types.PendingSwapOut) types.GenesisState {
+		return types.GenesisState{
+			Params: types.DefaultParams(),
+			Vaults: []types.VaultAccount{validVault},
+			PendingSwapOutQueue: types.PendingSwapOutQueue{
+				Entries: []types.PendingSwapOutQueueEntry{
+					{Time: time, Id: 7, SwapOut: swapOut},
+				},
+			},
+		}
+	}
+	swapOutWith := func(mutate func(*types.PendingSwapOut)) types.PendingSwapOut {
+		swapOut := validSwapOut
+		mutate(&swapOut)
+		return swapOut
+	}
+
 	tests := []struct {
 		name        string
 		genState    types.GenesisState
@@ -123,6 +146,70 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedErr: "fee timeout queue entry at index 0 has time 9223372036854775808 which exceeds max int64",
 		},
 		{
+			name: "valid payout verification set",
+			genState: types.GenesisState{
+				Params:                types.DefaultParams(),
+				Vaults:                []types.VaultAccount{validVault},
+				PayoutVerificationSet: []string{validAddr},
+			},
+		},
+		{
+			name: "invalid address in payout verification set",
+			genState: types.GenesisState{
+				Params:                types.DefaultParams(),
+				PayoutVerificationSet: []string{invalidAddr},
+			},
+			expectedErr: "invalid payout verification set address at index 0",
+		},
+		{
+			name: "payout verification set address is not an imported vault",
+			genState: types.GenesisState{
+				Params:                types.DefaultParams(),
+				PayoutVerificationSet: []string{validAddr},
+			},
+			expectedErr: "payout verification set address at index 0 is not an imported vault",
+		},
+		{
+			name: "duplicate payout verification set entry",
+			genState: types.GenesisState{
+				Params:                types.DefaultParams(),
+				Vaults:                []types.VaultAccount{validVault},
+				PayoutVerificationSet: []string{validAddr, validAddr},
+			},
+			expectedErr: "duplicate payout verification set entry for vault",
+		},
+		{
+			name: "vault in both the payout verification set and the payout timeout queue",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{
+					func() types.VaultAccount {
+						v := validVault
+						v.PeriodTimeout = 100
+						return v
+					}(),
+				},
+				PayoutTimeoutQueue:    []types.QueueEntry{{Time: 100, Addr: validAddr}},
+				PayoutVerificationSet: []string{validAddr},
+			},
+			expectedErr: "is in both the payout verification set and the payout timeout queue",
+		},
+		{
+			name: "payout verification set vault carries a scheduled period timeout",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{
+					func() types.VaultAccount {
+						v := validVault
+						v.PeriodTimeout = 100
+						return v
+					}(),
+				},
+				PayoutVerificationSet: []string{validAddr},
+			},
+			expectedErr: "has period timeout 100, expected 0",
+		},
+		{
 			name: "invalid vault address in pending swap out queue",
 			genState: types.GenesisState{
 				Params: types.DefaultParams(),
@@ -153,6 +240,50 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			expectedErr: "pending swap out queue vault address at index 0 is not an imported vault",
+		},
+		{
+			name:     "valid pending swap out queue",
+			genState: pendingSwapOutGenesis(1, validSwapOut),
+		},
+		{
+			name: "negative shares amount in pending swap out queue",
+			genState: pendingSwapOutGenesis(1, swapOutWith(func(swapOut *types.PendingSwapOut) {
+				swapOut.Shares = sdk.Coin{Denom: "share", Amount: sdkmath.NewInt(-100)}
+			})),
+			expectedErr: "invalid pending swap out at index 0: invalid shares: -100share",
+		},
+		{
+			name: "nil shares amount in pending swap out queue",
+			genState: pendingSwapOutGenesis(1, swapOutWith(func(swapOut *types.PendingSwapOut) {
+				swapOut.Shares = sdk.Coin{Denom: "share"}
+			})),
+			expectedErr: "invalid pending swap out at index 0: invalid shares:",
+		},
+		{
+			name: "zero shares amount in pending swap out queue",
+			genState: pendingSwapOutGenesis(1, swapOutWith(func(swapOut *types.PendingSwapOut) {
+				swapOut.Shares = sdk.NewInt64Coin("share", 0)
+			})),
+			expectedErr: "invalid pending swap out at index 0: shares cannot be zero",
+		},
+		{
+			name: "invalid owner address in pending swap out queue",
+			genState: pendingSwapOutGenesis(1, swapOutWith(func(swapOut *types.PendingSwapOut) {
+				swapOut.Owner = invalidAddr
+			})),
+			expectedErr: "invalid pending swap out at index 0: invalid owner address invalid-address",
+		},
+		{
+			name: "empty redeem denom in pending swap out queue",
+			genState: pendingSwapOutGenesis(1, swapOutWith(func(swapOut *types.PendingSwapOut) {
+				swapOut.RedeemDenom = ""
+			})),
+			expectedErr: "invalid pending swap out at index 0: redeem denom cannot be empty",
+		},
+		{
+			name:        "negative time in pending swap out queue",
+			genState:    pendingSwapOutGenesis(-1, validSwapOut),
+			expectedErr: "pending swap out queue entry at index 0 has negative time -1",
 		},
 		{
 			name: "invalid tech fee address in params",

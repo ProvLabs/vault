@@ -1,12 +1,16 @@
 package queue_test
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -19,7 +23,37 @@ import (
 	"github.com/provlabs/vault/utils/mocks"
 )
 
+// failingHasKVStoreService decorates a KVStoreService so that every existence check against the
+// underlying store fails, letting tests distinguish a store read failure from an absent entry.
+type failingHasKVStoreService struct {
+	inner store.KVStoreService
+	err   error
+}
+
+// OpenKVStore returns the decorated store whose Has always fails.
+func (s failingHasKVStoreService) OpenKVStore(ctx context.Context) store.KVStore {
+	return failingHasKVStore{KVStore: s.inner.OpenKVStore(ctx), err: s.err}
+}
+
+// failingHasKVStore behaves like the store it embeds except that existence checks always fail.
+type failingHasKVStore struct {
+	store.KVStore
+	err error
+}
+
+// Has always fails, simulating a store read failure during an existence check.
+func (s failingHasKVStore) Has([]byte) (bool, error) { return false, s.err }
+
+// newTestPendingSwapOutQueue builds a PendingSwapOutQueue backed by an in-memory store.
 func newTestPendingSwapOutQueue(t *testing.T) (sdk.Context, *queue.PendingSwapOutQueue) {
+	t.Helper()
+	return newPendingSwapOutQueue(t, nil)
+}
+
+// newPendingSwapOutQueue builds a PendingSwapOutQueue backed by an in-memory store. When hasErr is
+// non-nil, every existence check against that store fails with it, which is how tests exercise the
+// lookup-failure branch that must never be collapsed into a not-found result.
+func newPendingSwapOutQueue(t *testing.T, hasErr error) (sdk.Context, *queue.PendingSwapOutQueue) {
 	t.Helper()
 	storeKey := storetypes.NewKVStoreKey(vtypes.ModuleName)
 	testCtx := testutil.DefaultContextWithDB(t, storeKey, storetypes.NewTransientStoreKey("transient_test"))
@@ -31,7 +65,10 @@ func newTestPendingSwapOutQueue(t *testing.T) (sdk.Context, *queue.PendingSwapOu
 	sdkCfg.SetBech32PrefixForConsensusNode("provlabsvalcons", "provlabsvalconspub")
 	vtypes.RegisterInterfaces(cfg.InterfaceRegistry)
 
-	kvStoreService := runtime.NewKVStoreService(storeKey)
+	var kvStoreService store.KVStoreService = runtime.NewKVStoreService(storeKey)
+	if hasErr != nil {
+		kvStoreService = failingHasKVStoreService{inner: kvStoreService, err: hasErr}
+	}
 	sb := collections.NewSchemaBuilder(kvStoreService)
 
 	q := queue.NewPendingSwapOutQueue(sb, cfg.Codec)
@@ -194,12 +231,50 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name: "dequeue non-existent key",
+			name: "dequeue non-existent key reports not found instead of phantom success",
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
 				return 1, sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32), 999
 			},
 			dequeue:     true,
-			expectError: false,
+			expectError: true,
+			errorMsg:    "pending swap out 999 not found at timestamp 1 for vault",
+		},
+		{
+			name: "dequeue queued id under the wrong timestamp reports not found",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				req := vtypes.NewPendingSwapOut(addr1Acc, addr1Acc, sdk.NewInt64Coin("vshares", 100), "usd")
+				id, err := q.Enqueue(ctx, 1, &req)
+				require.NoError(t, err, "enqueue must succeed")
+				return 2, addr1Acc, id
+			},
+			dequeue:     true,
+			expectError: true,
+			errorMsg:    "not found at timestamp 2",
+		},
+		{
+			name: "dequeue queued id for the wrong vault reports not found",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				req := vtypes.NewPendingSwapOut(addr1Acc, addr1Acc, sdk.NewInt64Coin("vshares", 100), "usd")
+				id, err := q.Enqueue(ctx, 1, &req)
+				require.NoError(t, err, "enqueue must succeed")
+				return 1, sdk.MustAccAddressFromBech32(addr2.Bech32), id
+			},
+			dequeue:     true,
+			expectError: true,
+			errorMsg:    "not found at timestamp 1 for vault " + addr2.Bech32,
+		},
+		{
+			name: "dequeue twice reports not found on the second attempt",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				req := vtypes.NewPendingSwapOut(addr1Acc, addr1Acc, sdk.NewInt64Coin("vshares", 100), "usd")
+				id, err := q.Enqueue(ctx, 1, &req)
+				require.NoError(t, err, "enqueue must succeed")
+				require.NoError(t, q.Dequeue(ctx, 1, addr1Acc, id), "first dequeue must succeed")
+				return 1, addr1Acc, id
+			},
+			dequeue:     true,
+			expectError: true,
+			errorMsg:    "not found at timestamp 1",
 		},
 		{
 			name: "enqueue with invalid vault address (pre-validation, now fails validation)",
@@ -306,6 +381,144 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 					require.NoErrorf(t, err, "test case %q: enqueue should not return an error", tc.name)
 				}
 			}
+		})
+	}
+}
+
+func TestPendingSwapOutQueue_RequireQueued(t *testing.T) {
+	vaultAddr := sdk.AccAddress(utils.TestProvlabsAddress().Bytes)
+	otherVaultAddr := sdk.AccAddress(utils.TestProvlabsAddress().Bytes)
+	require.NotEqual(t, vaultAddr, otherVaultAddr, "the wrong-vault case is only meaningful if the two fixture vaults differ")
+
+	storeReadErr := errors.New("store read failed")
+
+	enqueueAt := func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue, timestamp int64, vault sdk.AccAddress) uint64 {
+		t.Helper()
+		req := vtypes.NewPendingSwapOut(vault, vault, sdk.NewInt64Coin("vshares", 100), "usd")
+		id, err := q.Enqueue(ctx, timestamp, &req)
+		require.NoError(t, err, "enqueue at timestamp %d for vault %s must succeed", timestamp, vault)
+		return id
+	}
+
+	tests := []struct {
+		name           string
+		lookupErr      error
+		setup          func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64)
+		expectNotFound bool
+		expectedError  string
+		expectedCause  error
+	}{
+		{
+			name: "queued key passes the guard",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				return 1, vaultAddr, enqueueAt(t, ctx, q, 1, vaultAddr)
+			},
+		},
+		{
+			name: "key that was never queued is reported as not found",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				return 1, vaultAddr, 999
+			},
+			expectNotFound: true,
+		},
+		{
+			name: "queued id under a different timestamp is reported as not found",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				return 2, vaultAddr, enqueueAt(t, ctx, q, 1, vaultAddr)
+			},
+			expectNotFound: true,
+		},
+		{
+			name: "queued id under a different vault is reported as not found",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				return 1, otherVaultAddr, enqueueAt(t, ctx, q, 1, vaultAddr)
+			},
+			expectNotFound: true,
+		},
+		{
+			name: "key removed by a prior dequeue is reported as not found",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				id := enqueueAt(t, ctx, q, 1, vaultAddr)
+				require.NoError(t, q.Dequeue(ctx, 1, vaultAddr, id), "the first dequeue must succeed")
+				return 1, vaultAddr, id
+			},
+			expectNotFound: true,
+		},
+		{
+			name: "negative timestamp is reported as not found rather than rejected here",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				return -1, vaultAddr, 1
+			},
+			expectNotFound: true,
+		},
+		{
+			name:      "failed lookup is propagated instead of being collapsed into not found",
+			lookupErr: storeReadErr,
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				return 1, vaultAddr, 7
+			},
+			expectedError: "failed to look up pending swap out 7 at 1: store read failed",
+			expectedCause: storeReadErr,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, q := newPendingSwapOutQueue(t, tc.lookupErr)
+			timestamp, vault, id := tc.setup(t, ctx, q)
+
+			err := q.TestAccessor_requireQueued(t, ctx, timestamp, vault, id)
+
+			expectedError := tc.expectedError
+			if tc.expectNotFound {
+				expectedError = fmt.Sprintf("pending swap out %d not found at timestamp %d for vault %s", id, timestamp, vault)
+			}
+			if expectedError == "" {
+				require.NoError(t, err, "a queued key must pass the guard that protects Dequeue and Reschedule")
+				return
+			}
+
+			require.EqualError(t, err, expectedError, "the guard must name every component of the key it could not confirm")
+			if tc.expectedCause != nil {
+				require.ErrorIs(t, err, tc.expectedCause, "the underlying store failure must stay inspectable by the caller")
+				require.NotContains(t, err.Error(), "not found", "a store read failure must never be reported as an absent entry")
+			}
+		})
+	}
+}
+
+func TestPendingSwapOutQueueMutationsPropagateLookupFailure(t *testing.T) {
+	addr := sdk.AccAddress(utils.TestProvlabsAddress().Bytes)
+	req := vtypes.NewPendingSwapOut(addr, addr, sdk.NewInt64Coin("vshares", 100), "usd")
+	storeReadErr := errors.New("store read failed")
+
+	tests := []struct {
+		name   string
+		mutate func(q *queue.PendingSwapOutQueue, ctx sdk.Context) error
+	}{
+		{
+			name: "dequeue surfaces the lookup failure",
+			mutate: func(q *queue.PendingSwapOutQueue, ctx sdk.Context) error {
+				return q.Dequeue(ctx, 1, addr, 7)
+			},
+		},
+		{
+			name: "reschedule surfaces the lookup failure",
+			mutate: func(q *queue.PendingSwapOutQueue, ctx sdk.Context) error {
+				return q.Reschedule(ctx, 1, addr, 7, 2, &req)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, q := newPendingSwapOutQueue(t, storeReadErr)
+
+			err := tc.mutate(q, ctx)
+
+			require.Error(t, err, "a failing store lookup must not be reported as success")
+			require.ErrorIs(t, err, storeReadErr, "the mutation must route its existence check through requireQueued and hand the store failure to the caller")
+			require.NotContains(t, err.Error(), "not found", "a store read failure must never be collapsed into a not-found result")
 		})
 	}
 }
@@ -670,7 +883,7 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: "badaddress", Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}},
 				},
 			},
-			errorMsg: "invalid vault address in pending swap out queue:",
+			errorMsg: "invalid pending swap out in pending swap out queue: invalid vault address badaddress",
 		},
 		{
 			name: "bad owner address",
@@ -680,7 +893,57 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: "badaddress", RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}},
 				},
 			},
-			errorMsg: "invalid owner address in pending swap out queue:",
+			errorMsg: "invalid pending swap out in pending swap out queue: invalid owner address badaddress",
+		},
+		{
+			name: "negative escrowed shares amount",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.Coin{Denom: "vshares", Amount: sdkmath.NewInt(-100)}}},
+				},
+			},
+			errorMsg: "invalid pending swap out in pending swap out queue: invalid shares: -100vshares",
+		},
+		{
+			name: "nil escrowed shares amount",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.Coin{Denom: "vshares"}}},
+				},
+			},
+			errorMsg: "invalid pending swap out in pending swap out queue: invalid shares:",
+		},
+		{
+			name: "zero escrowed shares amount",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 0)}},
+				},
+			},
+			errorMsg: "invalid pending swap out in pending swap out queue: shares cannot be zero",
+		},
+		{
+			name: "empty redeem denom",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Shares: sdk.NewInt64Coin("vshares", 100)}},
+				},
+			},
+			errorMsg: "invalid pending swap out in pending swap out queue: redeem denom cannot be empty",
+		},
+		{
+			name: "negative entry time",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: -1, Id: 7, SwapOut: req1},
+				},
+			},
+			errorMsg: "pending swap out queue entry 7 has negative time -1",
 		},
 	}
 

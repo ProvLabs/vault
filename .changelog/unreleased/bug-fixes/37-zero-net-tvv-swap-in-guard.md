@@ -1,0 +1,1 @@
+* Reject deposits priced against zero total assets with shares outstanding, so `SwapIn` fails closed and `EstimateSwapIn` agrees instead of quoting a mint the transaction would refuse [PR 270](https://github.com/provlabs/vault/pull/270).

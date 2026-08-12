@@ -66,6 +66,22 @@ var (
 	NAVsKeyPrefix = collections.NewPrefix(11)
 	// NAVsName is a human-readable name for the internal NAV table collection.
 	NAVsName = "vault_navs"
+
+	// TotalValuesKeyPrefix is the prefix for the materialized total vault value, keyed by vault address.
+	TotalValuesKeyPrefix = collections.NewPrefix(12)
+	// TotalValuesName is a human-readable name for the materialized total value collection.
+	TotalValuesName = "vault_total_values"
+
+	// NAVCountsKeyPrefix is the prefix for the number of NAV entries a vault prices, keyed by vault address.
+	NAVCountsKeyPrefix = collections.NewPrefix(13)
+	// NAVCountsName is a human-readable name for the NAV entry count collection.
+	NAVCountsName = "vault_nav_counts"
+
+	// VaultPayoutVerificationCursorPrefix is the prefix for the address the payout verification sweep
+	// resumes after. Progress tracking, not vault state, so it is not exported to genesis.
+	VaultPayoutVerificationCursorPrefix = collections.NewPrefix(9)
+	// VaultPayoutVerificationCursorName is a human-readable name for the payout verification cursor.
+	VaultPayoutVerificationCursorName = "vault_payout_verification_cursor"
 )
 
 var (
@@ -83,6 +99,15 @@ var (
 const (
 	// DefaultAumFeeBips is the default AUM fee rate in basis points (15 bps = 0.15%).
 	DefaultAumFeeBips = 15
+
+	// DefaultGovOnlyVaultCreation leaves vault creation open to any signer, so dev, docker,
+	// and testnet chains need no proposal. Mainnet enables the gate in genesis or by proposal.
+	DefaultGovOnlyVaultCreation = false
+
+	// MainnetChainID is the chain ID of the Provenance mainnet.
+	MainnetChainID = "pio-mainnet-1"
+	// TestnetChainID is the chain ID of the Provenance testnet.
+	TestnetChainID = "pio-testnet-1"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

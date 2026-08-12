@@ -49,7 +49,7 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 - **AUM Technology Fee**: a 15 bps (0.15% annual) fee collected from the vault principal to support protocol maintenance. It is accrued continuously and collected in the vault's underlying asset.
 - **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.
 - **Internal NAV Table**: per-vault price entries (`price` for `volume` units of a denom) that are the **sole source of truth** for the valuation engine's conversions. The module never reads external oracles or marker NAVs at valuation time.
-- **NAV Authority**: an optional per-vault address authorized to maintain the internal NAV table via `UpdateVaultNAV` and `RemoveVaultNAV`. The vault admin acts as NAV authority when unset; the admin rotates it via `UpdateNAVAuthority`. Pointing it at an entity separate from the asset manager splits pricing from trading: the authority decides what an asset is worth, and the manager may only trade at that price.
+- **NAV Authority**: an optional per-vault address authorized to maintain the internal NAV table via `UpdateVaultNAV`, `RepriceVault`, and `RemoveVaultNAV`. The vault admin acts as NAV authority when unset; the admin rotates it via `UpdateNAVAuthority`. Pointing it at an entity separate from the asset manager splits pricing from trading: the authority decides what an asset is worth, and the manager may only trade at that price. It may also sign `PauseVault`, since a pricing oracle sees an event warranting a freeze first and needs the pause window that repricing a held asset requires, but it has no general unpause. The authority owns the **repricing cadence** for each denom it prices and can run that cadence itself. See [NAV Freshness](#nav-freshness).
 
 - **Total Shares**: the canonical supply-of-record across chains. Local marker supply must never exceed `total_shares`.  
 - **Asset Manager**: an optional delegated operator address with limited management authority. When set, this account can perform certain administrative actions (e.g., fund management operations) in addition to the vault admin. If unset, only the vault admin holds these permissions.
@@ -70,9 +70,9 @@ Example:
 The keeper ties together state management, account operations, marker integration, interest reconciliation, and queued jobs.
 
 ### Vault Lifecycle
-- **CreateVault**: governance-gated. Validates an existing marker for the underlying asset, establishes a vault account under the admin designated by the proposal, and creates the share marker with mint/burn/withdraw/deposit permissions for the vault and `require_deposit_access` enabled, so only the vault can move coins into its principal marker.
+- **CreateVault**: gated by the `gov_only_vault_creation` param, which restricts the signer to the governance module account when enabled and allows any signer when disabled. Validates an existing marker for the underlying asset, establishes a vault account under the designated admin, and creates the share marker with mint/burn/withdraw/deposit permissions for the vault and `require_deposit_access` enabled, so only the vault can move coins into its principal marker.
 - **GetVault**: retrieves and validates a vault account by address.
-- **Pause/Unpause**: admins can pause a vault, freezing operations and fixing balances, or unpause to resume operations.
+- **Pause/Unpause**: the admin, asset manager, or NAV authority can pause a vault, freezing operations and fixing balances; only the admin or asset manager can unpause. The NAV authority's one exception is `RepriceVault`, which resumes a strict pause it took itself.
 - **Bridge Controls**: configure a single **bridge address** and **enable/disable** bridging; capacity checks ensure local marker supply never exceeds `total_shares`.
 - **SetAssetManager**: assigns or clears the optional delegated **asset manager** address. When set, both the admin and asset manager may perform privileged actions on the vault — except P2P settlement (`AcceptAsset`/`RejectAsset`), which only the asset manager may perform. The field is a role, not a person: composite approval workflows are configured by pointing it at a group address.
 
@@ -88,7 +88,7 @@ The keeper ties together state management, account operations, marker integratio
 - **ReconcileVault**: ensures accrued interest is applied and AUM fees are collected before any balance-changing action.
 - **Positive Interest**: paid from vault reserves into the principal marker.
 - **Negative Interest**: refunded from the principal marker into reserves, capped by available funds.
-- **AUM Technology Fee**: 15 bps annual fee collected from the principal marker into the configured ProvLabs collection address.
+- **AUM Technology Fee**: 15 bps annual fee collected from the principal marker into the configured ProvLabs collection address. A fee the vault cannot pay or transfer stays in `outstanding_aum_fee` and is retried on the next reconciliation; it never fails reconciliation. The liability is capped at the vault's gross TVV, so the collection address can never be owed more than the vault holds.
 - **Rate Controls**: vaults have configurable current/desired rates, and optional min/max bounds.
 - **Queues**: vaults rotate between verification, interest timeout, and fee timeout queues to forecast payout ability and auto-reconcile state periodically.
 
@@ -107,7 +107,7 @@ The keeper ties together state management, account operations, marker integratio
 ### Genesis
 - **InitGenesis**: loads vault accounts, queue entries, and validates stored state.
 - **ExportGenesis**: exports all vaults and active queue entries for chain restart or upgrades.
-- **Bridge Fields**: genesis includes `total_shares`, `bridge_address`, and `bridge_enabled`; validation asserts local marker supply does not exceed `total_shares`.
+- **Bridge Fields**: genesis includes `total_shares`, `bridge_address`, and `bridge_enabled`; `InitGenesis` asserts local marker supply does not exceed `total_shares` for every imported vault and fails the import otherwise. `GenesisState.Validate` cannot make this assertion because it has no access to the bank module, so migrations must preserve the relationship themselves.
 - **Asset Manager Field**: genesis includes the optional `asset_manager` field for each vault, which may be empty if not configured.
 
 ### Block Hooks
@@ -126,7 +126,19 @@ Bridging lets vault shares move across chains. The on-chain accounting model and
 
 - **Capacity is the only on-chain guardrail.** A mint is rejected when it would push local supply above `total_shares` (`available = total_shares - local_supply`). A burn lowering local supply re-widens that capacity by exactly the burned amount, so a later mint can bring those same shares back. Consequently, NAV per share (`Net TVV / total_shares`) is invariant across bridge mint/burn — they cannot dilute holders.
 
-- **Trust boundary (accepted assumption).** Both handlers are gated solely on the configured `bridge_address`; there is **no on-chain reconciliation** that a local mint corresponds to a genuine remote burn (or vice versa). Keeping the local/remote split honest is the responsibility of the off-chain bridge operator. A compromised or dishonest bridge key could mint local supply up to `total_shares` without real remote backing; this is bounded by `total_shares` (it can never inflate beyond the supply-of-record or move NAV per share) and is an accepted operator-trust assumption, not an on-chain accounting flaw. Admins can disable bridging (`bridge_enabled`) or rotate `bridge_address` to contain a compromised operator.
+- **Invariant: `total_shares >= local supply`.** Every path that changes both quantities keeps them ordered this way — `SwapIn` and the redemption payout path move them together, and `BridgeBurnShares` only lowers local supply — so no user transaction can invert them. The relationship is nevertheless an explicit obligation for **migrations and genesis imports**: a migration that lowers `total_shares` below local supply, or a crafted genesis file that does the same, would leave capacity uncomputable for that vault. `BridgeMintShares` therefore computes capacity with a checked subtraction and returns a descriptive error rather than panicking, and `InitGenesis` rejects any imported vault that violates the ordering.
+
+- **Trust boundary (accepted assumption).** Both handlers are gated solely on the configured `bridge_address`; there is **no on-chain reconciliation** that a local mint corresponds to a genuine remote burn (or vice versa). Keeping the local/remote split honest is the responsibility of the off-chain bridge operator. A compromised or dishonest bridge key could mint local supply up to `total_shares` without real remote backing; this is bounded by `total_shares` (it can never inflate beyond the supply-of-record or move NAV per share) and is an accepted operator-trust assumption, not an on-chain accounting flaw.
+
+- **Containment: the bridge is inside the pause circuit breaker.** Bridge mint/burn are value-touching paths, so they are gated on `!vault.Paused` exactly like `SwapIn` and `SwapOut`. An operator responding to a suspected bridge compromise therefore has three levers, any one of which stops mint/burn:
+
+  1. **`PauseVault`** — the fastest and broadest lever. It stops the bridge along with all user flow and freezes valuation at `PausedBalance`. Available to the admin, the asset manager, or the NAV authority. Because it is the widest response, it is the correct first move when the nature of the incident is still unknown.
+  2. **`ToggleBridge`** (`enabled = false`) — admin-only, and the surgical lever: it stops only the bridge and leaves swaps and accrual running. Use this when the bridge is the confirmed and isolated problem and there is no reason to halt depositors.
+  3. **`SetBridgeAddress`** — admin-only rotation to a fresh key, for recovering after containment rather than for stopping an in-flight incident. Rotation leaves any share balance on the outgoing address in place, reducing mint capacity by that amount until the balance is transferred to the new bridge and burned; see the drain-before-rotate procedure in [SetBridgeAddress](03_messages.md#setbridgeaddress).
+
+  Nothing is recoverable from the bridge while paused either: a mint performed before the pause cannot be redeemed during it, because `SwapOut` also refuses on a paused vault. Off-chain monitoring should watch `EventBridgeMintShares`/`EventBridgeBurnShares` volume and the running `total_shares - local_supply` gap, which is the only on-chain quantity reflecting bridge activity — bridge ops leave `total_shares` untouched.
+
+  Note that neither `ToggleBridge` nor `SetBridgeAddress` is itself pause-gated: bridge *configuration* stays reachable while a vault is paused, so an operator can rotate or disable the bridge without unpausing first.
 
 ## Internal NAV & Multi-Asset Settlement
 
@@ -138,10 +150,10 @@ Each vault carries its own table of price entries, one per asset denom. An entry
 
 Entries are written by three paths:
 
-1. **NAV authority updates** — the configured `nav_authority` (the admin when unset) maintains entries via `UpdateVaultNAV`, and revokes entries for denoms the vault does not hold via `RemoveVaultNAV`. This is the only path that sets a price.
+1. **NAV authority updates** — the configured `nav_authority` (the admin when unset) maintains entries via `UpdateVaultNAV`, and revokes entries for denoms the vault does not hold via `RemoveVaultNAV`. This is the only path that sets a price. Repricing a denom the vault **holds** requires the vault to be paused, since a held asset's price step moves the share price and a live vault would let a user swap in ahead of the step and out after it. The authority can open and close that pause window itself: it may sign `PauseVault`, and `RepriceVault` applies a batch of restatements and unpauses in one state transition, so a routine repricing cadence takes two messages from one role rather than a hand-off. That self-resume covers only a strict pause the current NAV authority took itself; an operator, forced, or automatic pause still needs the admin or asset manager to unpause.
 2. **Settlements** — `AcceptAsset` trades only at the price already recorded for the denom, so it never writes an entry. It removes one when an outbound settlement drains the denom from the principal.
 
-An entry may exist for a denom the vault does not hold. Total vault value is computed by valuing held balances against the table, so an unheld denom's entry contributes nothing until the asset arrives. That is what makes pre-pricing meaningful: the table doubles as the list of assets the vault is authorized to acquire, and at what price.
+An entry may exist for a denom the vault does not hold. Total vault value is computed by valuing held balances against the table, so an unheld denom's entry contributes nothing until the asset arrives. That is what makes pre-pricing meaningful: the table doubles as the list of assets the vault is authorized to acquire, and at what price. It is also why pricing an unheld denom needs no pause, while repricing a held one does.
 3. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
 
 Entries stay **internal to the vault**. A vault does not own the assets it prices, so an asset price is never mirrored into that asset's marker-module NAV records, where it would compete with prices set by the marker's own administrators. Only the vault's own share denom gets a published marker NAV, written by the reconciler. The vault never reads marker NAVs back either — the internal table is authoritative in both directions.
@@ -157,7 +169,7 @@ Exactly one payment leg must carry the vault's underlying asset, which determine
 Settlement is atomic and layers several protections:
 
 - **Reconcile-first** — accrued interest and fees settle against the pre-settlement TVV.
-- **Exact-price guardrail** — the asset denom must already carry an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding tolerance). A denom the NAV authority has never priced cannot be acquired, so the asset manager cannot mint a price of their choosing by being the first to acquire it. Settling at a different price requires the authority to move the NAV first (`UpdateVaultNAV`). Every price change is therefore an explicit, evented action by the NAV authority rather than a side effect of trade flow.
+- **Exact-price guardrail** — the asset denom must already carry an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding tolerance). A denom the NAV authority has never priced cannot be acquired, so the asset manager cannot mint a price of their choosing by being the first to acquire it. Settling at a different price requires the authority to move the NAV first (`UpdateVaultNAV`), which for a denom the vault already holds means pausing the vault to reprice it. Every price change is therefore an explicit, evented action by the NAV authority rather than a side effect of trade flow.
 
   A first acquisition is two messages: the authority prices the denom, then the manager settles. Both fit in one transaction, so when the two roles belong to different entities the transaction simply carries both signatures and the price and trade commit together.
 - **No price writes** — settling executes at the price the NAV authority already recorded and writes no entry of its own, since the guardrail has already proven the trade matched that price. When an outbound settlement empties the principal of the asset, the entry is removed so a stale price cannot linger.
@@ -165,6 +177,20 @@ Settlement is atomic and layers several protections:
 ### Valuation Scope
 
 TVV sums every denom held at the principal marker that has a vault internal NAV, expressed in the underlying unit. The underlying asset is counted at its identity price; any other held asset acquired through settlement (e.g. an `nft/scope…` coin) is valued at its internal NAV, which is priced directly in the underlying asset. A held denom with no internal NAV entry contributes nothing and is skipped (it does not fail valuation). Because TVV is the base for interest, the AUM fee, and NAV per share, a vault's value and that fee/interest/share-price base move when the NAV authority updates a held asset's NAV — a deliberate economic/trust surface.
+
+### NAV Freshness
+
+Every internal NAV entry records `updated_block_height` and `updated_time`, stamped by the module on each `UpdateVaultNAV` and on every entry written by a `RepriceVault` batch. These fields are **informational**: they are published for consumers and monitoring, and **no valuation path enforces them**. A price stays in effect, and keeps pricing shares, for as long as it stands. Their presence is not a freshness guarantee.
+
+This is deliberate. Vaults hold assets whose prices move on very different schedules: a liquid token may need daily repricing while a real-asset scope is legitimately restated on a quarterly cycle. A module-wide maximum age would have to accommodate the slowest of them to avoid halting honest vaults, which leaves it doing nothing for the fastest. The acceptable staleness window is a property of the asset and the vault's business model, so the module records the facts and leaves the policy to the vault.
+
+**The cadence is the NAV authority's responsibility.** For each denom it prices, the authority decides how often that price must be restated and meets that schedule. It can run that cadence without a hand-off. Repricing a denom the vault holds requires a paused vault, and the authority may sign `PauseVault` itself, then send `RepriceVault` with `resume = true` to apply the restatements and unpause in the same state transition. No user can swap across the price step, and the routine cycle costs two messages from one role. A restatement too large for a single transaction leaves `resume` unset on the earlier batches, so the vault stays frozen until the message that closes the window.
+
+The self-resume is narrow by design. It lifts only a strict pause the same NAV authority took itself, which is the case a repricing cadence produces. An operator, forced, or automatic pause is a management decision, so the authority may still restate prices under it, but the admin or asset manager decides when the vault comes back.
+
+**The trust assumption, stated plainly.** Share pricing consumes whatever price the NAV authority last published. Depositors and redeemers therefore rely on that authority's diligence, and the module provides no on-chain circuit breaker for a price that has lapsed or been deliberately frozen. This is a property of the custody model rather than a gap in it: the same authority that could withhold an update could equally publish a wrong one, and both are addressed by who is trusted with the role rather than by a staleness threshold.
+
+**Monitoring.** Entry age is readable on demand. `Query/VaultNavs` returns every entry for a vault and `Query/NavValue` returns a single vault/denom entry, both carrying the full `VaultNAV` including the two timestamp fields. `EventNAVUpdated` works as a change feed and carries `updated_block_height`, but it omits `updated_time`, so wall-clock age has to come from a query. Liveness monitoring for a NAV authority can be built on the queries alone, without indexing chain state.
 
 ---
 
@@ -180,7 +206,7 @@ TVV sums every denom held at the principal marker that has a vault internal NAV,
 
 ## High-Level Flow
 
-1. **CreateVault**: a governance proposal sets up a new vault and designates its admin.
+1. **CreateVault**: a signer — the governance module account while `gov_only_vault_creation` is enabled, otherwise any account — sets up a new vault and designates its admin.
 2. **SwapIn**: users deposit assets → shares minted.
 3. **SwapOut**: users escrow shares → queued for payout.
 4. **Interest**: accrues over time, reconciled on actions or via queues.

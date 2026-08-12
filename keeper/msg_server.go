@@ -35,12 +35,26 @@ func (k msgServer) validateGovAuthority(signer string) error {
 	return nil
 }
 
-// CreateVault creates a vault. Vault creation is governance-gated, so the message
-// must be signed by the governance module account.
+// validateVaultCreationAuthority gates CreateVault on the gov_only_vault_creation param:
+// only the governance authority may sign while it is on, any account while it is off.
+func (k msgServer) validateVaultCreationAuthority(ctx sdk.Context, signer string) error {
+	govOnly, err := k.IsVaultCreationGovOnly(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to determine vault creation authority: %w", err)
+	}
+	if !govOnly {
+		return nil
+	}
+
+	return k.validateGovAuthority(signer)
+}
+
+// CreateVault creates a vault, signed by the governance module account while the
+// gov_only_vault_creation param is enabled and by any account while it is not.
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := k.validateGovAuthority(msg.Authority); err != nil {
+	if err := k.validateVaultCreationAuthority(ctx, msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -401,6 +415,10 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
+	if err := k.checkDepositDenyList(ctx, authorityAddr, msg.Amount.Denom); err != nil {
+		return nil, fmt.Errorf("failed to deposit interest funds: %w", err)
+	}
+
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), authorityAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
 		return nil, fmt.Errorf("failed to deposit funds: %w", err)
 	}
@@ -475,12 +493,20 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 		return nil, fmt.Errorf("failed to validate accepted coin: %w", err)
 	}
 
+	if err := k.checkDepositDenyList(ctx, depositFromAddress, msg.Amount.Denom); err != nil {
+		return nil, fmt.Errorf("failed to deposit principal funds: %w", err)
+	}
+
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 		depositFromAddress,
 		principalAddress,
 		sdk.NewCoins(msg.Amount),
 	); err != nil {
 		return nil, fmt.Errorf("failed to deposit principal funds: %w", err)
+	}
+
+	if err := k.adjustTotalValue(ctx, *vault, msg.Amount.Amount); err != nil {
+		return nil, fmt.Errorf("failed to record principal deposit value: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventDepositPrincipalFunds(msg.VaultAddress, msg.Authority, msg.Amount))
@@ -525,6 +551,10 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 		return nil, fmt.Errorf("failed to withdraw principal funds: %w", err)
 	}
 
+	if err := k.adjustTotalValue(ctx, *vault, msg.Amount.Amount.Neg()); err != nil {
+		return nil, fmt.Errorf("failed to record principal withdrawal value: %w", err)
+	}
+
 	k.emitEvent(ctx, types.NewEventWithdrawPrincipalFunds(msg.VaultAddress, msg.Authority, msg.Amount))
 
 	return &types.MsgWithdrawPrincipalFundsResponse{}, nil
@@ -557,7 +587,8 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 	return &types.MsgExpeditePendingSwapOutResponse{}, nil
 }
 
-// PauseVault pauses a vault, disabling all user-facing operations.
+// PauseVault pauses a vault, disabling all user-facing operations. The admin, the asset
+// manager, or the NAV authority may pause; only the first two may unpause.
 //
 // By default the pause is strict: it reconciles outstanding interest and fees
 // and snapshots the net TVV first, and any failure (e.g. insufficient reserves
@@ -579,8 +610,8 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if err != nil {
 		return nil, err
 	}
-	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
-		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	if err = vault.ValidatePauseAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate pause authority: %w", err)
 	}
 
 	if vault.Paused {
@@ -604,6 +635,8 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)
 	vault.Paused = true
 	vault.PausedReason = msg.Reason
+	vault.PausedBy = msg.Authority
+	vault.PausedForced = false
 
 	if err := k.haltVaultAccrual(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to halt vault accrual before pausing: %w", err)
@@ -641,36 +674,18 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("vault %s is not paused", msg.VaultAddress)
 	}
 
-	if err = k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate); err != nil {
-		return nil, fmt.Errorf("failed to update interest rates: %w", err)
+	if err = k.resumeVault(ctx, vault, msg.Authority); err != nil {
+		return nil, err
 	}
-
-	vault.PausedBalance = sdk.Coin{}
-	vault.Paused = false
-	vault.PausedReason = ""
-	if err = k.SetVaultAccount(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to set vault account: %w", err)
-	}
-
-	tvv, err := k.GetTVV(ctx, *vault)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
-	}
-
-	if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
-	}
-
-	if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to enqueue vault fee timeout: %w", err)
-	}
-
-	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))
 
 	return &types.MsgUnpauseVaultResponse{}, nil
 }
 
 // SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+//
+// Rotation does not move or burn any share balance the outgoing bridge holds; drain the outgoing bridge first,
+// or mint capacity stays reduced by that balance until it is transferred to the new bridge and burned. See the
+// drain-before-rotate procedure in spec/03_messages.md.
 func (k msgServer) SetBridgeAddress(goCtx context.Context, msg *types.MsgSetBridgeAddressRequest) (*types.MsgSetBridgeAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -717,7 +732,8 @@ func (k msgServer) ToggleBridge(goCtx context.Context, msg *types.MsgToggleBridg
 }
 
 // BridgeMintShares mints local share marker supply for a vault; the signer must match the configured bridge address
-// and the mint amount must not exceed (total_shares - current marker supply).
+// and the mint amount must not exceed (total_shares - current marker supply). Pausing a vault is the module's
+// incident circuit breaker, so a paused vault rejects bridge mints alongside every other value-touching path.
 func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeMintSharesRequest) (*types.MsgBridgeMintSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -727,6 +743,9 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
 		return nil, err
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
@@ -741,8 +760,10 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 		return nil, fmt.Errorf("mint amount must be positive")
 	}
 
-	currentSupply := k.BankKeeper.GetSupply(ctx, vault.TotalShares.Denom)
-	available := vault.TotalShares.Sub(currentSupply)
+	available, err := k.availableBridgeMintCapacity(ctx, vault)
+	if err != nil {
+		return nil, err
+	}
 	if msg.Shares.Amount.GT(available.Amount) {
 		return nil, fmt.Errorf("mint exceeds capacity: requested %s available %s", msg.Shares.Amount.String(), available.Amount.String())
 	}
@@ -762,6 +783,8 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 
 // BridgeBurnShares burns local share marker supply for a vault; the signer must match the configured bridge address
 // and the burn amount must not exceed the current marker supply. Shares are burned from the bridge account balance.
+// Pausing a vault is the module's incident circuit breaker, so a paused vault rejects bridge burns alongside every
+// other value-touching path.
 func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeBurnSharesRequest) (*types.MsgBridgeBurnSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -771,6 +794,9 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
 		return nil, err
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
@@ -886,10 +912,8 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 // administrators. Only the vault's share denom, which the vault does own, gets a
 // published marker NAV (see publishShareNav).
 //
-// The update is accepted whether or not the vault is paused, so an operator can
-// pause, reprice, and unpause as one deliberate sequence. Swap-ins and swap-outs
-// are closed for the whole paused span, which keeps a repricing from being
-// front-run by a user transaction ordered ahead of it.
+// Repricing an asset the vault holds requires the vault to be paused, so no user can swap
+// across the share price step (see requirePausedHeldReprice).
 //
 // Writing the entry is all this handler does to a paused vault. PausedBalance is
 // left alone, holding the value as of the moment of pausing, exactly as it does for
@@ -913,16 +937,95 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
 	}
 
+	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
+	if err := k.requirePausedHeldReprice(ctx, vault, nav); err != nil {
+		return nil, err
+	}
+
 	if err := k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault before NAV update: %w", err)
 	}
 
-	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
 	}
 
 	return &types.MsgUpdateVaultNAVResponse{}, nil
+}
+
+// RepriceVault applies a batch of internal NAV updates and, when Resume is set, unpauses
+// the vault in the same state transition. It is the batched form of UpdateVaultNAV and
+// enforces the identical per-entry rules, so repricing a denom the vault holds still
+// requires the pause window.
+//
+// Leaving Resume unset is what makes a restatement too large for one transaction possible:
+// successive batches land while the vault stays frozen, and only the final message resumes
+// it. With Resume set, the batch and the unpause commit together, so there is never a block
+// in which the vault is live, a new price is public, and the share price step has not landed.
+//
+// Resuming is gated on a strict pause this same NAV authority took; operator, forced, and
+// automatic pauses still require a management unpause. The gate is checked before any price
+// is written so a batch that cannot resume changes nothing.
+//
+// The reconcile settles accrued interest against the total vault value that held before the
+// batch, and is a no-op on a paused vault whose accrual is already halted.
+func (k msgServer) RepriceVault(goCtx context.Context, msg *types.MsgRepriceVaultRequest) (*types.MsgRepriceVaultResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault %s: %w", msg.VaultAddress, err)
+	}
+	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
+	}
+	if msg.Resume {
+		if err := requireNAVAuthorityResumable(vault, msg.Signer); err != nil {
+			return nil, err
+		}
+	}
+
+	navs := make([]types.VaultNAV, len(msg.Navs))
+	for i, update := range msg.Navs {
+		navs[i] = types.NewVaultNAV(update.Denom, update.Price, update.Volume, update.Source)
+		if err := k.requirePausedHeldReprice(ctx, vault, navs[i]); err != nil {
+			return nil, fmt.Errorf("NAV update at index %d: %w", i, err)
+		}
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before NAV batch: %w", err)
+	}
+
+	for i, nav := range navs {
+		if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
+			return nil, fmt.Errorf("failed to update vault NAV for denom %q at index %d: %w", nav.Denom, i, err)
+		}
+	}
+
+	if msg.Resume {
+		if err := k.resumeVault(ctx, vault, msg.Signer); err != nil {
+			return nil, err
+		}
+	}
+
+	return &types.MsgRepriceVaultResponse{}, nil
+}
+
+// requireNAVAuthorityResumable requires the vault's current pause to be a strict one the
+// signing NAV authority took itself, which is the only pause it may lift on its own.
+func requireNAVAuthorityResumable(vault *types.VaultAccount, signer string) error {
+	if !vault.Paused {
+		return fmt.Errorf("vault %s is not paused: pause it before repricing and resuming", vault.Address)
+	}
+	if vault.PausedForced {
+		return fmt.Errorf("vault %s is under a forced or automatic pause: the vault admin or asset manager must review and unpause it", vault.Address)
+	}
+	if vault.PausedBy != signer {
+		return fmt.Errorf("vault %s was paused by %q rather than the NAV authority: the vault admin or asset manager must unpause it", vault.Address, vault.PausedBy)
+	}
+	return nil
 }
 
 // RemoveVaultNAV deletes a vault's internal NAV entry for a denom the vault does not
@@ -934,9 +1037,8 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 // asset is written down through UpdateVaultNAV, and the settlement path removes the
 // entry on its own once an outbound trade drains the denom.
 //
-// Removal is accepted whether or not the vault is paused, matching UpdateVaultNAV so
-// the NAV table stays editable across a pause-reprice-unpause sequence. The held-balance
-// check is what keeps a removal from moving value, in either state.
+// Removal is accepted whether or not the vault is paused: the held-balance check above is
+// what keeps it from moving value, in either state.
 //
 // No reconcile is needed first: an unheld denom contributes nothing to total vault
 // value, so removing its entry cannot move the valuation basis.
@@ -1012,13 +1114,19 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		return nil, fmt.Errorf("vault %s is paused: assets cannot be accepted while paused", msg.VaultAddress)
 	}
 
-	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)
-	payment, err := k.ExchangeKeeper.GetPayment(ctx, sourceAddr, msg.ExternalId)
+	sourceAddr, err := sdk.AccAddressFromBech32(msg.Payment.Source)
+	if err != nil {
+		return nil, fmt.Errorf("invalid payment source address %q: %w", msg.Payment.Source, err)
+	}
+	payment, err := k.ExchangeKeeper.GetPayment(ctx, sourceAddr, msg.Payment.ExternalId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get payment: %w", err)
 	}
 	if payment == nil {
-		return nil, fmt.Errorf("payment not found for source %s and external id %q", msg.Source, msg.ExternalId)
+		return nil, fmt.Errorf("payment not found for source %s and external id %q", msg.Payment.Source, msg.Payment.ExternalId)
+	}
+	if err = msg.Payment.ValidateMatches(payment); err != nil {
+		return nil, fmt.Errorf("stored payment no longer matches the approved terms: %w", err)
 	}
 	if payment.Target != msg.VaultAddress {
 		return nil, fmt.Errorf("payment target %s is not vault %s", payment.Target, msg.VaultAddress)
@@ -1061,7 +1169,7 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		return nil, fmt.Errorf("failed to move source amount from vault to principal: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, msg.Source, msg.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
+	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, payment.Source, payment.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
 
 	if err := k.removeDrainedSettlementNAV(ctx, vault, assetCoin.Denom, direction); err != nil {
 		return nil, err

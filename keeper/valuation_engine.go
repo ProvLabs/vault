@@ -28,6 +28,15 @@ var ErrInternalNAVNotFound = errors.New("internal NAV entry not found")
 // by a migration or a direct write) can never drive unbounded recursion.
 var ErrInternalNAVPriceCycle = errors.New("internal NAV price chain contains a cycle")
 
+// ErrNoMaterializedTotalValue is returned for a vault with no TotalValues entry. Seeding one is
+// the job of creation, genesis import and the migration, so reaching this means the vault was
+// skipped as unvaluable by one of them. See spec/02_state.md.
+var ErrNoMaterializedTotalValue = errors.New("vault has no materialized total value")
+
+// ErrNegativeTotalValue is returned when a delta would drive a vault's materialized total below
+// zero, meaning some path misreported its change.
+var ErrNegativeTotalValue = errors.New("materialized total value would go negative")
+
 // UnitPriceFraction returns the unit price of srcDenom expressed in the vault's
 // underlying asset as an integer fraction (numerator, denominator), sourced
 // exclusively from the per-vault Internal NAV table.
@@ -155,41 +164,86 @@ func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccoun
 	return product.Quo(volume), nil
 }
 
-// GetTVV returns the Total Vault Value (TVV) expressed in
-// vault.UnderlyingAsset using floor arithmetic.
+// GetTVV returns the gross Total Vault Value (TVV) expressed in vault.UnderlyingAsset — every
+// asset the vault's principal marker holds, before the OutstandingAumFee liability is deducted.
 //
-// Paused fast-path:
-//   - If vault.Paused is true, this function short-circuits and returns
-//     vault.PausedBalance.Amount (no balance iteration or NAV conversion).
+// Gross and net are not interchangeable, and which one a caller wants is a policy decision:
+//   - The AUM fee is assessed on gross, so the fee accrues on assets under management rather
+//     than on equity that already has the fee netted out (see PerformVaultFeeTransfer).
+//   - Share pricing, share-NAV publication and interest accrual use GetNetTVV, because those
+//     must reflect equity actually owned by shareholders.
+//   - Solvency and reserve checks use gross, since a liability owed does not change what is on
+//     hand to pay out with.
 //
-// Source of truth (when not paused):
-//   - TVV sums the balances held at the vault’s *principal* account, i.e. the marker
-//     address for vault.PrincipalMarkerAddress().
-//   - The vault account’s own balances are treated as *reserves* and are not included here.
+// A paused vault returns vault.PausedBalance.Amount, which was captured net of the fee liability
+// at pause time, so paused pricing stays frozen and NAV-independent.
 //
-// Computation (when not paused), valuing only the denoms the vault actually prices
-// rather than everything parked at the principal marker:
-//   - First, count the principal's underlying-asset balance at its identity price.
-//   - Then, iterate this vault's internal NAV entries and value any held denom
-//     (e.g. nft/scope… acquired via AcceptAsset) from its principal balance at its
-//     internal NAV. The underlying and the share denom are skipped here because the
-//     underlying is already counted above and the share denom is never priced.
-//   - Sum the converted amounts (floor at each multiplication/division step).
+// Otherwise this is a single store read of the materialized total, never a walk of the vault's
+// balances. WalkTotalValue defines the number, every path that moves a priced balance or changes
+// a price reports its change, and the total-value invariant enforces that the two agree.
 //
-// Iterating the NAV table (a protocol-controlled key set written only by SetVaultNAV
-// and genesis import) rather than every principal balance makes the cost O(valued denoms):
-// a denom parked at the principal with no NAV entry is never visited, so it is neither
-// valued nor able to inflate the per-call work. This preserves the prior behavior in
-// which such denoms were skipped.
-//
-// Because a held asset's internal NAV is set by the NAV authority, a vault's TVV
-// (and the interest/fee/share-price base derived from it) moves when that NAV is
-// updated — a deliberate economic/trust surface.
+// Because a held asset's internal NAV is set by the vault's NAV authority, repricing moves TVV and
+// everything derived from it — a deliberate economic and trust surface.
 func (k Keeper) GetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	if vault.Paused {
 		return vault.PausedBalance.Amount, nil
 	}
+	return k.totalValue(ctx, vault)
+}
 
+// totalValue returns the materialized total, ignoring the paused snapshot. A missing entry is
+// reported rather than derived, since deriving would walk the whole NAV table on a metered path.
+func (k Keeper) totalValue(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	total, found, err := k.storedTotalValue(ctx, vault)
+	if err != nil {
+		return math.Int{}, err
+	}
+	if !found {
+		return math.Int{}, fmt.Errorf("failed to read total value for vault %s: %w", vault.GetAddress(), ErrNoMaterializedTotalValue)
+	}
+	return total, nil
+}
+
+// storedTotalValue reads a vault's materialized total, reporting whether an entry exists so callers
+// can tell "no entry yet" apart from a stored zero.
+func (k Keeper) storedTotalValue(ctx sdk.Context, vault types.VaultAccount) (math.Int, bool, error) {
+	total, err := k.TotalValues.Get(ctx, vault.GetAddress())
+	switch {
+	case err == nil:
+		return total, true, nil
+	case errors.Is(err, collections.ErrNotFound):
+		return math.ZeroInt(), false, nil
+	default:
+		return math.Int{}, false, fmt.Errorf("failed to read materialized total value for vault %s: %w", vault.GetAddress(), err)
+	}
+}
+
+// RecomputeTotalValue derives a vault's total value from state, stores it, and returns it.
+//
+// This is a seeding path, not a repair path available to consensus code: the walk is unbounded in
+// the number of denoms the vault prices. Callers are limited to genesis, the migration and vault
+// creation. See spec/02_state.md.
+func (k Keeper) RecomputeTotalValue(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	total, err := k.WalkTotalValue(ctx, vault)
+	if err != nil {
+		return math.Int{}, err
+	}
+	if err := k.TotalValues.Set(ctx, vault.GetAddress(), total); err != nil {
+		return math.Int{}, fmt.Errorf("failed to store materialized total value for vault %s: %w", vault.GetAddress(), err)
+	}
+	return total, nil
+}
+
+// WalkTotalValue derives a vault's total value by walking its NAV table, and is the definition the
+// materialized total must match. It counts only the principal marker's balances, valuing the
+// underlying at identity and each priced denom at its NAV. Iterating the NAV table rather than every
+// principal balance keeps the cost proportional to the denoms the vault actually prices, and
+// per-denom value comes from denomValue so the walk and the incremental deltas cannot disagree.
+//
+// The share denom and the underlying are skipped up front. Neither entry should exist — the
+// accumulator already holds the underlying, and validateVaultNAVFields rejects a NAV on the share
+// denom — so this guards state that reached the table without passing that validation.
+func (k Keeper) WalkTotalValue(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	principal := vault.PrincipalMarkerAddress()
 	total := k.BankKeeper.GetBalance(ctx, principal, vault.UnderlyingAsset).Amount
 
@@ -199,13 +253,9 @@ func (k Keeper) GetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, err
 		if denom == vault.TotalShares.Denom || denom == vault.UnderlyingAsset {
 			return false, nil
 		}
-		balance := k.BankKeeper.GetBalance(ctx, principal, denom)
-		if balance.IsZero() {
-			return false, nil
-		}
-		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
+		val, err := k.denomValue(ctx, vault, denom, k.BankKeeper.GetBalance(ctx, principal, denom).Amount)
 		if err != nil {
-			return true, fmt.Errorf("failed to convert held denom %q balance to underlying: %w", denom, err)
+			return true, err
 		}
 		total, err = total.SafeAdd(val)
 		if err != nil {
@@ -218,6 +268,151 @@ func (k Keeper) GetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, err
 	}
 
 	return total, nil
+}
+
+// InitTotalValue seeds a new vault's materialized total by deriving it rather than assuming zero,
+// since its principal address may already hold a balance sent there before the vault existed. The
+// walk is bounded here: a vault being created prices no denoms yet.
+func (k Keeper) InitTotalValue(ctx sdk.Context, vault *types.VaultAccount) error {
+	if _, err := k.RecomputeTotalValue(ctx, *vault); err != nil {
+		return fmt.Errorf("failed to initialize materialized total value for vault %s: %w", vault.GetAddress(), err)
+	}
+	return nil
+}
+
+// HydrateTotalValues derives and stores the materialized total for every vault in the lookup,
+// resolving that lookup exactly as the total-value invariant does so the two cannot disagree about
+// which vaults must end up with an entry. A vault that cannot be valued is logged and skipped,
+// because aborting an upgrade or a genesis import over one bad vault is worse; the invariant passes
+// over that vault too, having no reference of its own to compare against.
+func (k Keeper) HydrateTotalValues(ctx sdk.Context) error {
+	vaults, _, err := k.resolveVaults(ctx, "materializing total values")
+	if err != nil {
+		return err
+	}
+
+	for _, vault := range vaults {
+		total, err := k.RecomputeTotalValue(ctx, vault)
+		if err != nil {
+			k.getLogger(ctx).Error("skipping total value for vault that cannot be valued",
+				"vault", vault.GetAddress().String(),
+				"err", err,
+			)
+			continue
+		}
+
+		k.getLogger(ctx).Info("materialized vault total value",
+			"vault", vault.GetAddress().String(),
+			"total_value", total.String(),
+			"denom", vault.UnderlyingAsset,
+		)
+	}
+
+	return nil
+}
+
+// denomValue returns what a principal balance of denom contributes to total vault value. An
+// unpriced denom contributes zero rather than erroring, matching what the walk does with it.
+func (k Keeper) denomValue(ctx sdk.Context, vault types.VaultAccount, denom string, balance math.Int) (math.Int, error) {
+	if balance.IsNil() || !balance.IsPositive() {
+		return math.ZeroInt(), nil
+	}
+	if denom == vault.UnderlyingAsset {
+		return balance, nil
+	}
+	if denom == vault.TotalShares.Denom {
+		return math.ZeroInt(), nil
+	}
+	value, err := k.ToUnderlyingAssetAmount(ctx, vault, sdk.NewCoin(denom, balance))
+	if err != nil {
+		if errors.Is(err, ErrInternalNAVNotFound) {
+			return math.ZeroInt(), nil
+		}
+		return math.Int{}, fmt.Errorf("failed to value held denom %q for vault %s: %w", denom, vault.GetAddress(), err)
+	}
+	return value, nil
+}
+
+// adjustTotalValue folds a signed change into a vault's materialized total, and is how every path
+// that moves a priced balance or changes a price keeps that total current. Callers must report
+// after the balance has moved.
+//
+// A missing entry or a total that would go negative is refused rather than repaired, since
+// repairing means walking the NAV table on a metered path. See spec/02_state.md.
+func (k Keeper) adjustTotalValue(ctx sdk.Context, vault types.VaultAccount, delta math.Int) error {
+	if delta.IsNil() || delta.IsZero() {
+		return nil
+	}
+
+	current, found, err := k.storedTotalValue(ctx, vault)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return fmt.Errorf("failed to apply value delta %s for vault %s: %w", delta, vault.GetAddress(), ErrNoMaterializedTotalValue)
+	}
+
+	updated, err := current.SafeAdd(delta)
+	if err != nil {
+		return fmt.Errorf("failed to apply value delta %s to total %s for vault %s: %w", delta, current, vault.GetAddress(), err)
+	}
+
+	if updated.IsNegative() {
+		k.getLogger(ctx).Error("materialized total value would go negative",
+			"vault", vault.GetAddress().String(),
+			"stored", current.String(),
+			"delta", delta.String(),
+		)
+		return fmt.Errorf("failed to apply value delta %s to total %s for vault %s: %w", delta, current, vault.GetAddress(), ErrNegativeTotalValue)
+	}
+
+	if err := k.TotalValues.Set(ctx, vault.GetAddress(), updated); err != nil {
+		return fmt.Errorf("failed to store materialized total value for vault %s: %w", vault.GetAddress(), err)
+	}
+	return nil
+}
+
+// refreshDenomValue folds one denom's change into the total, given its principal balance either
+// side of a transfer. Both balances are re-valued rather than valuing the amount moved, because
+// the total sums per-denom floors: floor(a×p/v) + floor(b×p/v) != floor((a+b)×p/v).
+func (k Keeper) refreshDenomValue(ctx sdk.Context, vault types.VaultAccount, denom string, before, after math.Int) error {
+	if before.Equal(after) {
+		return nil
+	}
+	oldValue, err := k.denomValue(ctx, vault, denom, before)
+	if err != nil {
+		return fmt.Errorf("failed to value denom %q at its balance before the transfer: %w", denom, err)
+	}
+	newValue, err := k.denomValue(ctx, vault, denom, after)
+	if err != nil {
+		return fmt.Errorf("failed to value denom %q at its balance after the transfer: %w", denom, err)
+	}
+	return k.adjustTotalValue(ctx, vault, newValue.Sub(oldValue))
+}
+
+// principalBalances snapshots the principal's balance for each denom of coins, to pair with
+// refreshPrincipalValue around a transfer. It returns a slice, not a map, so the refresh applies its
+// deltas in a fixed order: adjustTotalValue can bail out partway, making order observable.
+func (k Keeper) principalBalances(ctx sdk.Context, vault types.VaultAccount, coins sdk.Coins) []sdk.Coin {
+	principal := vault.PrincipalMarkerAddress()
+	balances := make([]sdk.Coin, len(coins))
+	for i, coin := range coins {
+		balances[i] = sdk.NewCoin(coin.Denom, k.BankKeeper.GetBalance(ctx, principal, coin.Denom).Amount)
+	}
+	return balances
+}
+
+// refreshPrincipalValue folds every denom's change into the total, given the balances captured
+// before the transfer.
+func (k Keeper) refreshPrincipalValue(ctx sdk.Context, vault types.VaultAccount, before []sdk.Coin) error {
+	principal := vault.PrincipalMarkerAddress()
+	for _, prior := range before {
+		after := k.BankKeeper.GetBalance(ctx, principal, prior.Denom).Amount
+		if err := k.refreshDenomValue(ctx, vault, prior.Denom, prior.Amount, after); err != nil {
+			return fmt.Errorf("failed to refresh value of denom %q for vault %s: %w", prior.Denom, vault.GetAddress(), err)
+		}
+	}
+	return nil
 }
 
 // GetNetTVV returns the Total Vault Value (TVV) expressed in
@@ -278,7 +473,8 @@ func (k Keeper) GetNAVPerShare(ctx sdk.Context, vault types.VaultAccount) (math.
 // deposit denom via ValidateAcceptedCoin, so no price conversion is required.
 //
 // Returns a coin in the share denom. This function performs calculation only;
-// callers must enforce liquidity/policy.
+// callers must enforce liquidity/policy. Returns utils.ErrZeroAssetsWithSharesOutstanding
+// when net TVV is zero while shares are outstanding; callers surface that as a rejection.
 func (k Keeper) ConvertDepositToShares(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
 	tvv, err := k.GetNetTVV(ctx, vault)
 	if err != nil {

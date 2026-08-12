@@ -1,10 +1,12 @@
 #!/bin/bash
 
-# Vault creation is governance-gated: MsgCreateVaultRequest must be signed by the
-# gov module account. This script builds that message, wraps it in a governance
-# proposal, submits it, votes yes with the given key, and waits for the vault to
-# appear. It assumes a local single-node chain started by ./local.sh, where the
-# voting period is short and the given key holds all the voting power.
+# Creates a vault, taking whichever path the chain's gov_only_vault_creation param
+# calls for. With the param off (the local default), the given key signs
+# MsgCreateVaultRequest directly. With it on, the message must be signed by the gov
+# module account, so the script wraps it in a governance proposal, submits it, votes
+# yes with the given key, and waits for the vault to appear. The governance path
+# assumes a local single-node chain started by ./local.sh, where the voting period is
+# short and the given key holds all the voting power.
 
 set -uo pipefail
 
@@ -34,18 +36,29 @@ UNDERLYING_ASSET="$1"
 SHARE_DENOM="$2"
 KEY_NAME="$3"
 
-# Derive ADMIN from the provided key_name. It becomes the vault admin designated by
-# the proposal, and signs the marker creation, proposal submission, and vote.
+# Derive ADMIN from the provided key_name. It becomes the vault admin and signs the
+# marker creation, plus either the vault creation itself or the proposal and vote.
 ADMIN=$($GET_KEY_SCRIPT "$KEY_NAME")
 if [ -z "$ADMIN" ]; then
   echo "ERROR: Could not retrieve address for key '$KEY_NAME'. Ensure $GET_KEY_SCRIPT works and key exists."
   exit 1
 fi
 
-GOV_AUTHORITY=$($SIMD_BIN query auth module-account gov $HOME_DIR --output json 2>/dev/null | jq -r '.account.value.address')
-if [ -z "$GOV_AUTHORITY" ] || [ "$GOV_AUTHORITY" = "null" ]; then
-  echo "ERROR: Could not resolve the gov module account address. Is the node running?"
+PARAMS_JSON=$($SIMD_BIN query vault params $HOME_DIR --output json 2>/dev/null)
+if [ -z "$PARAMS_JSON" ]; then
+  echo "ERROR: Could not read the vault module params. Is the node running?"
   exit 1
+fi
+
+# The gate is omitted from the query output when it is off, so absent means false.
+GOV_ONLY=$(printf '%s' "$PARAMS_JSON" | jq -r '.params.gov_only_vault_creation // false')
+
+if [ "$GOV_ONLY" = "true" ]; then
+  GOV_AUTHORITY=$($SIMD_BIN query auth module-account gov $HOME_DIR --output json 2>/dev/null | jq -r '.account.value.address')
+  if [ -z "$GOV_AUTHORITY" ] || [ "$GOV_AUTHORITY" = "null" ]; then
+    echo "ERROR: Could not resolve the gov module account address. Is the node running?"
+    exit 1
+  fi
 fi
 
 # --- 1. Check if Marker Exists ---
@@ -85,7 +98,21 @@ if [ -z "$MARKER_ADDR" ]; then
   exit 1
 fi
 
-# --- 3. Build the governance proposal containing MsgCreateVaultRequest ---
+# --- 3a. Direct creation, available while gov_only_vault_creation is off ---
+if [ "$GOV_ONLY" != "true" ]; then
+  echo "Creating vault '$SHARE_DENOM' directly, signed by $ADMIN..."
+  $TX_SCRIPT vault create "$ADMIN" "$ADMIN" "$SHARE_DENOM" "$UNDERLYING_ASSET" --from "$ADMIN"
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to create vault '$SHARE_DENOM'."
+    exit 1
+  fi
+
+  echo "Vault '$SHARE_DENOM' created."
+  $QUERY_SCRIPT vault get "$SHARE_DENOM"
+  exit $?
+fi
+
+# --- 3b. Build the governance proposal containing MsgCreateVaultRequest ---
 PROPOSAL_FILE=$(mktemp -t create-vault-proposal)
 trap 'rm -f "$PROPOSAL_FILE"' EXIT
 

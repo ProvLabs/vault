@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 	"math"
+	"strings"
 
 	gproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/protoadapt"
@@ -23,9 +24,13 @@ const (
 	// MaxWithdrawalDelay caps the swap-out withdrawal delay in seconds (2 years).
 	MaxWithdrawalDelay = 31_536_000 * 2
 
-	// MaxAbsInterestRate is the absolute ceiling on any interest rate's magnitude (100.0 == 10,000% APR),
-	// bounding the e^(rt) exponent so an admin-set rate cannot overflow the LegacyDec interest math.
+	// MaxAbsInterestRate is the absolute ceiling on any interest rate's magnitude (100.0 == 10,000% APR).
+	// It bounds r only; utils.ExpDec range-reduces the e^(rt) exponent, which elapsed time leaves unbounded.
 	MaxAbsInterestRate = "100.0"
+
+	// NoPauseAuthority is the PausedBy value for a pause no signer initiated, keeping the
+	// field parseable as the address the proto declares it to be. PausedForced gates resuming.
+	NoPauseAuthority = ""
 )
 
 var (
@@ -36,9 +41,19 @@ var (
 	maxAbsInterestRateDec = sdkmath.LegacyMustNewDecFromStr(MaxAbsInterestRate)
 )
 
+// ValidateWithdrawalDelay returns an error if delaySeconds exceeds MaxWithdrawalDelay.
+// Every write path must run it: an unbounded delay truncates on conversion to the int64
+// queue key, wrapping the maturity into the past so the swap-out pays out immediately.
+func ValidateWithdrawalDelay(delaySeconds uint64) error {
+	if delaySeconds > MaxWithdrawalDelay {
+		return fmt.Errorf("withdrawal delay cannot exceed %d seconds: %d", MaxWithdrawalDelay, delaySeconds)
+	}
+	return nil
+}
+
 // ValidateInterestRateMagnitude returns an error if the absolute value of rate
-// exceeds the MaxAbsInterestRate ceiling. The check is symmetric: a large negative
-// rate overflows the e^(rt) series exactly as a large positive one does.
+// exceeds the MaxAbsInterestRate ceiling. The check is symmetric because a large
+// negative rate reclaims principal as aggressively as a large positive one pays out.
 func ValidateInterestRateMagnitude(rate sdkmath.LegacyDec) error {
 	if rate.Abs().GT(maxAbsInterestRateDec) {
 		return fmt.Errorf("interest rate %s exceeds maximum allowed magnitude %s", rate, MaxAbsInterestRate)
@@ -137,6 +152,9 @@ func (v VaultAccount) Clone() *VaultAccount {
 func ValidateSwapLimits(minStr, maxStr string) error {
 	var minVal sdkmath.Int
 	if minStr != "" {
+		if err := ValidateIntStringLength("min value", minStr); err != nil {
+			return err
+		}
 		var ok bool
 		minVal, ok = sdkmath.NewIntFromString(minStr)
 		if !ok {
@@ -150,6 +168,9 @@ func ValidateSwapLimits(minStr, maxStr string) error {
 	}
 
 	if maxStr != "" {
+		if err := ValidateIntStringLength("max value", maxStr); err != nil {
+			return err
+		}
 		maxVal, ok := sdkmath.NewIntFromString(maxStr)
 		if !ok {
 			return fmt.Errorf("invalid max value: %s", maxStr)
@@ -206,6 +227,15 @@ func (v VaultAccount) Validate() error {
 		if _, err := sdk.AccAddressFromBech32(v.NavAuthority); err != nil {
 			return fmt.Errorf("invalid nav authority address: %w", err)
 		}
+	}
+
+	if v.PausedBy != "" {
+		if _, err := sdk.AccAddressFromBech32(v.PausedBy); err != nil {
+			return fmt.Errorf("invalid paused by address: %w", err)
+		}
+	}
+	if !v.Paused && (v.PausedBy != "" || v.PausedForced) {
+		return fmt.Errorf("unpaused vault cannot carry pause attribution (paused_by=%q paused_forced=%t)", v.PausedBy, v.PausedForced)
 	}
 
 	if v.BridgeAddress != "" {
@@ -283,6 +313,10 @@ func (v VaultAccount) Validate() error {
 	}
 	if v.AumFeeBips > 10_000 {
 		return fmt.Errorf("AUM fee bips cannot exceed 10,000: %d", v.AumFeeBips)
+	}
+
+	if err := ValidateWithdrawalDelay(v.WithdrawalDelaySeconds); err != nil {
+		return err
 	}
 
 	if v.OutstandingAumFee.Amount.IsNil() {
@@ -364,6 +398,16 @@ func (v *VaultAccount) ValidateNAVAuthority(signer string) error {
 	return nil
 }
 
+// ValidateNotIBCDenom rejects ICS-20 voucher denoms (ibc/<hash>). IBC receives bypass the
+// marker send restriction, so a valued IBC balance would drift the materialized total value;
+// review that flow before lifting this ban.
+func ValidateNotIBCDenom(denom string) error {
+	if strings.HasPrefix(denom, "ibc/") {
+		return fmt.Errorf("ibc denom %q cannot be used by a vault", denom)
+	}
+	return nil
+}
+
 // IsAcceptedDenom reports whether denom is allowed for vault I/O. Vaults are
 // single-denom: only the underlying asset is accepted.
 func (v *VaultAccount) IsAcceptedDenom(denom string) bool {
@@ -386,6 +430,21 @@ func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
 	return v.ValidateAcceptedDenom(c.Denom)
 }
 
+// SwapOutPayoutTime returns the unix timestamp at which a swap-out requested at blockTime
+// becomes payable. It re-validates the delay and checks the addition so a vault whose delay
+// slipped past MaxWithdrawalDelay fails the swap-out instead of maturing in the past.
+func (v VaultAccount) SwapOutPayoutTime(blockTime int64) (int64, error) {
+	if err := ValidateWithdrawalDelay(v.WithdrawalDelaySeconds); err != nil {
+		return 0, err
+	}
+	delay := int64(v.WithdrawalDelaySeconds) //nolint:gosec // G115: ValidateWithdrawalDelay bounds the delay by MaxWithdrawalDelay, far below the int64 ceiling.
+	payoutTime := blockTime + delay
+	if payoutTime < blockTime {
+		return 0, fmt.Errorf("payout time overflows int64: block time %d plus withdrawal delay %d", blockTime, delay)
+	}
+	return payoutTime, nil
+}
+
 // PrincipalMarkerAddress returns the share-denom marker address that holds the
 // vault’s principal (i.e., the marker account backing the vault’s shares).
 func (v VaultAccount) PrincipalMarkerAddress() sdk.AccAddress {
@@ -402,6 +461,15 @@ func (v VaultAccount) ValidateManagementAuthority(authority string) error {
 		return nil
 	}
 	return fmt.Errorf("unauthorized authority: %s", authority)
+}
+
+// ValidatePauseAuthority checks whether the given address may pause the vault. It widens
+// ValidateManagementAuthority to include the NAV authority; unpausing does not widen.
+func (v VaultAccount) ValidatePauseAuthority(authority string) error {
+	if authority == v.GetNAVAuthority() {
+		return nil
+	}
+	return v.ValidateManagementAuthority(authority)
 }
 
 // ValidateAssetManagerAuthority checks whether the given address is the vault's asset
@@ -464,4 +532,25 @@ func NewVaultNAV(denom string, price sdk.Coin, volume sdkmath.Int, source string
 		Volume: volume,
 		Source: source,
 	}
+}
+
+// PricesSameAs reports whether other carries the same unit price as this entry, so the
+// same price quoted at a different volume compares equal. It returns false when the two
+// are not comparable: a different price denom, an unset amount, or an overflowing product.
+func (n VaultNAV) PricesSameAs(other VaultNAV) bool {
+	if n.Price.Denom != other.Price.Denom {
+		return false
+	}
+	if n.Price.Amount.IsNil() || other.Price.Amount.IsNil() || n.Volume.IsNil() || other.Volume.IsNil() {
+		return false
+	}
+	thisValue, err := n.Price.Amount.SafeMul(other.Volume)
+	if err != nil {
+		return false
+	}
+	otherValue, err := other.Price.Amount.SafeMul(n.Volume)
+	if err != nil {
+		return false
+	}
+	return thisValue.Equal(otherValue)
 }

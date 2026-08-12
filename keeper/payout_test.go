@@ -454,6 +454,31 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 			},
 			batchSize: keeper.MaxSwapOutBatchSize,
 		},
+		{
+			name: "request with negative escrowed shares is deferred instead of halting the chain",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress, shares sdk.Coin) (sdk.AccAddress, uint64) {
+				ownerAddr, _, _, req := s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+				req.Shares = sdk.Coin{Denom: shareDenom, Amount: math.NewInt(-100)}
+				const malformedID = 9_000
+				s.forceEnqueuePendingSwapOut(duePayoutTime, malformedID, req)
+				return ownerAddr, malformedID
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
+				req := s.assertSwapOutRetryDeferred(reqID, 1)
+				s.Require().True(req.Shares.Amount.IsNegative(), "the malformed escrow record should be preserved for operator remediation")
+
+				retryEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRetryScheduled(
+					vaultAddr.String(), ownerAddr.String(), req.Shares, reqID, types.RetryReasonInvalidRequest, 1, testBlockTime.Unix(),
+				))
+				s.Require().NoError(err, "should not error converting typed EventSwapOutRetryScheduled")
+				s.Assert().Contains(
+					normalizeEvents(s.ctx.EventManager().Events()),
+					normalizeEvents(sdk.Events{retryEvent})[0],
+					"a retry event with reason %s should be emitted for the malformed request", types.RetryReasonInvalidRequest,
+				)
+			},
+			batchSize: keeper.MaxSwapOutBatchSize,
+		},
 	}
 
 	for i, tc := range tests {
@@ -579,6 +604,141 @@ func (s *TestSuite) TestKeeper_SwapOutRetryBackoff() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_SwapOutRetryDelay() {
+	tests := []struct {
+		name          string
+		id            uint64
+		failureCount  uint32
+		expectedDelay int64
+	}{
+		{
+			name:          "no failures recorded yet, retries immediately without jitter",
+			id:            7,
+			failureCount:  0,
+			expectedDelay: 0,
+		},
+		{
+			name:          "first failure retries on the next block without jitter",
+			id:            7,
+			failureCount:  1,
+			expectedDelay: 0,
+		},
+		{
+			name:          "second failure adds the id derived jitter to the base delay",
+			id:            7,
+			failureCount:  2,
+			expectedDelay: keeper.SwapOutRetryBackoffBase + 7,
+		},
+		{
+			name:          "an id at the top of the spread window still lands inside it",
+			id:            keeper.SwapOutRetryJitterSpread - 1,
+			failureCount:  2,
+			expectedDelay: keeper.SwapOutRetryBackoffBase + keeper.SwapOutRetryJitterSpread - 1,
+		},
+		{
+			name:          "jitter wraps once the id exceeds the spread window",
+			id:            keeper.SwapOutRetryJitterSpread + 3,
+			failureCount:  2,
+			expectedDelay: keeper.SwapOutRetryBackoffBase + 3,
+		},
+		{
+			name:          "an id that is a multiple of the spread window contributes no jitter",
+			id:            2 * keeper.SwapOutRetryJitterSpread,
+			failureCount:  2,
+			expectedDelay: keeper.SwapOutRetryBackoffBase,
+		},
+		{
+			name:          "jitter is added on top of the capped backoff",
+			id:            42,
+			failureCount:  1_000,
+			expectedDelay: keeper.SwapOutRetryBackoffMax + 42,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			delay := s.k.TestAccessor_swapOutRetryDelay(tc.id, tc.failureCount)
+			s.Require().Equal(tc.expectedDelay, delay, "unexpected retry delay for request %d with failure count %d", tc.id, tc.failureCount)
+			s.Require().LessOrEqual(
+				delay,
+				int64(keeper.SwapOutRetryBackoffMax+keeper.SwapOutRetryJitterSpread),
+				"retry delay for request %d should never exceed the cap plus the jitter spread", tc.id,
+			)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_SwapOutRetryDelay_DistinctForConsecutiveIDs() {
+	const clusterSize = 250
+
+	seen := make(map[int64]uint64, clusterSize)
+	for i := range clusterSize {
+		id := uint64(9_000 + i)
+		delay := s.k.TestAccessor_swapOutRetryDelay(id, 2)
+		collided, ok := seen[delay]
+		s.Require().False(ok, "requests %d and %d should not share retry delay %d", collided, id, delay)
+		seen[delay] = id
+	}
+}
+
+func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts_ClusteredFailuresDoNotShareRetryTime() {
+	testBlockTime := time.Now().UTC()
+	duePayoutTime := testBlockTime.Add(-1 * time.Hour).Unix()
+	underlyingDenom := "jitterylds"
+	shareDenom := "vsharejitter"
+	assets := sdk.NewInt64Coin(underlyingDenom, 50)
+	const clusterSize = 8
+
+	s.SetupTest()
+	s.ctx = s.ctx.WithBlockTime(testBlockTime)
+	reqIDs := s.enqueueUnrefundableSwapOutCluster(underlyingDenom, shareDenom, assets, duePayoutTime, clusterSize)
+
+	s.Require().NoError(
+		s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize),
+		"the block granting the one immediate retry should not error",
+	)
+
+	for _, reqID := range reqIDs {
+		retryTime, req, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, reqID)
+		s.Require().NoError(err, "request %d should stay queued after its first failure", reqID)
+		s.Require().Equal(uint32(1), req.FailureCount, "request %d should have recorded one failed attempt", reqID)
+		s.Require().Equal(
+			s.ctx.BlockTime().Unix(),
+			retryTime,
+			"the immediate retry granted by SwapOutImmediateRetries should not be jittered for request %d", reqID,
+		)
+	}
+
+	s.ctx = s.ctx.WithBlockTime(testBlockTime.Add(time.Second))
+	s.Require().NoError(
+		s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize),
+		"the block that starts backing the cluster off should not error",
+	)
+
+	retryTimes := make(map[int64]uint64, clusterSize)
+	for _, reqID := range reqIDs {
+		retryTime, req, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, reqID)
+		s.Require().NoError(err, "request %d should stay queued after its second failure", reqID)
+		s.Require().Equal(uint32(2), req.FailureCount, "request %d should have recorded two failed attempts", reqID)
+
+		delay := retryTime - s.ctx.BlockTime().Unix()
+		s.Require().GreaterOrEqual(
+			delay,
+			int64(keeper.SwapOutRetryBackoffBase),
+			"request %d should never be retried sooner than its backoff", reqID,
+		)
+		s.Require().Less(
+			delay,
+			int64(keeper.SwapOutRetryBackoffBase+keeper.SwapOutRetryJitterSpread),
+			"request %d should be retried inside the jitter spread window", reqID,
+		)
+
+		collided, ok := retryTimes[retryTime]
+		s.Require().False(ok, "identically failing requests %d and %d must not share retry time %d", collided, reqID, retryTime)
+		retryTimes[retryTime] = reqID
+	}
+}
+
 func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts_RepeatedFailuresBackOff() {
 	testBlockTime := time.Now().UTC()
 	duePayoutTime := testBlockTime.Add(-1 * time.Hour).Unix()
@@ -596,9 +756,14 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts_RepeatedFailuresBackOff() 
 		2 * keeper.SwapOutRetryBackoffBase,
 		4 * keeper.SwapOutRetryBackoffBase,
 	}
+	jitter := int64(reqID % keeper.SwapOutRetryJitterSpread)
 
 	for i, expectedBackoff := range expectedBackoffs {
 		failureCount := uint32(i + 1)
+		expectedDelay := expectedBackoff
+		if expectedBackoff > 0 {
+			expectedDelay += jitter
+		}
 
 		dueTime, _, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, reqID)
 		s.Require().NoError(err, "request %d should still be queued before attempt %d", reqID, failureCount)
@@ -616,9 +781,9 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts_RepeatedFailuresBackOff() 
 		retryTime, _, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, reqID)
 		s.Require().NoError(err, "request %d should stay queued after attempt %d", reqID, failureCount)
 		s.Require().Equal(
-			s.ctx.BlockTime().Unix()+expectedBackoff,
+			s.ctx.BlockTime().Unix()+expectedDelay,
 			retryTime,
-			"attempt %d should defer the retry by %d seconds", failureCount, expectedBackoff,
+			"attempt %d should defer the retry by %d seconds", failureCount, expectedDelay,
 		)
 	}
 
@@ -843,6 +1008,8 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 				s.Require().True(vault.Paused, "vault should be paused after the critical failure")
 				vault.Paused = false
 				vault.PausedReason = ""
+				vault.PausedBy = ""
+				vault.PausedForced = false
 				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should successfully unpause vault")
 
 				retryTime, preserved, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, reqID)
@@ -862,6 +1029,34 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 				s.assertBalance(vaultAddr, mintedShares.Denom, math.ZeroInt())
 				supply := s.k.BankKeeper.GetSupply(s.ctx, shareDenom)
 				s.Require().True(supply.Amount.IsZero(), "share supply should be zero after the burn completes")
+			},
+		},
+		{
+			name: "job whose queue entry is already gone is not paid out and pauses the vault",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress) (sdk.AccAddress, sdk.Coin, uint64, types.PendingSwapOut) {
+				return s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+			},
+			act: func(shareDenom string, vaultAddr sdk.AccAddress, ownerAddr sdk.AccAddress, mintedShares sdk.Coin, reqID uint64, req types.PendingSwapOut) {
+				s.Require().NoError(
+					s.k.PendingSwapOutQueue.Dequeue(s.ctx, duePayoutTime, vaultAddr, reqID),
+					"should remove request %d from the queue so the collected job no longer matches queue contents", reqID,
+				)
+				s.k.TestAccessor_processSwapOutJobs(s.T(), s.ctx, []types.PayoutJob{types.NewPayoutJob(duePayoutTime, reqID, vaultAddr, req)})
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, mintedShares sdk.Coin) {
+				s.Require().Zero(s.countPendingSwapOuts(), "a job with no queue entry must not resurrect one")
+
+				s.assertBalance(ownerAddr, underlyingDenom, math.ZeroInt())
+				s.assertBalance(vaultAddr, mintedShares.Denom, mintedShares.Amount)
+				s.Require().Equal(
+					mintedShares.Amount,
+					s.k.BankKeeper.GetSupply(s.ctx, shareDenom).Amount,
+					"share supply must be untouched when the payout rolls back with request %d", reqID,
+				)
+
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should successfully get vault %s", vaultAddr)
+				s.Require().True(vault.Paused, "vault %s must be paused when the collected job and the queue disagree", vaultAddr)
 			},
 		},
 	}

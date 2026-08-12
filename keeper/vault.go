@@ -1,10 +1,12 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -54,6 +56,10 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 	maxSwapIn := attributes.GetMaxSwapInValue()
 	maxSwapOut := attributes.GetMaxSwapOutValue()
 
+	if err := types.ValidateNotIBCDenom(underlying); err != nil {
+		return nil, fmt.Errorf("invalid underlying asset: %w", err)
+	}
+
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get underlying asset marker address: %w", err)
@@ -71,6 +77,10 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 
 	if _, err = k.createVaultMarker(cacheCtx, vault.GetAddress(), vault.TotalShares.Denom); err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
+	}
+
+	if err = k.InitTotalValue(cacheCtx, vault); err != nil {
+		return nil, fmt.Errorf("failed to seed vault total value: %w", err)
 	}
 
 	provlabsAddr, err := k.GetAUMFeeAddress(cacheCtx)
@@ -118,6 +128,17 @@ func (k Keeper) getVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAcco
 		return nil, fmt.Errorf("vault not found: %s", addr.String())
 	}
 	return vault, nil
+}
+
+// availableBridgeMintCapacity returns the share supply the bridge may still mint locally
+func (k Keeper) availableBridgeMintCapacity(ctx sdk.Context, vault *types.VaultAccount) (sdk.Coin, error) {
+	currentSupply := k.BankKeeper.GetSupply(ctx, vault.TotalShares.Denom)
+	available, err := vault.TotalShares.SafeSub(currentSupply)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("share supply invariant violated for vault %s: total shares %s is below local supply %s: %w",
+			vault.Address, vault.TotalShares, currentSupply, err)
+	}
+	return available, nil
 }
 
 // createVaultAccount creates and stores a new vault account and initializes its fee tracking.
@@ -220,13 +241,15 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 //  3. Reconciles the vault (interest and AUM fees) if due.
 //  4. Resolves the vault share marker address.
 //  5. Validates that the provided underlying asset matches the vault’s configured underlying denom.
-//  6. Calculates the number of shares to mint based on the deposit, current supply, and vault balance,
-//     rejecting deposits that round down to zero shares before any funds move.
-//  7. Mints the computed amount of shares under the vault’s admin authority.
-//  8. Withdraws the minted shares from the vault to the recipient address.
-//  9. Sends the underlying asset from the recipient to the vault’s marker account.
+//  6. Rejects the deposit when the depositor is on the underlying marker’s deny list.
+//  7. Calculates the number of shares to mint based on the deposit, current supply, and vault balance,
+//     rejecting deposits that round down to zero shares, or that price against a zero net vault
+//     value with shares outstanding, before any funds move.
+//  8. Mints the computed amount of shares under the vault’s admin authority.
+//  9. Withdraws the minted shares from the vault to the recipient address.
 //
-// 10. Emits a SwapIn event with metadata for indexing and audit.
+// 10. Sends the underlying asset from the recipient to the vault’s marker account.
+// 11. Emits a SwapIn event with metadata for indexing and audit.
 //
 // Returns the minted share amount on success, or an error if any step fails.
 func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, asset sdk.Coin) (*sdk.Coin, error) {
@@ -250,6 +273,10 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("failed to validate asset: %w", err)
 	}
 
+	if err = k.checkDepositDenyList(ctx, recipient, asset.Denom); err != nil {
+		return nil, fmt.Errorf("failed to swap in: %w", err)
+	}
+
 	accept, reason, err := k.AllowSwapInAmount(ctx, asset, *vault)
 	if err != nil {
 		return nil, fmt.Errorf("swap in amount not allowed: %w", err)
@@ -266,6 +293,9 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	shares, err := k.ConvertDepositToShares(ctx, *vault, asset)
 	if err != nil {
+		if errors.Is(err, utils.ErrZeroAssetsWithSharesOutstanding) {
+			return nil, fmt.Errorf("vault %s cannot accept deposits: net vault value is zero with %s outstanding: %w", vaultAddr.String(), vault.TotalShares.String(), err)
+		}
 		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
 	}
 
@@ -294,8 +324,25 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("failed to send asset to principal: %w", err)
 	}
 
+	if err := k.adjustTotalValue(ctx, *vault, asset.Amount); err != nil {
+		return nil, fmt.Errorf("failed to record swap-in value: %w", err)
+	}
+
 	k.emitEvent(ctx, types.NewEventSwapIn(vaultAddr.String(), recipient.String(), asset, shares))
 	return &shares, nil
+}
+
+// checkDepositDenyList rejects a depositor that is on the deny list of the deposited denom's marker.
+// Deposits move funds with a marker bypass, which skips the deny-list enforcement in SendRestrictionFn.
+func (k *Keeper) checkDepositDenyList(ctx sdk.Context, depositor sdk.AccAddress, denom string) error {
+	markerAddr, err := markertypes.MarkerAddress(denom)
+	if err != nil {
+		return fmt.Errorf("failed to get marker address for %s: %w", denom, err)
+	}
+	if k.MarkerKeeper.IsSendDeny(ctx, markerAddr, depositor) {
+		return fmt.Errorf("%s is on deny list for sending restricted marker %s", depositor, denom)
+	}
+	return nil
 }
 
 // checkPayoutRestrictions performs a pre-flight check to ensure a user is permissioned to receive
@@ -318,6 +365,9 @@ func (k *Keeper) checkPayoutRestrictions(ctx sdk.Context, vault *types.VaultAcco
 // underlying asset, escrows the user's shares, and enqueues a pending withdrawal request
 // to be processed by the EndBlocker.
 // It returns the unique ID of the newly queued request.
+//
+// The vault is reconciled before pricing so the swap-out limits gate the current net valuation.
+// The limits are checked only at admission; the payout is re-priced at maturity without a second check.
 func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (uint64, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
@@ -339,6 +389,10 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.TotalShares.Denom)
 	}
 
+	if err = k.reconcileVault(ctx, vault); err != nil {
+		return 0, fmt.Errorf("failed to reconcile vault: %w", err)
+	}
+
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate assets from shares: %w", err)
@@ -356,11 +410,14 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("failed to check payout restrictions: %w", err)
 	}
 
+	payoutTime, err := vault.SwapOutPayoutTime(ctx.BlockTime().Unix())
+	if err != nil {
+		return 0, fmt.Errorf("failed to determine swap out payout time: %w", err)
+	}
+
 	if err = k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
 		return 0, fmt.Errorf("failed to escrow shares: %w", err)
 	}
-
-	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds) //nolint:gosec // G115: WithdrawalDelaySeconds is validated <= MaxWithdrawalDelay.
 
 	pendingReq := types.NewPendingSwapOut(owner, vaultAddr, shares, vault.UnderlyingAsset)
 	requestID, err := k.PendingSwapOutQueue.Enqueue(ctx, payoutTime, &pendingReq)
@@ -482,19 +539,61 @@ func (k *Keeper) SetWithdrawalDelay(ctx sdk.Context, vault *types.VaultAccount, 
 	return nil
 }
 
-// applyPausedState performs the in-memory paused-state transition shared by the
-// operator-initiated PauseVault and the automatic autoPauseVault. It snapshots the
-// frozen balance, marks the vault paused with the supplied reason, and zeroes the
-// accruing interest rate while emitting the corresponding EventVaultInterestChange
-// so both paths stop interest accrual identically. It intentionally does not persist
-// the account: the caller chooses SetVaultAccount (validated) or SetAccount
-// (validation-skipped) depending on whether the vault may be in an invalid state.
-func (k *Keeper) applyPausedState(ctx sdk.Context, vault *types.VaultAccount, reason string, pausedBalance sdk.Coin) {
+// applyPausedState performs the in-memory paused-state transition shared by the two
+// emergency pause paths, forcePauseVault and autoPauseVault, so both stop interest
+// accrual identically. Both waive the strict reconcile and valuation gate, so it marks the
+// pause forced; pausedBy is types.NoPauseAuthority when no signer initiated the pause. It
+// intentionally does not persist the account: the caller chooses SetVaultAccount (validated)
+// or SetAccount (validation-skipped) depending on whether the vault may be in an invalid state.
+func (k *Keeper) applyPausedState(ctx sdk.Context, vault *types.VaultAccount, reason, pausedBy string, pausedBalance sdk.Coin) {
+	if pausedBalance.Amount.IsNil() {
+		pausedBalance.Amount = sdkmath.ZeroInt()
+	}
 	vault.PausedBalance = pausedBalance
 	vault.Paused = true
 	vault.PausedReason = reason
+	vault.PausedBy = pausedBy
+	vault.PausedForced = true
 	vault.CurrentInterestRate = types.ZeroInterestRate
 	k.emitEvent(ctx, types.NewEventVaultInterestChange(vault.GetAddress().String(), types.ZeroInterestRate, vault.DesiredInterestRate))
+}
+
+// resumeVault clears the paused state, re-arms interest and fee accrual from the current
+// block time so the paused span is never charged, and emits EventVaultUnpaused. Shared by
+// UnpauseVault and RepriceVault; the caller authorizes the resume.
+//
+// The total vault value it reports is read, not re-derived: everything done during the pause
+// folded its own change into the materialized total as it happened.
+func (k *Keeper) resumeVault(ctx sdk.Context, vault *types.VaultAccount, authority string) error {
+	if err := k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate); err != nil {
+		return fmt.Errorf("failed to update interest rates: %w", err)
+	}
+
+	vault.PausedBalance = sdk.Coin{}
+	vault.Paused = false
+	vault.PausedReason = ""
+	vault.PausedBy = ""
+	vault.PausedForced = false
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	tvv, err := k.totalValue(ctx, *vault)
+	if err != nil {
+		return fmt.Errorf("failed to read total vault value on unpause: %w", err)
+	}
+
+	if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {
+		return fmt.Errorf("failed to enqueue vault payout verification: %w", err)
+	}
+
+	if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
+		return fmt.Errorf("failed to enqueue vault fee timeout: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultUnpaused(vault.Address, authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))
+
+	return nil
 }
 
 // autoPauseVault sets a vault's state to paused, records the reason, persists it to state,
@@ -511,9 +610,10 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 	tvv, err := k.GetNetTVV(ctx, *vault)
 	if err != nil {
 		k.getLogger(ctx).Error("Failed to get net TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
+		tvv = sdkmath.ZeroInt()
 	}
 
-	k.applyPausedState(ctx, vault, reason, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv})
+	k.applyPausedState(ctx, vault, reason, types.NoPauseAuthority, sdk.NewCoin(vault.UnderlyingAsset, tvv))
 
 	if err := k.haltVaultAccrual(ctx, vault); err != nil {
 		k.getLogger(ctx).Error("failed to halt vault accrual during auto-pause", "vault_address", vault.GetAddress().String(), "error", err)
@@ -558,7 +658,7 @@ func (k *Keeper) forcePauseVault(ctx sdk.Context, vault *types.VaultAccount, aut
 		tvv = sdkmath.ZeroInt()
 	}
 
-	k.applyPausedState(ctx, vault, reason, sdk.NewCoin(vault.UnderlyingAsset, tvv))
+	k.applyPausedState(ctx, vault, reason, authority, sdk.NewCoin(vault.UnderlyingAsset, tvv))
 
 	if err := k.haltVaultAccrual(ctx, vault); err != nil {
 		forcedErrors = append(forcedErrors, fmt.Sprintf("halt accrual failed: %v", err))

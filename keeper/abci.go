@@ -39,6 +39,10 @@ const (
 	// SwapOutRetryBackoffMax caps the retry delay (in seconds) so a permanently failing
 	// swap out is still revisited, at a cost the batch budget can absorb.
 	SwapOutRetryBackoffMax = 6 * interest.SecondsPerHour
+
+	// SwapOutRetryJitterSpread is the window (in seconds) that delayed retries are spread across so
+	// swap outs failing in the same block do not all come due again in the same block.
+	SwapOutRetryJitterSpread = 600
 )
 
 // BeginBlocker is a hook that is called at the beginning of every block.

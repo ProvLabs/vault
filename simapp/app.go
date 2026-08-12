@@ -257,6 +257,10 @@ func NewSimApp(
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
+	// module.Manager.RegisterInvariants is a no-op in this SDK, so module invariants have to be
+	// registered on the crisis keeper directly or they never run.
+	vaultkeeper.RegisterInvariants(app.CrisisKeeper, *app.VaultKeeper)
+
 	if err := app.RegisterProvenanceModules(); err != nil {
 		return nil, err
 	}

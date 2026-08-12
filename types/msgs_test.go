@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -581,6 +582,15 @@ func TestMsgUpdateMinInterestRateRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("invalid min rate: %q", "abc"),
 		},
+		{
+			name: "over-length min rate is rejected without echoing the input",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MinRate:      strings.Repeat("9", types.MaxDecStringLength+1),
+			},
+			expectedErr: fmt.Errorf("invalid min rate: must be at most %d characters", types.MaxDecStringLength),
+		},
 	}
 
 	for _, tc := range tests {
@@ -649,6 +659,15 @@ func TestMsgUpdateMaxInterestRateRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("invalid max rate: %q", "notanumber"),
 		},
+		{
+			name: "over-length max rate is rejected without echoing the input",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MaxRate:      strings.Repeat("9", types.MaxDecStringLength+1),
+			},
+			expectedErr: fmt.Errorf("invalid max rate: must be at most %d characters", types.MaxDecStringLength),
+		},
 	}
 
 	for _, tc := range tests {
@@ -707,6 +726,15 @@ func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
 				NewRate:      "bad",
 			},
 			expectedErr: fmt.Errorf("invalid interest rate: %q", "bad"),
+		},
+		{
+			name: "over-length new rate is rejected without echoing the input",
+			msg: types.MsgUpdateInterestRateRequest{
+				Authority:    addr,
+				VaultAddress: addr,
+				NewRate:      strings.Repeat("9", types.MaxDecStringLength+1),
+			},
+			expectedErr: fmt.Errorf("invalid interest rate: must be at most %d characters", types.MaxDecStringLength),
 		},
 	}
 
@@ -2058,6 +2086,232 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: "source too long",
 		},
+		{
+			name: "price amount at the magnitude ceiling",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewCoin("under", maxNAVComponent()),
+				Volume:       sdkmath.NewInt(1),
+			},
+		},
+		{
+			name: "price amount one bit above the magnitude ceiling",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewCoin("under", maxNAVComponent().AddRaw(1)),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "NAV price amount",
+		},
+		{
+			name: "volume one bit above the magnitude ceiling",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       maxNAVComponent().AddRaw(1),
+			},
+			expectedErr: "NAV volume",
+		},
+	})
+}
+
+// maxNAVComponent returns the largest NAV price amount or volume that passes the magnitude bound.
+func maxNAVComponent() sdkmath.Int {
+	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), types.MaxNAVComponentBits), big.NewInt(1)))
+}
+
+func TestMsgRepriceVaultRequest_ValidateBasic(t *testing.T) {
+	addr := NewTestAddress()
+	validNAV := func(denom string) types.NAVUpdate {
+		return types.NAVUpdate{
+			Denom:  denom,
+			Price:  sdk.NewInt64Coin("under", 100),
+			Volume: sdkmath.NewInt(1),
+			Source: "oracle",
+		}
+	}
+	batchOf := func(n int) []types.NAVUpdate {
+		navs := make([]types.NAVUpdate, n)
+		for i := range navs {
+			navs[i] = validNAV(fmt.Sprintf("loan%d", i))
+		}
+		return navs
+	}
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid single update",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("rwa")},
+			},
+		},
+		{
+			name: "valid batch of distinct denoms",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("loan1"), validNAV("loan2"), validNAV("loan3")},
+			},
+		},
+		{
+			name: "batch at the size ceiling",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         batchOf(types.MaxRepriceBatchSize),
+			},
+		},
+		{
+			name: "batch one entry above the size ceiling",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         batchOf(types.MaxRepriceBatchSize + 1),
+			},
+			expectedErr: "too many NAV updates",
+		},
+		{
+			name: "invalid signer address",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       "not-an-address",
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("rwa")},
+			},
+			expectedErr: "invalid signer address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: "not-an-address",
+				Navs:         []types.NAVUpdate{validNAV("rwa")},
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "empty batch has nothing to reprice",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+			},
+			expectedErr: "at least one NAV update is required",
+		},
+		{
+			name: "duplicate denom in the batch is ambiguous",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("rwa"), validNAV("rwa")},
+			},
+			expectedErr: `duplicate NAV update for denom "rwa" at index 1`,
+		},
+		{
+			name: "invalid denom in the batch reports its index",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("rwa"), validNAV("bad denom")},
+			},
+			expectedErr: "invalid NAV update at index 1: invalid denom",
+		},
+		{
+			name: "invalid price coin in the batch",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.Coin{Denom: "under", Amount: sdkmath.NewInt(-1)},
+					Volume: sdkmath.NewInt(1),
+				}},
+			},
+			expectedErr: "invalid price coin",
+		},
+		{
+			name: "zero price is allowed statelessly so a held asset can be written down",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewInt64Coin("under", 0),
+					Volume: sdkmath.NewInt(1),
+				}},
+			},
+		},
+		{
+			name: "denom equals price denom",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewInt64Coin("rwa", 100),
+					Volume: sdkmath.NewInt(1),
+				}},
+			},
+			expectedErr: `NAV denom "rwa" and price denom must differ`,
+		},
+		{
+			name: "nil volume",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom: "rwa",
+					Price: sdk.NewInt64Coin("under", 100),
+				}},
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "negative volume",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewInt64Coin("under", 100),
+					Volume: sdkmath.NewInt(-1),
+				}},
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "source too long",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewInt64Coin("under", 100),
+					Volume: sdkmath.NewInt(1),
+					Source: strings.Repeat("a", types.MaxNAVSourceLength+1),
+				}},
+			},
+			expectedErr: "source too long",
+		},
+		{
+			name: "price amount one bit above the magnitude ceiling",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewCoin("under", maxNAVComponent().AddRaw(1)),
+					Volume: sdkmath.NewInt(1),
+				}},
+			},
+			expectedErr: "NAV price amount",
+		},
 	})
 }
 
@@ -2174,14 +2428,27 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 	vaultAddr := NewTestAddress()
 	source := NewTestAddress()
 
+	approvedPayment := func(mutate func(*types.Payment)) types.Payment {
+		payment := types.Payment{
+			Source:       source,
+			SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("rwacoin", 10)),
+			Target:       vaultAddr,
+			TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("under", 5)),
+			ExternalId:   "payment-1",
+		}
+		if mutate != nil {
+			mutate(&payment)
+		}
+		return payment
+	}
+
 	RunValidateBasicTable(t, []validateBasicCase{
 		{
 			name: "valid",
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(nil),
 			},
 		},
 		{
@@ -2189,8 +2456,7 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   "",
+				Payment:      approvedPayment(func(p *types.Payment) { p.ExternalId = "" }),
 			},
 		},
 		{
@@ -2198,8 +2464,15 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   strings.Repeat("x", 100),
+				Payment:      approvedPayment(func(p *types.Payment) { p.ExternalId = strings.Repeat("x", 100) }),
+			},
+		},
+		{
+			name: "valid with a zero-priced leg",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment:      approvedPayment(func(p *types.Payment) { p.TargetAmount = sdk.NewCoins() }),
 			},
 		},
 		{
@@ -2207,8 +2480,7 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    "bad",
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(nil),
 			},
 			expectedErr: "invalid authority address",
 		},
@@ -2217,8 +2489,7 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    "",
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(nil),
 			},
 			expectedErr: "invalid authority address",
 		},
@@ -2227,40 +2498,88 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: "bad",
-				Source:       source,
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(nil),
 			},
 			expectedErr: "invalid vault address",
 		},
 		{
-			name: "invalid source",
+			name: "invalid payment source",
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       "bad",
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(func(p *types.Payment) { p.Source = "bad" }),
 			},
-			expectedErr: "invalid source address",
+			expectedErr: "invalid payment: invalid source address",
 		},
 		{
-			name: "empty source",
+			name: "empty payment source",
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       "",
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(func(p *types.Payment) { p.Source = "" }),
 			},
-			expectedErr: "invalid source address",
+			expectedErr: "invalid payment: invalid source address",
+		},
+		{
+			name: "invalid payment target",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment:      approvedPayment(func(p *types.Payment) { p.Target = "bad" }),
+			},
+			expectedErr: "invalid payment: invalid target address",
+		},
+		{
+			name: "empty payment target",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment:      approvedPayment(func(p *types.Payment) { p.Target = "" }),
+			},
+			expectedErr: "invalid payment: invalid target address",
+		},
+		{
+			name: "unsorted payment source amount",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment: approvedPayment(func(p *types.Payment) {
+					p.SourceAmount = sdk.Coins{sdk.NewInt64Coin("zcoin", 1), sdk.NewInt64Coin("acoin", 1)}
+				}),
+			},
+			expectedErr: "invalid payment: invalid source amount",
+		},
+		{
+			name: "zero payment target amount coin",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment: approvedPayment(func(p *types.Payment) {
+					p.TargetAmount = sdk.Coins{sdk.NewInt64Coin("under", 0)}
+				}),
+			},
+			expectedErr: "invalid payment: invalid target amount",
+		},
+		{
+			name: "both payment legs zero",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment: approvedPayment(func(p *types.Payment) {
+					p.SourceAmount = sdk.NewCoins()
+					p.TargetAmount = sdk.NewCoins()
+				}),
+			},
+			expectedErr: "invalid payment: source amount and target amount cannot both be zero",
 		},
 		{
 			name: "external id too long",
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   strings.Repeat("x", 101),
+				Payment:      approvedPayment(func(p *types.Payment) { p.ExternalId = strings.Repeat("x", 101) }),
 			},
-			expectedErr: "invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
+			expectedErr: "invalid payment: invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
 		},
 	})
 }

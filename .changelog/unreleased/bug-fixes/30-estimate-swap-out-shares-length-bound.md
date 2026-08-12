@@ -1,0 +1,1 @@
+* Bound the `shares` string on the `EstimateSwapOut` query and validate it before the vault lookup, without echoing it back in the error. The same bound is applied to the swap-limit and interest-rate strings [PR 270](https://github.com/provlabs/vault/pull/270).

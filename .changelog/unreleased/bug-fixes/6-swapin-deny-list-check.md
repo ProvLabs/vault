@@ -1,0 +1,1 @@
+* Reject deposits from an address on the underlying marker's deny list, which the marker bypass used by swap-in and the interest/principal deposits previously skipped [PR 270](https://github.com/provlabs/vault/pull/270).

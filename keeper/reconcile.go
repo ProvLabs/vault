@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"math/big"
@@ -35,8 +36,7 @@ var navReferenceVolume = sdkmath.NewIntFromUint64(math.MaxUint64)
 
 // reconcileVault updates interest accounting and collects AUM fees for a vault if a new period has started.
 //
-// If this is the first time the vault accrues interest, it triggers the start of a new period
-// and publishes the initial NAV for the share denom in terms of the underlying asset.
+// If this is the first time the vault accrues fees, it bootstraps the fee period.
 // If the current block time is after the relevant PeriodStart, it applies the interest and/or fee transfers.
 // This function will do nothing if the vault is paused.
 //
@@ -52,6 +52,10 @@ var navReferenceVolume = sdkmath.NewIntFromUint64(math.MaxUint64)
 // 1. Interest is processed first to ensure the Total Vault Value (TVV) is updated.
 // 2. AUM fees are then calculated and collected based on the post-interest TVV.
 // 3. Timeouts are rescheduled and the updated NAV is published.
+//
+// The share NAV is republished whenever either accrual moved the net TVV, so a fee-only
+// reconcile refreshes the marker mirror just as an interest accrual does. A reconcile that
+// moves no value publishes nothing.
 func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error {
 	if vault == nil {
 		return fmt.Errorf("vault account cannot be nil")
@@ -63,8 +67,9 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
 	currentBlockTime := cacheCtx.BlockTime().Unix()
+	netValueMoved := interestPeriodElapsed(v, currentBlockTime) || feeAccrualMovesNetValue(v, currentBlockTime)
 
-	if v.PeriodStart != 0 && currentBlockTime > v.PeriodStart {
+	if interestPeriodElapsed(v, currentBlockTime) {
 		if err := k.PerformVaultInterestTransfer(cacheCtx, v); err != nil {
 			return fmt.Errorf("perform vault interest transfer: %w", err)
 		}
@@ -83,7 +88,7 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 		}
 	}
 
-	if v.PeriodStart != 0 && currentBlockTime > v.PeriodStart {
+	if netValueMoved {
 		if err := k.publishShareNav(cacheCtx, v); err != nil {
 			return fmt.Errorf("publish share nav: %w", err)
 		}
@@ -96,6 +101,35 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 	write()
 	*vault = *v
 	return nil
+}
+
+// interestPeriodElapsed reports whether an interest accrual is due for the vault at blockTime,
+// meaning a reconcile will move the vault's total value by settling interest.
+func interestPeriodElapsed(vault *types.VaultAccount, blockTime int64) bool {
+	return vault.PeriodStart != 0 && blockTime > vault.PeriodStart
+}
+
+// feePeriodElapsed reports whether an AUM fee accrual is due for the vault at blockTime.
+func feePeriodElapsed(vault *types.VaultAccount, blockTime int64) bool {
+	return vault.FeePeriodStart != 0 && blockTime > vault.FeePeriodStart
+}
+
+// feeAccrualMovesNetValue reports whether a due AUM fee accrual will move the vault's net total
+// value. The net moves by the newly accrued fee alone, so a vault with no fee rate never moves it.
+func feeAccrualMovesNetValue(vault *types.VaultAccount, blockTime int64) bool {
+	return vault.AumFeeBips != 0 && feePeriodElapsed(vault, blockTime)
+}
+
+// refreshShareNav republishes the mirrored share NAV after an ABCI reconcile moved the vault's net
+// total vault value. The mirror is informational, so a failure is logged rather than returned and
+// cannot roll back the transfer that already succeeded in the same cache context.
+func (k Keeper) refreshShareNav(ctx sdk.Context, vault *types.VaultAccount) {
+	if err := k.publishShareNav(ctx, vault); err != nil {
+		k.getLogger(ctx).Error("failed to publish share NAV after reconcile",
+			"vault", vault.GetAddress().String(),
+			"err", err,
+		)
+	}
 }
 
 // setShareDenomNAV publishes the Net Asset Value (NAV) for a vault’s share denom
@@ -262,6 +296,9 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 		); err != nil {
 			return fmt.Errorf("failed to pay interest: %w", err)
 		}
+		if err = k.adjustTotalValue(ctx, *vault, interestEarned); err != nil {
+			return fmt.Errorf("failed to record paid interest value: %w", err)
+		}
 	} else if interestEarned.IsNegative() {
 		principalUnderlying := k.BankKeeper.GetBalance(ctx, principalAddress, denom)
 		owed := interestEarned.Abs()
@@ -278,6 +315,9 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 				sdk.NewCoins(sdk.NewCoin(denom, owed)),
 			); err != nil {
 				return fmt.Errorf("failed to reclaim negative interest: %w", err)
+			}
+			if err = k.adjustTotalValue(ctx, *vault, owed.Neg()); err != nil {
+				return fmt.Errorf("failed to record reclaimed interest value: %w", err)
 			}
 			actualInterest = owed.Neg()
 		}
@@ -311,6 +351,12 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 // the principal marker's current underlying-asset balance. Any uncollected remainder is
 // recorded in OutstandingAumFee to be retried during the next reconciliation.
 //
+// A rejected fee transfer is treated the same way as an insufficient balance: the error is
+// logged, the full fee stays in OutstandingAumFee, and the fee period still advances. This
+// keeps an uncollectable fee (for example a restricted underlying whose fee collector lost its
+// required attribute) from failing reconciliation and bricking every vault operation. The
+// outstanding total is capped at the gross TVV, so an uncollectable fee's excess is forfeited.
+//
 // An EventVaultFeeCollected is emitted upon success.
 func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
@@ -328,15 +374,22 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return fmt.Errorf("failed to calculate accrued AUM fee payment: %w", err)
 	}
 
-	totalOutstandingAmount, err := vault.OutstandingAumFee.Amount.SafeAdd(newFeePayment.Amount)
-	if err != nil {
-		return fmt.Errorf("failed to add new fee payment %s to outstanding AUM fee %s: %w", newFeePayment, vault.OutstandingAumFee, err)
-	}
-	totalOutstanding := sdk.NewCoin(vault.UnderlyingAsset, totalOutstandingAmount)
-	if totalOutstanding.IsZero() {
+	carriedOutstanding := vault.OutstandingAumFee.Amount
+	if carriedOutstanding.IsZero() && newFeePayment.Amount.IsZero() {
 		vault.FeePeriodStart = currentBlockTime
 		return nil
 	}
+
+	totalOutstandingAmount, excessForfeited := capAumFeeLiability(carriedOutstanding, newFeePayment.Amount, tvv)
+	if excessForfeited {
+		k.getLogger(ctx).Error("outstanding AUM fee exceeds gross vault value, capping and forfeiting the excess",
+			"vault", vault.GetAddress().String(),
+			"carried_outstanding", vault.OutstandingAumFee.String(),
+			"accrued_fee", newFeePayment.String(),
+			"gross_tvv", sdk.NewCoin(vault.UnderlyingAsset, tvv).String(),
+		)
+	}
+	totalOutstanding := sdk.NewCoin(vault.UnderlyingAsset, totalOutstandingAmount)
 
 	provlabsAddr, err := k.GetAUMFeeAddress(ctx)
 	if err != nil {
@@ -352,13 +405,17 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	}
 
 	if !toCollect.IsZero() {
-		if err = k.BankKeeper.SendCoins(
-			markertypes.WithTransferAgents(ctx, vault.GetAddress()),
-			principalAddress,
-			provlabsAddr,
-			sdk.NewCoins(toCollect),
-		); err != nil {
-			return fmt.Errorf("failed to transfer AUM fee: %w", err)
+		if err = k.sendAUMFee(ctx, vault, provlabsAddr, toCollect); err != nil {
+			k.getLogger(ctx).Error("failed to transfer AUM fee, leaving it outstanding",
+				"vault", vault.GetAddress().String(),
+				"recipient", provlabsAddr.String(),
+				"fee", toCollect.String(),
+				"err", err,
+			)
+			toCollect = sdk.NewCoin(vault.UnderlyingAsset, sdkmath.ZeroInt())
+		}
+		if err = k.adjustTotalValue(ctx, *vault, toCollect.Amount.Neg()); err != nil {
+			return fmt.Errorf("failed to record collected AUM fee value: %w", err)
 		}
 	}
 
@@ -379,6 +436,30 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		periodDuration,
 	))
 
+	return nil
+}
+
+// capAumFeeLiability adds the newly accrued fee to the balance carried from prior periods, bounded
+// by the vault's gross TVV, and reports whether any excess was forfeited to honor that bound.
+func capAumFeeLiability(carried, accrued, grossTVV sdkmath.Int) (sdkmath.Int, bool) {
+	boundedCarried := sdkmath.MinInt(carried, grossTVV)
+	boundedAccrued := sdkmath.MinInt(accrued, grossTVV.Sub(boundedCarried))
+	return boundedCarried.Add(boundedAccrued), boundedCarried.LT(carried) || boundedAccrued.LT(accrued)
+}
+
+// sendAUMFee transfers the fee from the vault's principal marker to the fee collector inside a
+// cache context, so a rejected transfer leaves no partial state behind for the caller to unwind.
+func (k Keeper) sendAUMFee(ctx sdk.Context, vault *types.VaultAccount, recipient sdk.AccAddress, fee sdk.Coin) error {
+	cacheCtx, write := ctx.CacheContext()
+	if err := k.BankKeeper.SendCoins(
+		markertypes.WithTransferAgents(cacheCtx, vault.GetAddress()),
+		vault.PrincipalMarkerAddress(),
+		recipient,
+		sdk.NewCoins(fee),
+	); err != nil {
+		return err
+	}
+	write()
 	return nil
 }
 
@@ -521,7 +602,6 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
 	var pausedKeys []collections.Pair[uint64, sdk.AccAddress]
-	var depleted []*types.VaultAccount
 
 	visited := 0
 	err := k.PayoutTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
@@ -573,10 +653,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 		}
 
 		if !canPay {
-			depleted = append(depleted, vault)
-			if err := k.PayoutTimeoutQueue.Dequeue(ctx, timeoutUnix, addr); err != nil {
-				k.getLogger(ctx).Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
-			}
+			k.retireDepletedVault(ctx, vault, timeoutUnix)
 			continue
 		}
 
@@ -587,8 +664,28 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 		}
 	}
 
-	k.handleDepletedVaults(ctx, depleted)
 	return nil
+}
+
+// retireDepletedVault zeroes the current interest rate of a due vault that can no longer cover its
+// payout window, preserving the desired rate, and dequeues the timeout it was walked under in the same
+// atomic write. A failure leaves the timeout queued as it was found rather than rescheduling it, since
+// a reschedule drops the entry before re-filing it.
+func (k Keeper) retireDepletedVault(ctx sdk.Context, vault *types.VaultAccount, walkedTimeout int64) {
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+
+	if err := k.UpdateInterestRates(cacheCtx, v, types.ZeroInterestRate, v.DesiredInterestRate); err != nil {
+		k.getLogger(ctx).Error("failed to update interest rates for depleted vault, leaving its timeout queued", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, walkedTimeout, v.GetAddress()); err != nil {
+		k.getLogger(ctx).Error("CRITICAL: failed to dequeue interest timeout for depleted vault, leaving its timeout queued", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	write()
 }
 
 // atomicallyReconcileInterest performs the interest transfer, dequeues the current
@@ -597,12 +694,20 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 //
 // walkedTimeout is the key the entry was found under. It can differ from the vault's recorded
 // timeout, so both are dequeued and no entry is left behind to stay due forever.
+//
+// A settled interest accrual moves the total vault value, so the mirrored share NAV is
+// republished before the cache context is written.
 func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount, walkedTimeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
+	interestAccrued := interestPeriodElapsed(v, cacheCtx.BlockTime().Unix())
 
 	if err := k.PerformVaultInterestTransfer(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to perform vault interest transfer: %w", err)
+	}
+
+	if interestAccrued {
+		k.refreshShareNav(cacheCtx, v)
 	}
 
 	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, walkedTimeout, v.GetAddress()); err != nil {
@@ -644,24 +749,22 @@ func (k Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultA
 	return vault, true
 }
 
-// handleReconciledVaults processes vaults from the payout verification queue using a safe
-// "collect-then-mutate" pattern.
-//
-// It first collects keys for non-paused vaults, visiting at most limit entries per block and
-// leaving the remainder in the set for later blocks. It then iterates the collected keys,
-// removing each from the set before partitioning them into payable vs depleted groups.
-// Paused vaults are removed from the set rather than skipped so they cannot consume the budget.
+// handleReconciledVaults advances vaults out of the payout verification set with a safe
+// "collect-then-mutate" pattern, visiting at most limit entries per block, resuming where the previous
+// block stopped, and removing paused vaults without processing them. A set entry is the vault's retry
+// token, cleared only in the same atomic write that transitions it. Only a Walk failure is returned.
 func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 	var keysToProcess []sdk.AccAddress
 	var pausedKeys []sdk.AccAddress
-	var vaultsToProcess []*types.VaultAccount
 
 	visited := 0
-	err := k.PayoutVerificationSet.Walk(ctx, nil, func(addr sdk.AccAddress) (bool, error) {
+	var lastVisited sdk.AccAddress
+	err := k.PayoutVerificationSet.Walk(ctx, k.payoutVerificationSweepRange(ctx), func(addr sdk.AccAddress) (bool, error) {
 		if visited == limit {
 			return true, nil
 		}
 		visited++
+		lastVisited = addr
 		v, ok := k.tryGetVault(ctx, addr)
 		if ok && v.Paused {
 			pausedKeys = append(pausedKeys, addr)
@@ -674,6 +777,11 @@ func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 		return fmt.Errorf("walk failed: %w", err)
 	}
 
+	if visited < limit {
+		lastVisited = nil
+	}
+	k.setPayoutVerificationCursor(ctx, lastVisited)
+
 	for _, addr := range pausedKeys {
 		if err := k.PayoutVerificationSet.Remove(ctx, addr); err != nil {
 			k.getLogger(ctx).Error("failed to remove paused vault from payout verification set", "vault", addr.String(), "err", err)
@@ -681,61 +789,134 @@ func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 	}
 
 	for _, addr := range keysToProcess {
-		if err := k.PayoutVerificationSet.Remove(ctx, addr); err != nil {
-			k.getLogger(ctx).Error("CRITICAL: failed to remove from payout verification set, skipping", "vault", addr.String(), "err", err)
-			continue
-		}
-
-		v, ok := k.tryGetVault(ctx, addr)
-		if ok && !v.Paused {
-			vaultsToProcess = append(vaultsToProcess, v)
-		}
+		k.transitionVerifiedVault(ctx, addr)
 	}
 
-	payable, depleted := k.partitionVaults(ctx, vaultsToProcess)
-	k.handlePayableVaults(ctx, payable)
-	k.handleDepletedVaults(ctx, depleted)
 	return nil
 }
 
-// partitionVaults splits the provided vaults into payable and depleted groups for the
-// AutoReconcilePayoutDuration forecast window using CanPayInterestDuration.
-func (k Keeper) partitionVaults(ctx sdk.Context, vaults []*types.VaultAccount) ([]*types.VaultAccount, []*types.VaultAccount) {
-	var payable []*types.VaultAccount
-	var depleted []*types.VaultAccount
-	for _, v := range vaults {
-		ok, err := k.CanPayInterestDuration(ctx, v, AutoReconcilePayoutDuration)
-		if err != nil {
-			k.getLogger(ctx).Error("failed to check payout ability", "vault", v.GetAddress().String(), "err", err)
-			continue
+// payoutVerificationSweepRange resumes the verification walk after the entry the previous block
+// stopped on, so entries retained by a failed transition cannot monopolize the per-block budget: every
+// entry is reached within one sweep of the set no matter how many ahead of it keep failing. An
+// unreadable or exhausted cursor starts a fresh sweep from the beginning of the set.
+func (k Keeper) payoutVerificationSweepRange(ctx sdk.Context) *collections.Range[sdk.AccAddress] {
+	sweep := new(collections.Range[sdk.AccAddress])
+
+	cursor, err := k.PayoutVerificationCursor.Get(ctx)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			k.getLogger(ctx).Error("failed to read payout verification cursor, restarting the sweep", "err", err)
 		}
-		if ok {
-			payable = append(payable, v)
-		} else {
-			depleted = append(depleted, v)
-		}
+		return sweep
 	}
-	return payable, depleted
+	if len(cursor) == 0 {
+		return sweep
+	}
+
+	return sweep.StartExclusive(cursor)
 }
 
-// handlePayableVaults updates timeout tracking for vaults that remain payable after reconciliation.
-// It sets PeriodTimeout to now + AutoReconcileTimeout, persists the vault, and enqueues the timeout.
-func (k Keeper) handlePayableVaults(ctx sdk.Context, payouts []*types.VaultAccount) {
-	for _, v := range payouts {
-		if err := k.SafeEnqueuePayoutTimeout(ctx, v); err != nil {
-			k.getLogger(ctx).Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
-		}
+// setPayoutVerificationCursor records the entry the next sweep resumes after. A nil address means the
+// sweep reached the end of the set, so the next one starts over.
+func (k Keeper) setPayoutVerificationCursor(ctx sdk.Context, addr sdk.AccAddress) {
+	if err := k.PayoutVerificationCursor.Set(ctx, addr); err != nil {
+		k.getLogger(ctx).Error("failed to record the payout verification cursor", "err", err)
 	}
 }
 
-// handleDepletedVaults disables interest for vaults that cannot cover the forecasted payout window
-// by setting the current rate to zero while preserving the desired rate.
-func (k Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.VaultAccount) {
-	for _, record := range failedPayouts {
-		if err := k.UpdateInterestRates(ctx, record, types.ZeroInterestRate, record.DesiredInterestRate); err != nil {
-			k.getLogger(ctx).Error("failed to update interest rates", "vault", record.GetAddress().String(), "err", err)
-		}
+// transitionVerifiedVault moves one verified vault to its next accrual state: payable vaults are
+// promoted into the PayoutTimeoutQueue, depleted vaults have their current rate zeroed, and a vault
+// whose forecast errors is deferred to the next timeout window. An entry whose account is gone can
+// never be transitioned, so it is dropped rather than re-walked forever; an account that is present but
+// unreadable keeps its entry, since a decode failure could otherwise strand a live vault.
+func (k Keeper) transitionVerifiedVault(ctx sdk.Context, addr sdk.AccAddress) {
+	vault, err := k.GetVault(ctx, addr)
+	if err != nil {
+		k.getLogger(ctx).Error("CRITICAL: payout verification entry has an unreadable vault, leaving it in the set", "vault", addr.String(), "err", err)
+		return
 	}
+	if vault == nil {
+		k.getLogger(ctx).Error("CRITICAL: payout verification entry has no vault account, removing the orphaned entry", "vault", addr.String())
+		if removeErr := k.PayoutVerificationSet.Remove(ctx, addr); removeErr != nil {
+			k.getLogger(ctx).Error("CRITICAL: failed to remove orphaned payout verification entry, retrying next block", "vault", addr.String(), "err", removeErr)
+		}
+		return
+	}
+
+	canPay, err := k.CanPayInterestDuration(ctx, vault, AutoReconcilePayoutDuration)
+	if err != nil {
+		k.getLogger(ctx).Error("failed to check payout ability, deferring to the next timeout window", "vault", addr.String(), "err", err)
+		k.deferPayoutVerification(ctx, vault)
+		return
+	}
+
+	if canPay {
+		k.promotePayableVault(ctx, vault)
+		return
+	}
+
+	k.demoteDepletedVault(ctx, vault)
+}
+
+// promotePayableVault enqueues the next payout timeout for a vault that remains payable and clears its
+// verification entry in the same atomic write, so a failed enqueue leaves the vault queued for
+// verification on a later block.
+func (k Keeper) promotePayableVault(ctx sdk.Context, vault *types.VaultAccount) {
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+
+	if err := k.SafeEnqueuePayoutTimeout(cacheCtx, v); err != nil {
+		k.getLogger(ctx).Error("failed to enqueue timeout, leaving vault in the payout verification set", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	if err := k.PayoutVerificationSet.Remove(cacheCtx, v.GetAddress()); err != nil {
+		k.getLogger(ctx).Error("CRITICAL: failed to remove promoted vault from the payout verification set, retrying next block", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	write()
+}
+
+// demoteDepletedVault zeroes the current interest rate of a vault that cannot cover the forecast payout
+// window, preserving the desired rate, and clears its verification entry in the same atomic write. A
+// failed rate update keeps the entry so the vault is revisited on a later block.
+func (k Keeper) demoteDepletedVault(ctx sdk.Context, vault *types.VaultAccount) {
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+
+	if err := k.UpdateInterestRates(cacheCtx, v, types.ZeroInterestRate, v.DesiredInterestRate); err != nil {
+		k.getLogger(ctx).Error("failed to update interest rates, leaving vault in the payout verification set", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	if err := k.PayoutVerificationSet.Remove(cacheCtx, v.GetAddress()); err != nil {
+		k.getLogger(ctx).Error("CRITICAL: failed to remove depleted vault from the payout verification set, retrying next block", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	write()
+}
+
+// deferPayoutVerification files a vault whose payout forecast could not be computed at the next timeout
+// window, preserving PeriodStart, and clears its verification entry in the same atomic write. The
+// time-keyed queue bounds its retries to one per window rather than one per block; a failed deferral
+// keeps the entry.
+func (k Keeper) deferPayoutVerification(ctx sdk.Context, vault *types.VaultAccount) {
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+
+	if err := k.ReschedulePayoutTimeout(cacheCtx, v, v.PeriodTimeout); err != nil {
+		k.getLogger(ctx).Error("failed to defer payout verification, leaving vault in the payout verification set", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	if err := k.PayoutVerificationSet.Remove(cacheCtx, v.GetAddress()); err != nil {
+		k.getLogger(ctx).Error("CRITICAL: failed to remove deferred vault from the payout verification set, retrying next block", "vault", v.GetAddress().String(), "err", err)
+		return
+	}
+
+	write()
 }
 
 // handleVaultFeeTimeouts checks vaults with expired fee periods and reconciles them.
@@ -801,12 +982,20 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context, limit int) error {
 //
 // walkedTimeout is the key the entry was found under. It can differ from the vault's recorded
 // fee timeout, so both are dequeued and no entry is left behind to stay due forever.
+//
+// An accrued fee moves the net total vault value, so the mirrored share NAV is republished before
+// the cache context is written.
 func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount, walkedTimeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
+	netValueMoved := feeAccrualMovesNetValue(v, cacheCtx.BlockTime().Unix())
 
 	if err := k.PerformVaultFeeTransfer(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to perform vault fee transfer: %w", err)
+	}
+
+	if netValueMoved {
+		k.refreshShareNav(cacheCtx, v)
 	}
 
 	if err := k.FeeTimeoutQueue.Dequeue(cacheCtx, walkedTimeout, v.GetAddress()); err != nil {

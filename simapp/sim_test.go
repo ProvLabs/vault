@@ -194,10 +194,17 @@ func TestAppImportExport(t *testing.T) {
 			stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
 			stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
 		},
-		authzkeeper.StoreKey:    {authzkeeper.GrantQueuePrefix},
-		feegrant.StoreKey:       {feegrant.FeeAllowanceQueueKeyPrefix},
-		slashingtypes.StoreKey:  {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
-		vaulttypes.StoreKey:     {vaulttypes.VaultPayoutVerificationSetPrefix},
+		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
+		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
+		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
+		// The payout verification set is exported, but InitGenesis also re-derives membership
+		// from imported vault state, so the imported set is legitimately a superset: a vault the
+		// EndBlocker found depleted keeps an open accrual period after its rate is zeroed and is
+		// re-armed on import.
+		vaulttypes.StoreKey: {
+			vaulttypes.VaultPayoutVerificationSetPrefix,
+			vaulttypes.VaultPayoutVerificationCursorPrefix,
+		},
 		attributetypes.StoreKey: {attributetypes.AttributeAddrLookupKeyPrefix},
 	}
 

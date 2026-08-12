@@ -1,0 +1,1 @@
+* Reject a nil, zero, or negative `assets` amount on the `EstimateSwapIn` query with `InvalidArgument`, matching the `MsgSwapIn` validation, so a malformed query no longer panics the handler on a nil `big.Int`. The pro-rata share and redeem helpers also reject nil inputs instead of dereferencing them [PR 270](https://github.com/provlabs/vault/pull/270).

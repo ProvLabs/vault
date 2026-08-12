@@ -34,11 +34,18 @@ import (
 //
 // Bumped from 1 to 2 to accompany Migrator.Migrate1to2, which flattens every
 // vault to single-denom on its underlying asset (defaulting nav_authority to the
-// vault admin) and enables deposit protection when a vault's share marker can be loaded. A
-// v1->v2 migration handler is registered in RegisterServices so the SDK module
-// manager can drive the migration via RunMigrations when an upstream upgrade
-// handler advances the chain.
-const ConsensusVersion = 2
+// vault admin) and enables deposit protection when a vault's share marker can be loaded.
+//
+// Bumped from 2 to 3 to accompany Migrator.Migrate2to3, which enables the
+// gov_only_vault_creation param on mainnet and materializes every vault's total
+// value. The materialized total is new module state that the total-value invariant
+// requires to be present, so it has to be seeded at upgrade time rather than left
+// to the lazy repair in GetTVV.
+//
+// A handler per step is registered in RegisterServices so the SDK module manager
+// can drive the migrations via RunMigrations when an upstream upgrade handler
+// advances the chain.
+const ConsensusVersion = 3
 
 var (
 	_ module.AppModuleBasic      = AppModule{}
@@ -46,6 +53,7 @@ var (
 	_ module.HasConsensusVersion = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasGenesisBasics    = AppModuleBasic{}
+	_ module.HasInvariants       = AppModule{} //nolint:staticcheck // SA1019: deprecated with x/crisis; see RegisterInvariants.
 	_ module.HasServices         = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -136,6 +144,13 @@ func (m AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawM
 	return cdc.MustMarshalJSON(genesis)
 }
 
+// RegisterInvariants registers the vault module's invariants. Remove it once x/crisis is gone.
+//
+//nolint:staticcheck // SA1019: x/crisis is deprecated, but its registry is still the only wiring the SDK offers for module invariants.
+func (m AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	keeper.RegisterInvariants(ir, *m.keeper)
+}
+
 // BeginBlock returns the begin blocker for the vault module.
 func (m AppModule) BeginBlock(ctx context.Context) error {
 	return m.keeper.BeginBlocker(sdk.UnwrapSDKContext(ctx))
@@ -155,6 +170,9 @@ func (m AppModule) RegisterServices(cfg module.Configurator) {
 	migrator := keeper.NewMigrator(m.keeper)
 	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to register %s v1->v2 migration: %v", types.ModuleName, err))
+	}
+	if err := cfg.RegisterMigration(types.ModuleName, 2, migrator.Migrate2to3); err != nil {
+		panic(fmt.Sprintf("failed to register %s v2->v3 migration: %v", types.ModuleName, err))
 	}
 }
 
@@ -193,8 +211,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "create [authority] [admin] [share_denom] [underlying_asset]",
 					Alias:     []string{"c", "new"},
 					Short:     "Create a new vault",
-					Long:      "Create a new vault with an underlying asset and share denom, administered by the designated admin. Optionally set a withdrawal delay that queues swap-outs until the delay elapses. Requires governance authority, so this command is meant to be run with --generate-only and submitted as a governance proposal.",
-					Example:   fmt.Sprintf("%s create %s %s svnhash nhash --withdrawal-delay-seconds 86400 --generate-only", txStart, exampleAuthorityAddr, exampleAdminAddr),
+					Long:      "Create a new vault with an underlying asset and share denom, administered by the designated admin. Optionally set a withdrawal delay that queues swap-outs until the delay elapses. The authority is the signer: when the module's gov_only_vault_creation param is enabled it must be the governance module account, so the command is run with --generate-only and the message submitted as a governance proposal; otherwise it can be any account creating the vault directly.",
+					Example:   fmt.Sprintf("%s create %s %s svnhash nhash --withdrawal-delay-seconds 86400\n%s create %s %s svnhash nhash --withdrawal-delay-seconds 86400 --generate-only", txStart, exampleAdminAddr, exampleAdminAddr, txStart, exampleAuthorityAddr, exampleAdminAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: fieldAuthority},
 						{ProtoField: fieldAdmin},
@@ -578,6 +596,25 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "price"},
 						{ProtoField: "volume"},
 						{ProtoField: "source", Optional: true},
+					},
+				},
+				{
+					RpcMethod: "RepriceVault",
+					Use:       "reprice [signer] [vault_address] [navs...]",
+					Alias:     []string{"rv"},
+					Short:     "Apply a batch of internal NAV updates, optionally unpausing the vault",
+					Long:      "Restate the internal net asset value of one or more denoms on a vault. Each nav is a JSON object with denom, price, volume, and an optional source. Repricing a denom the vault holds requires the vault to be paused, exactly as update-vault-nav does. Pass --resume to unpause in the same transaction, which requires a strict pause this same NAV authority took; an operator, forced, or automatic pause still needs the admin or asset manager to unpause. Leave --resume off to reprice and stay paused, which is how a book too large for one transaction is repriced across several.",
+					Example:   fmt.Sprintf(`%s reprice %s %s '{"denom":"usdc","price":{"denom":"nhash","amount":"1000000"},"volume":"1000000","source":"my-oracle"}' --resume`, txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: fieldSigner},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: "navs", Varargs: true},
+					},
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"resume": {
+							Name:  "resume",
+							Usage: "Unpause the vault after applying the batch. Requires a strict pause taken by this NAV authority.",
+						},
 					},
 				},
 				{

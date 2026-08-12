@@ -1,9 +1,12 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -25,7 +28,11 @@ func (k *Keeper) stageFromPrincipal(ctx sdk.Context, vault *types.VaultAccount, 
 	if amt.IsZero() {
 		return nil
 	}
-	return k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), vault.PrincipalMarkerAddress(), vault.GetAddress(), amt)
+	before := k.principalBalances(ctx, *vault, amt)
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), vault.PrincipalMarkerAddress(), vault.GetAddress(), amt); err != nil {
+		return fmt.Errorf("failed to stage %s out of the principal of vault %s: %w", amt, vault.Address, err)
+	}
+	return k.refreshPrincipalValue(ctx, *vault, before)
 }
 
 // returnToPrincipal moves coins from the vault account into its own principal marker, for
@@ -36,7 +43,11 @@ func (k *Keeper) returnToPrincipal(ctx sdk.Context, vault *types.VaultAccount, a
 	if amt.IsZero() {
 		return nil
 	}
-	return k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), vault.GetAddress(), vault.PrincipalMarkerAddress(), amt)
+	before := k.principalBalances(ctx, *vault, amt)
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), vault.GetAddress(), vault.PrincipalMarkerAddress(), amt); err != nil {
+		return fmt.Errorf("failed to return %s to the principal of vault %s: %w", amt, vault.Address, err)
+	}
+	return k.refreshPrincipalValue(ctx, *vault, before)
 }
 
 // removeDrainedSettlementNAV drops the vault's internal NAV entry for an asset denom
@@ -57,6 +68,11 @@ func (k *Keeper) removeDrainedSettlementNAV(ctx sdk.Context, vault *types.VaultA
 		return nil
 	}
 	if err := k.RemoveVaultNAV(ctx, vault, assetDenom, ""); err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			k.getLogger(ctx).Info("no internal NAV entry to remove for drained settlement denom",
+				"vault", vault.Address, "denom", assetDenom)
+			return nil
+		}
 		return fmt.Errorf("failed to remove internal NAV for drained denom %q: %w", assetDenom, err)
 	}
 	return nil

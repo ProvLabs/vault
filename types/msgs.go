@@ -19,6 +19,34 @@ const maxDenomMetadataDescriptionLength = 200
 // per-entry state and emitted events from being inflated by an unbounded value.
 const MaxNAVSourceLength = 200
 
+// MaxNAVComponentBits bounds a NAV price amount and volume. Valuation multiplies a balance by the
+// price, so an unbounded price makes total vault value overflow and stay underivable.
+const MaxNAVComponentBits = 128
+
+// MaxRepriceBatchSize bounds the NAV updates in one MsgRepriceVault. Each entry costs a
+// balance read and two valuations, so the cap keeps a single message from being decoded and
+// validated at unbounded cost before gas metering can charge for it. It is set well above a
+// realistic book of priced positions.
+const MaxRepriceBatchSize = 1_000
+
+// MaxVaultNAVEntries bounds how many denoms a single vault may price. No metered path walks the
+// table, so the cap is not a gas bound: it sizes the un-metered walks that remain — genesis
+// import, the v2→v3 migration and the total-value invariant. A full table exceeds
+// MaxRepriceBatchSize, so restating one spans two batches. See spec/02_state.md.
+const MaxVaultNAVEntries = 2_000
+
+// ValidateNAVComponentMagnitudes rejects a NAV price amount or volume that would overflow valuation.
+// Genesis import skips such an entry rather than refusing to start, so this is checked separately.
+func ValidateNAVComponentMagnitudes(price sdk.Coin, volume sdkmath.Int) error {
+	if !price.Amount.IsNil() && price.Amount.BigInt().BitLen() > MaxNAVComponentBits {
+		return fmt.Errorf("NAV price amount %s exceeds the maximum of %d bits", price.Amount, MaxNAVComponentBits)
+	}
+	if !volume.IsNil() && volume.BigInt().BitLen() > MaxNAVComponentBits {
+		return fmt.Errorf("NAV volume %s exceeds the maximum of %d bits", volume, MaxNAVComponentBits)
+	}
+	return nil
+}
+
 // maxPauseReasonLength bounds the operator-supplied pause reason, which is
 // persisted to vault state on every pause, to keep an unbounded value from
 // inflating state.
@@ -55,6 +83,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMaxSwapInValueRequest)(nil),
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
 	(*MsgUpdateVaultNAVRequest)(nil),
+	(*MsgRepriceVaultRequest)(nil),
 	(*MsgRemoveVaultNAVRequest)(nil),
 	(*MsgUpdateNAVAuthorityRequest)(nil),
 	(*MsgAcceptAssetRequest)(nil),
@@ -87,8 +116,8 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("payment denom is deprecated: vaults are single-denom, so payment denom (%q) must be empty or equal underlying asset (%q)", m.PaymentDenom, m.UnderlyingAsset)
 	}
 
-	if m.WithdrawalDelaySeconds > MaxWithdrawalDelay {
-		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
+	if err := ValidateWithdrawalDelay(m.WithdrawalDelaySeconds); err != nil {
+		return err
 	}
 
 	if err := ValidateSwapLimits(m.MinSwapInValue, m.MaxSwapInValue); err != nil {
@@ -207,6 +236,9 @@ func (m MsgUpdateMinInterestRateRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
 	if m.MinRate != "" {
+		if err := ValidateDecStringLength("min rate", m.MinRate); err != nil {
+			return err
+		}
 		if _, err := sdkmath.LegacyNewDecFromStr(m.MinRate); err != nil {
 			return fmt.Errorf("invalid min rate: %q: %w", m.MinRate, err)
 		}
@@ -223,6 +255,9 @@ func (m MsgUpdateMaxInterestRateRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
 	if m.MaxRate != "" {
+		if err := ValidateDecStringLength("max rate", m.MaxRate); err != nil {
+			return err
+		}
 		if _, err := sdkmath.LegacyNewDecFromStr(m.MaxRate); err != nil {
 			return fmt.Errorf("invalid max rate: %q: %w", m.MaxRate, err)
 		}
@@ -238,6 +273,9 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
+	if err := ValidateDecStringLength("interest rate", m.NewRate); err != nil {
+		return err
+	}
 	if _, err := sdkmath.LegacyNewDecFromStr(m.NewRate); err != nil {
 		return fmt.Errorf("invalid interest rate: %q: %w", m.NewRate, err)
 	}
@@ -252,8 +290,8 @@ func (m MsgUpdateWithdrawalDelayRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	if m.WithdrawalDelaySeconds > MaxWithdrawalDelay {
-		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
+	if err := ValidateWithdrawalDelay(m.WithdrawalDelaySeconds); err != nil {
+		return err
 	}
 	return nil
 }
@@ -565,8 +603,62 @@ func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
 	if m.Volume.IsNil() || !m.Volume.IsPositive() {
 		return fmt.Errorf("volume must be positive")
 	}
+	if err := ValidateNAVComponentMagnitudes(m.Price, m.Volume); err != nil {
+		return err
+	}
 	if len(m.Source) > MaxNAVSourceLength {
 		return fmt.Errorf("source too long (expected <= %d, actual: %d)", MaxNAVSourceLength, len(m.Source))
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgRepriceVaultRequest. Whether the
+// vault is paused, and by whom, is stateful and enforced by the keeper.
+func (m MsgRepriceVaultRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return fmt.Errorf("invalid signer address: %q: %w", m.Signer, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if len(m.Navs) == 0 {
+		return fmt.Errorf("at least one NAV update is required")
+	}
+	if len(m.Navs) > MaxRepriceBatchSize {
+		return fmt.Errorf("too many NAV updates (expected <= %d, actual: %d)", MaxRepriceBatchSize, len(m.Navs))
+	}
+	seen := make(map[string]struct{}, len(m.Navs))
+	for i, nav := range m.Navs {
+		if err := nav.Validate(); err != nil {
+			return fmt.Errorf("invalid NAV update at index %d: %w", i, err)
+		}
+		if _, duplicate := seen[nav.Denom]; duplicate {
+			return fmt.Errorf("duplicate NAV update for denom %q at index %d", nav.Denom, i)
+		}
+		seen[nav.Denom] = struct{}{}
+	}
+	return nil
+}
+
+// Validate performs stateless validation on a single NAVUpdate within a reprice batch.
+func (n NAVUpdate) Validate() error {
+	if err := sdk.ValidateDenom(n.Denom); err != nil {
+		return fmt.Errorf("invalid denom: %q: %w", n.Denom, err)
+	}
+	if err := n.Price.Validate(); err != nil {
+		return fmt.Errorf("invalid price coin %v: %w", n.Price, err)
+	}
+	if n.Denom == n.Price.Denom {
+		return fmt.Errorf("NAV denom %q and price denom must differ", n.Denom)
+	}
+	if n.Volume.IsNil() || !n.Volume.IsPositive() {
+		return fmt.Errorf("volume must be positive")
+	}
+	if err := ValidateNAVComponentMagnitudes(n.Price, n.Volume); err != nil {
+		return err
+	}
+	if len(n.Source) > MaxNAVSourceLength {
+		return fmt.Errorf("source too long (expected <= %d, actual: %d)", MaxNAVSourceLength, len(n.Source))
 	}
 	return nil
 }
@@ -611,11 +703,8 @@ func (m MsgAcceptAssetRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
-		return fmt.Errorf("invalid source address: %q: %w", m.Source, err)
-	}
-	if err := exchange.ValidateExternalID(m.ExternalId); err != nil {
-		return fmt.Errorf("invalid external id: %w", err)
+	if err := m.Payment.Validate(); err != nil {
+		return fmt.Errorf("invalid payment: %w", err)
 	}
 	return nil
 }

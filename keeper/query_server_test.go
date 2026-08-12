@@ -60,10 +60,10 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		vault2 := s.createSingleDenomVault(vaultAttrs{admin: admin, share: shareDenom2, underlying: underlying})
 		s.setVaultNAV(vault1, heldAsset, sdk.NewInt64Coin(underlying, 1), 1)
 		s.setVaultNAV(vault2, heldAsset, sdk.NewInt64Coin(underlying, 1), 1)
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 40))), "fund reserves for vault1 should succeed")
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(heldAsset, 250))), "fund principal (marker) for vault1 should succeed")
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 20))), "fund reserves for vault2 should succeed")
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 200), sdk.NewInt64Coin(heldAsset, 100))), "fund principal (marker) for vault2 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, addr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 40))), "fund reserves for vault1 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(heldAsset, 250))), "fund principal (marker) for vault1 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, addr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 20))), "fund reserves for vault2 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 200), sdk.NewInt64Coin(heldAsset, 100))), "fund principal (marker) for vault2 should succeed")
 	}
 
 	tests := []querytest.TestCase[types.QueryVaultRequest, types.QueryVaultResponse]{
@@ -349,6 +349,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	assetsUnderlying := sdk.NewInt64Coin(underlyingDenom, 100)
 
+	zeroNetUnderlying := "uzeronet.fcc"
+	zeroNetShare := "zeronetshares"
+	zeroNetVaultAddr := types.GetVaultAddress(zeroNetShare)
+
 	setupVault := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 		s.CreateVaultWithParams(shareDenom, underlyingDenom)
@@ -397,6 +401,28 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			ExpectedErrSubstrs: []string{"swap-in disabled or vault paused", "FailedPrecondition"},
 		},
 		{
+			Name: "fails when a drained principal leaves zero net value with shares outstanding",
+			Setup: func() {
+				s.setupZeroNetTVVVault(zeroNetUnderlying, zeroNetShare, 0, 0)
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: zeroNetVaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(zeroNetUnderlying, 100),
+			},
+			ExpectedErrSubstrs: []string{"cannot accept deposits", "net vault value is zero", "FailedPrecondition"},
+		},
+		{
+			Name: "fails when an uncollectable fee consumes the gross value behind outstanding shares",
+			Setup: func() {
+				s.setupZeroNetTVVVault(zeroNetUnderlying, zeroNetShare, 1_000_000, 1_000_000)
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: zeroNetVaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(zeroNetUnderlying, 100),
+			},
+			ExpectedErrSubstrs: []string{"cannot accept deposits", "net vault value is zero", "FailedPrecondition"},
+		},
+		{
 			Name:               "nil request",
 			Req:                nil,
 			ExpectedErrSubstrs: []string{"invalid request"},
@@ -425,6 +451,33 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			},
 			ExpectedErrSubstrs: []string{"unsupported deposit denom"},
 		},
+		{
+			Name:  "nil assets amount is rejected instead of panicking",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.Coin{Denom: underlyingDenom},
+			},
+			ExpectedErrSubstrs: []string{"invalid assets amount", underlyingDenom, "must be greater than zero", "InvalidArgument"},
+		},
+		{
+			Name:  "zero assets amount is rejected",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(underlyingDenom, 0),
+			},
+			ExpectedErrSubstrs: []string{"invalid assets amount", underlyingDenom, "must be greater than zero", "InvalidArgument"},
+		},
+		{
+			Name:  "negative assets amount is rejected",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.Coin{Denom: underlyingDenom, Amount: math.NewInt(-100)},
+			},
+			ExpectedErrSubstrs: []string{"invalid assets amount", underlyingDenom, "must be greater than zero", "InvalidArgument"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -450,6 +503,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	sharesToSwap := sdk.NewCoin(shareDenom, math.NewInt(100).Mul(utils.ShareScalar))
 
+	reflectableSharesInput := "not-a-number-<echo-probe>"
+	maxLengthSharesInput := strings.Repeat("9", types.MaxIntStringLength)
+	overLengthSharesInput := strings.Repeat("9", types.MaxIntStringLength+1)
+
 	setupVault := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 		s.CreateVaultWithParams(shareDenom, underlyingDenom)
@@ -457,9 +514,9 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 
 	setupFundedVault := func() {
 		setupVault()
-		err := FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
+		err := FundAccount(s.ctx, s.simApp, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
 		s.Require().NoError(err, "fund marker with underlying should succeed")
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
+		err = FundAccount(s.ctx, s.simApp, s.adminAddr, sdk.NewCoins(sharesToSwap))
 		s.Require().NoError(err, "fund owner with shares should succeed")
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
 		s.Require().NoError(err, "get vault should succeed")
@@ -548,9 +605,21 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			ExpectedErrSubstrs: []string{"invalid vault_address", "decoding bech32 failed"},
 		},
 		{
-			Name:               "vault not found",
-			Req:                &types.QueryEstimateSwapOutRequest{VaultAddress: vaultAddr.String()},
+			Name: "vault not found",
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       sharesToSwap.Amount.String(),
+			},
 			ExpectedErrSubstrs: []string{"vault with address", "not found"},
+		},
+		{
+			Name:  "fails with empty shares string",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       "",
+			},
+			ExpectedErrSubstrs: []string{"invalid shares amount: must be a valid integer", "InvalidArgument"},
 		},
 		{
 			Name:  "fails with incorrect shares string",
@@ -559,7 +628,17 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				VaultAddress: vaultAddr.String(),
 				Shares:       "bogus",
 			},
-			ExpectedErrSubstrs: []string{"invalid shares amount \"bogus\" : must be a valid integer"},
+			ExpectedErrSubstrs: []string{"invalid shares amount: must be a valid integer", "InvalidArgument"},
+		},
+		{
+			Name:  "shares string is not echoed back to the caller",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       reflectableSharesInput,
+			},
+			ExpectedErrSubstrs:   []string{"invalid shares amount: must be a valid integer", "InvalidArgument"},
+			UnexpectedErrSubstrs: []string{reflectableSharesInput},
 		},
 		{
 			Name:  "fails with negative shares",
@@ -568,7 +647,25 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				VaultAddress: vaultAddr.String(),
 				Shares:       "-100",
 			},
-			ExpectedErrSubstrs: []string{"invalid shares amount \"-100\" : must not be negative", "InvalidArgument"},
+			ExpectedErrSubstrs: []string{"invalid shares amount: must not be negative", "InvalidArgument"},
+		},
+		{
+			Name:  "shares string at the length limit reaches the parse",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       maxLengthSharesInput,
+			},
+			ExpectedErrSubstrs: []string{"invalid shares amount: must be a valid integer", "InvalidArgument"},
+		},
+		{
+			Name: "over-length shares string is rejected before the vault is read",
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       overLengthSharesInput,
+			},
+			ExpectedErrSubstrs:   []string{"invalid shares amount: must be at most 80 characters", "InvalidArgument"},
+			UnexpectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 	}
 

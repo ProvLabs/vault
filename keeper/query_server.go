@@ -113,6 +113,8 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 }
 
 // EstimateSwapIn estimates the amount of shares received for a given amount of deposit assets at query time.
+// It prices off the same net basis as SwapIn, so a vault with zero net value and shares outstanding
+// reports FailedPrecondition here instead of a share count SwapIn would refuse to mint.
 func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstimateSwapInRequest) (*types.QueryEstimateSwapInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -135,6 +137,9 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	if !vault.IsAcceptedDenom(req.Assets.Denom) {
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported deposit denom: %q", req.Assets.Denom)
 	}
+	if req.Assets.Amount.IsNil() || !req.Assets.Amount.IsPositive() {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid assets amount: %s must be greater than zero", req.Assets.Denom)
+	}
 
 	if vault.Paused || !vault.SwapInEnabled {
 		return nil, status.Error(codes.FailedPrecondition, "swap-in disabled or vault paused")
@@ -154,6 +159,9 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		vault.TotalShares.Denom,
 	)
 	if err != nil {
+		if errors.Is(err, utils.ErrZeroAssetsWithSharesOutstanding) {
+			return nil, status.Errorf(codes.FailedPrecondition, "vault %q cannot accept deposits: net vault value is zero with %s outstanding", req.VaultAddress, vault.TotalShares.String())
+		}
 		return nil, status.Errorf(codes.Internal, "failed to calculate shares: %v", err)
 	}
 
@@ -180,6 +188,17 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "invalid vault_address: %v", err)
 	}
 
+	if lenErr := types.ValidateIntStringLength("shares amount", req.Shares); lenErr != nil {
+		return nil, status.Error(codes.InvalidArgument, lenErr.Error())
+	}
+	shares, ok := math.NewIntFromString(req.Shares)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "invalid shares amount: must be a valid integer")
+	}
+	if shares.IsNegative() {
+		return nil, status.Error(codes.InvalidArgument, "invalid shares amount: must not be negative")
+	}
+
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
@@ -198,14 +217,6 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	estimatedTVV, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
-	}
-
-	shares, ok := math.NewIntFromString(req.Shares)
-	if !ok {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid shares amount \"%s\" : must be a valid integer", req.Shares)
-	}
-	if shares.IsNegative() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid shares amount \"%s\" : must not be negative", req.Shares)
 	}
 
 	estimatedPayout, err := utils.CalculateRedeemProRata(
@@ -425,7 +436,7 @@ func (k queryServer) VaultPayment(goCtx context.Context, req *types.QueryVaultPa
 	}
 
 	return &types.QueryVaultPaymentResponse{
-		Payment: toPayment(payment),
+		Payment: types.NewPaymentFromExchange(payment),
 	}, nil
 }
 
@@ -455,22 +466,11 @@ func (k queryServer) VaultPayments(goCtx context.Context, req *types.QueryVaultP
 
 	payments := make([]types.Payment, 0, len(res.Payments))
 	for _, payment := range res.Payments {
-		payments = append(payments, toPayment(payment))
+		payments = append(payments, types.NewPaymentFromExchange(payment))
 	}
 
 	return &types.QueryVaultPaymentsResponse{
 		Payments:   payments,
 		Pagination: res.Pagination,
 	}, nil
-}
-
-// toPayment maps an exchange-module payment into the vault module's Payment view.
-func toPayment(payment *exchange.Payment) types.Payment {
-	return types.Payment{
-		Source:       payment.Source,
-		SourceAmount: payment.SourceAmount,
-		Target:       payment.Target,
-		TargetAmount: payment.TargetAmount,
-		ExternalId:   payment.ExternalId,
-	}
 }

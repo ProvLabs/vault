@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/big"
 	"strings"
 	"time"
@@ -154,9 +155,9 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_OverwriteReStamps() {
 }
 
 // TestKeeper_SetVaultNAV_RejectsInvalidInput verifies SetVaultNAV rejects every
-// invalid input before persisting an entry: the vault share denom, an invalid
-// price coin, a negative price amount, a price denom that is not the vault
-// underlying asset, a nil or non-positive volume, a denom that is not a
+// invalid input before persisting an entry: the vault share denom, an IBC voucher
+// denom, an invalid price coin, a negative price amount, a price denom that is not
+// the vault underlying asset, a nil or non-positive volume, a denom that is not a
 // registered marker, and an nft/ denom that does not name an existing scope.
 func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 	underlying := "under"
@@ -179,6 +180,15 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 				Volume: sdkmath.NewInt(1),
 			},
 			expectedErrSubstr: "cannot set NAV for vault share denom",
+		},
+		{
+			name: "rejects an IBC voucher denom",
+			nav: types.VaultNAV{
+				Denom:  "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "cannot be used by a vault",
 		},
 		{
 			name: "rejects an invalid price coin",
@@ -457,6 +467,144 @@ func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_RequirePausedHeldReprice() {
+	underlying := "under"
+	share := "vaultshares"
+	heldDenom := "rwa"
+
+	const (
+		seedPrice  = 2
+		seedVolume = 1
+		heldAmount = 1_000
+	)
+
+	tests := []struct {
+		name              string
+		heldAmount        int64
+		unpriced          bool
+		corruptNav        bool
+		paused            bool
+		newPrice          int64
+		newVolume         int64
+		expectedErrSubstr string
+	}{
+		{
+			name:       "paused vault may reprice a held asset",
+			heldAmount: heldAmount,
+			paused:     true,
+			newPrice:   4,
+			newVolume:  1,
+		},
+		{
+			name:       "paused vault may price an asset it holds for the first time",
+			heldAmount: heldAmount,
+			unpriced:   true,
+			paused:     true,
+			newPrice:   4,
+			newVolume:  1,
+		},
+		{
+			name:       "live vault may reprice a denom it does not hold",
+			heldAmount: 0,
+			newPrice:   4,
+			newVolume:  1,
+		},
+		{
+			name:       "live vault may restate a held asset at an identical price and volume",
+			heldAmount: heldAmount,
+			newPrice:   seedPrice,
+			newVolume:  seedVolume,
+		},
+		{
+			name:       "live vault may restate a held asset at the same unit price scaled up",
+			heldAmount: heldAmount,
+			newPrice:   seedPrice * 4,
+			newVolume:  seedVolume * 4,
+		},
+		{
+			name:              "live vault may not mark a held asset up",
+			heldAmount:        heldAmount,
+			newPrice:          seedPrice + 1,
+			newVolume:         seedVolume,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "live vault may not mark a held asset down",
+			heldAmount:        heldAmount,
+			newPrice:          seedPrice - 1,
+			newVolume:         seedVolume,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "live vault may not write a held asset down to zero",
+			heldAmount:        heldAmount,
+			newPrice:          0,
+			newVolume:         seedVolume,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "live vault may not change the unit price by changing only the volume",
+			heldAmount:        heldAmount,
+			newPrice:          seedPrice,
+			newVolume:         seedVolume + 1,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "live vault may not price an asset it already holds for the first time",
+			heldAmount:        heldAmount,
+			unpriced:          true,
+			newPrice:          seedPrice,
+			newVolume:         seedVolume,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "an unreadable NAV entry for a held denom surfaces the lookup failure",
+			heldAmount:        heldAmount,
+			corruptNav:        true,
+			newPrice:          4,
+			newVolume:         1,
+			expectedErrSubstr: "failed to get internal NAV for denom",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vaultAddr := types.GetVaultAddress(share)
+			var vault *types.VaultAccount
+			if tc.unpriced || tc.corruptNav {
+				vault = s.setupBaseVault(underlying, share)
+				s.requireSimpleMarker(heldDenom)
+				s.fundPrincipal(vault, sdk.NewInt64Coin(heldDenom, tc.heldAmount))
+			} else {
+				vault = s.setupHeldNAVVault(underlying, share, heldDenom, sdk.NewInt64Coin(underlying, seedPrice), seedVolume, tc.heldAmount)
+			}
+			if tc.corruptNav {
+				s.Require().NoError(s.k.TestAccessor_corruptVaultNAV(s.T(), s.ctx, vaultAddr, heldDenom),
+					"failed to corrupt the NAV entry for %s", heldDenom)
+			}
+			if tc.paused {
+				vault = s.pauseVault(vaultAddr)
+			}
+
+			nav := types.NewVaultNAV(heldDenom, sdk.NewInt64Coin(underlying, tc.newPrice), sdkmath.NewInt(tc.newVolume), "oracle")
+			err := s.k.TestAccessor_requirePausedHeldReprice(s.T(), s.ctx, vault, nav)
+
+			if tc.expectedErrSubstr == "" {
+				s.Require().NoError(err, "requirePausedHeldReprice should allow pricing %s at %d per %d units",
+					heldDenom, tc.newPrice, tc.newVolume)
+				return
+			}
+			s.Require().ErrorContains(err, tc.expectedErrSubstr,
+				"requirePausedHeldReprice should reject pricing %s at %d per %d units while the vault holds %d",
+				heldDenom, tc.newPrice, tc.newVolume, tc.heldAmount)
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_CheckSettlementNAVGuardrail() {
 	underlying := "under"
 	share := "vaultshares"
@@ -665,4 +813,121 @@ func (s *TestSuite) TestKeeper_SetNAVAuthority_NoOpWhenUnchanged() {
 	after, err := s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err, "GetVault after no-op SetNAVAuthority should succeed")
 	s.Assert().Equal(before.NavAuthority, after.NavAuthority, "no-op should leave NavAuthority untouched")
+}
+
+func (s *TestSuite) TestKeeper_SetVaultNAV_EnforcesEntryCap() {
+	underlying := "capunder"
+	share := "capshares"
+
+	tests := []struct {
+		name          string
+		recordedCount uint64
+		denom         string
+		prePrice      bool
+		expErr        string
+		expCount      uint64
+	}{
+		{
+			name:          "well under the cap, new denom is priced",
+			recordedCount: 0,
+			denom:         "capasseta",
+			expCount:      1,
+		},
+		{
+			name:          "one slot left, new denom is priced",
+			recordedCount: types.MaxVaultNAVEntries - 1,
+			denom:         "capassetb",
+			expCount:      types.MaxVaultNAVEntries,
+		},
+		{
+			name:          "at the cap, a new denom is rejected",
+			recordedCount: types.MaxVaultNAVEntries,
+			denom:         "capassetc",
+			expErr:        fmt.Sprintf("already prices %d denoms (max %d)", types.MaxVaultNAVEntries, types.MaxVaultNAVEntries),
+			expCount:      types.MaxVaultNAVEntries,
+		},
+		{
+			name:          "over the cap, a new denom is rejected",
+			recordedCount: types.MaxVaultNAVEntries + 5,
+			denom:         "capassetd",
+			expErr:        fmt.Sprintf("already prices %d denoms (max %d)", types.MaxVaultNAVEntries+5, types.MaxVaultNAVEntries),
+			expCount:      types.MaxVaultNAVEntries + 5,
+		},
+		{
+			name:          "at the cap, repricing an already-priced denom is allowed",
+			recordedCount: types.MaxVaultNAVEntries,
+			denom:         "capassete",
+			prePrice:      true,
+			expCount:      types.MaxVaultNAVEntries,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := s.setupBaseVault(underlying, share)
+			s.requireSimpleMarker(tc.denom)
+
+			if tc.prePrice {
+				s.setVaultNAV(vault, tc.denom, sdk.NewInt64Coin(underlying, 1), 1)
+			}
+			s.Require().NoError(s.k.NAVCounts.Set(s.ctx, vault.GetAddress(), tc.recordedCount),
+				"failed to seed a recorded NAV entry count of %d", tc.recordedCount)
+
+			nav := types.NewVaultNAV(tc.denom, sdk.NewInt64Coin(underlying, 2), sdkmath.NewInt(1), "captest")
+			err := s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String())
+
+			if tc.expErr != "" {
+				s.Require().ErrorContains(err, tc.expErr,
+					"SetVaultNAV should reject %q once the vault records %d priced denoms", tc.denom, tc.recordedCount)
+				_, getErr := s.k.GetVaultNAV(s.ctx, vault.GetAddress(), tc.denom)
+				s.Require().ErrorIs(getErr, collections.ErrNotFound,
+					"a rejected NAV must not be written for denom %q", tc.denom)
+			} else {
+				s.Require().NoError(err, "SetVaultNAV should price %q when the vault records %d priced denoms", tc.denom, tc.recordedCount)
+			}
+
+			count, err := s.k.NAVEntryCount(s.ctx, vault.GetAddress())
+			s.Require().NoError(err, "failed to read the NAV entry count for vault %s", vault.Address)
+			s.Require().Equal(tc.expCount, count,
+				"NAV entry count mismatch for vault %s after setting %q", vault.Address, tc.denom)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_NAVEntryCount_TracksTheTable() {
+	underlying := "trackunder"
+	share := "trackshares"
+	denoms := []string{"trackasseta", "trackassetb", "trackassetc"}
+
+	vault := s.setupBaseVault(underlying, share)
+	for _, denom := range denoms {
+		s.requireSimpleMarker(denom)
+	}
+
+	assertCount := func(expected uint64, stage string) {
+		count, err := s.k.NAVEntryCount(s.ctx, vault.GetAddress())
+		s.Require().NoError(err, "failed to read the NAV entry count %s", stage)
+		s.Require().Equal(expected, count, "NAV entry count mismatch %s", stage)
+	}
+
+	assertCount(0, "before any denom is priced")
+
+	for i, denom := range denoms {
+		s.setVaultNAV(vault, denom, sdk.NewInt64Coin(underlying, 1), 1)
+		assertCount(uint64(i+1), "after pricing "+denom)
+	}
+
+	s.setVaultNAV(vault, denoms[0], sdk.NewInt64Coin(underlying, 7), 1)
+	assertCount(uint64(len(denoms)), "after repricing an already-priced denom")
+
+	s.Require().NoError(s.k.RemoveVaultNAV(s.ctx, vault, denoms[0], s.adminAddr.String()),
+		"failed to remove the NAV for %s", denoms[0])
+	assertCount(uint64(len(denoms))-1, "after removing one denom")
+
+	s.Require().NoError(s.k.NAVCounts.Set(s.ctx, vault.GetAddress(), 0),
+		"failed to force the recorded count to zero")
+	s.Require().NoError(s.k.RemoveVaultNAV(s.ctx, vault, denoms[1], s.adminAddr.String()),
+		"a NAV removal must still succeed when the recorded count already reads zero")
+	assertCount(0, "after removing a denom while the recorded count read zero")
 }

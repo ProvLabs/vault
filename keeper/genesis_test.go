@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
+	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 )
 
@@ -200,6 +201,14 @@ func (s *TestSuite) TestVaultGenesis_Params_RoundTrip() {
 			name:   "default params should survive export and re-import",
 			params: types.DefaultParams(),
 		},
+		{
+			name: "gov-only vault creation should survive export and re-import",
+			params: types.Params{
+				TechFeeAddress:       techFeeAddress.String(),
+				DefaultAumFeeBips:    100,
+				GovOnlyVaultCreation: true,
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -326,95 +335,177 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid vault")
 }
 
+func (s *TestSuite) TestVaultGenesis_InitEnforcesTotalSharesAtLeastLocalSupply() {
+	shareDenom := "vaultshare"
+	underlying := "undercoin"
+	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	localSupply := int64(150)
+
+	tests := []struct {
+		name          string
+		totalShares   int64
+		expectedPanic string
+	}{
+		{
+			name:        "total shares above local supply leaves mint capacity",
+			totalShares: 200,
+		},
+		{
+			name:        "total shares equal to local supply leaves no mint capacity",
+			totalShares: localSupply,
+		},
+		{
+			name:        "total shares below local supply violates the invariant",
+			totalShares: 100,
+			expectedPanic: fmt.Sprintf("invalid vault %s in genesis: share supply invariant violated for vault %s: total shares %d%s is below local supply %d%s: negative coin amount: -%d%s",
+				vaultAddr, vaultAddr, 100, shareDenom, localSupply, shareDenom, localSupply-100, shareDenom),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(shareDenom, localSupply), s.adminAddr)
+
+			vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
+			vault.TotalShares = sdk.NewInt64Coin(shareDenom, tc.totalShares)
+			genesis := &types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{vault},
+			}
+
+			if tc.expectedPanic != "" {
+				s.Require().PanicsWithError(tc.expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) },
+					"InitGenesis should reject a vault whose total shares %d is below the local supply %d", tc.totalShares, localSupply)
+				return
+			}
+
+			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should accept a vault whose total shares %d is at least the local supply %d", tc.totalShares, localSupply)
+			imported, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "failed to read back the imported vault %s", vaultAddr)
+			s.Require().NotNil(imported, "vault %s should exist after InitGenesis", vaultAddr)
+			s.Assert().Equal(sdk.NewInt64Coin(shareDenom, tc.totalShares).String(), imported.TotalShares.String(),
+				"imported vault %s should preserve its genesis total shares", vaultAddr)
+		})
+	}
+}
+
 func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 	shareDenom := "vaultshare"
 	underlying := "undercoin"
 	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom).String()
+	unknownVaultAddr := types.GetVaultAddress("baddenom").String()
 
-	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
+	validSwapOut := types.PendingSwapOut{
+		Owner:        admin,
+		VaultAddress: vaultAddr,
+		RedeemDenom:  underlying,
+		Shares:       sdk.NewInt64Coin(shareDenom, 100),
+	}
+	swapOutWith := func(mutate func(*types.PendingSwapOut)) types.PendingSwapOut {
+		swapOut := validSwapOut
+		mutate(&swapOut)
+		return swapOut
+	}
 
-	genesis := &types.GenesisState{
-		Params: types.DefaultParams(),
-		Vaults: []types.VaultAccount{vault},
-		PendingSwapOutQueue: types.PendingSwapOutQueue{
-			LatestSequenceNumber: 55,
-			Entries: []types.PendingSwapOutQueueEntry{
-				{
-					Time: 10000,
-					Id:   1,
-					SwapOut: types.PendingSwapOut{
-						Owner:        "badaddress",
-						VaultAddress: vault.Address,
-						RedeemDenom:  "ylds",
-						Shares:       sdk.NewInt64Coin("vshares", 100),
-					},
-				},
-			},
+	tests := []struct {
+		name          string
+		entry         types.PendingSwapOutQueueEntry
+		expectedPanic string
+	}{
+		{
+			name:          "bad owner address",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.Owner = "badaddress" })},
+			expectedPanic: "invalid vault genesis state: invalid pending swap out at index 0: invalid owner address badaddress: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "bad vault address",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.VaultAddress = "badaddress" })},
+			expectedPanic: "invalid vault genesis state: invalid vault address in pending swap out queue at index 0: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "vault address is not an imported vault",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.VaultAddress = unknownVaultAddr })},
+			expectedPanic: fmt.Sprintf("invalid vault genesis state: pending swap out queue vault address at index 0 is not an imported vault: %s", unknownVaultAddr),
+		},
+		{
+			name: "negative escrowed shares amount",
+			entry: types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) {
+				swapOut.Shares = sdk.Coin{Denom: shareDenom, Amount: sdkmath.NewInt(-100)}
+			})},
+			expectedPanic: fmt.Sprintf("invalid vault genesis state: invalid pending swap out at index 0: invalid shares: -100%s", shareDenom),
+		},
+		{
+			name:          "nil escrowed shares amount",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.Shares = sdk.Coin{Denom: shareDenom} })},
+			expectedPanic: "invalid vault genesis state: invalid pending swap out at index 0: invalid shares: <nil>" + shareDenom,
+		},
+		{
+			name:          "zero escrowed shares amount",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.Shares = sdk.NewInt64Coin(shareDenom, 0) })},
+			expectedPanic: "invalid vault genesis state: invalid pending swap out at index 0: shares cannot be zero",
+		},
+		{
+			name:          "empty redeem denom",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.RedeemDenom = "" })},
+			expectedPanic: "invalid vault genesis state: invalid pending swap out at index 0: redeem denom cannot be empty",
+		},
+		{
+			name:          "negative entry time",
+			entry:         types.PendingSwapOutQueueEntry{Time: -1, Id: 1, SwapOut: validSwapOut},
+			expectedPanic: "invalid vault genesis state: pending swap out queue entry at index 0 has negative time -1",
 		},
 	}
-	expectedPanic := "failed to import pending swap out queue: invalid owner address in pending swap out queue: decoding bech32 failed: invalid separator index -1"
-	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid pending swap out")
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			genesis := buildSingleVaultPendingSwapOutGenesisState(shareDenom, underlying, admin, tc.entry)
+			s.Require().PanicsWithError(tc.expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should reject a pending swap out with %s", tc.name)
+		})
+	}
 }
 
-func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault() {
+func (s *TestSuite) TestVaultGenesis_InitPanicsOnWithdrawalDelayAboveMax() {
 	shareDenom := "vaultshare"
 	underlying := "undercoin"
 	admin := s.adminAddr.String()
-	badVaultAddr := types.GetVaultAddress("baddenom")
 
-	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
-
-	genesis := &types.GenesisState{
-		Params: types.DefaultParams(),
-		Vaults: []types.VaultAccount{vault},
-		PendingSwapOutQueue: types.PendingSwapOutQueue{
-			LatestSequenceNumber: 55,
-			Entries: []types.PendingSwapOutQueueEntry{
-				{
-					Time: 10000,
-					Id:   1,
-					SwapOut: types.PendingSwapOut{
-						Owner:        admin,
-						VaultAddress: badVaultAddr.String(),
-						RedeemDenom:  "ylds",
-						Shares:       sdk.NewInt64Coin("vshares", 100),
-					},
-				},
-			},
+	tests := []struct {
+		name         string
+		delaySeconds uint64
+	}{
+		{
+			name:         "one second above the maximum",
+			delaySeconds: types.MaxWithdrawalDelay + 1,
+		},
+		{
+			name:         "MaxUint64 truncates to a negative payout time",
+			delaySeconds: math.MaxUint64,
 		},
 	}
-	expectedPanic := fmt.Sprintf("invalid vault genesis state: pending swap out queue vault address at index 0 is not an imported vault: %s", badVaultAddr.String())
-	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault")
-}
 
-func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddress() {
-	shareDenom := "vaultshare"
-	underlying := "undercoin"
-	admin := s.adminAddr.String()
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
+			vault.WithdrawalDelaySeconds = tc.delaySeconds
+			genesis := &types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{vault},
+			}
 
-	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
-
-	genesis := &types.GenesisState{
-		Params: types.DefaultParams(),
-		Vaults: []types.VaultAccount{vault},
-		PendingSwapOutQueue: types.PendingSwapOutQueue{
-			LatestSequenceNumber: 55,
-			Entries: []types.PendingSwapOutQueueEntry{
-				{
-					Time: 10000,
-					Id:   1,
-					SwapOut: types.PendingSwapOut{
-						Owner:        admin,
-						VaultAddress: "badaddress",
-						RedeemDenom:  "ylds",
-						Shares:       sdk.NewInt64Coin("vshares", 100),
-					},
-				},
-			},
-		},
+			expectedPanic := fmt.Sprintf("invalid vault genesis state: invalid vault at index 0: withdrawal delay cannot exceed %d seconds: %d",
+				types.MaxWithdrawalDelay, tc.delaySeconds)
+			s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should reject a vault whose withdrawal delay is %d seconds", tc.delaySeconds)
+		})
 	}
-	expectedPanic := "invalid vault genesis state: invalid vault address in pending swap out queue at index 0: decoding bech32 failed: invalid separator index -1"
-	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on bad vault address")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPayoutTimeoutHasUnknownVault() {
@@ -441,6 +532,195 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenFeeTimeoutHasUnknownVault() {
 	}
 	expectedPanic := fmt.Sprintf("invalid vault genesis state: fee timeout queue address at index 0 is not an imported vault: %s", badVaultAddr.String())
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault in fee timeout queue")
+}
+
+func (s *TestSuite) TestVaultGenesis_RoundTrip_PayoutVerificationSet() {
+	shareDenom := "verifyshare"
+	underlying := "verifyunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	vault := makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())
+	vault.PeriodStart = time.Now().Add(-time.Hour).Unix()
+
+	genesis := &types.GenesisState{
+		Params:                types.DefaultParams(),
+		Vaults:                []types.VaultAccount{vault},
+		PayoutVerificationSet: []string{vaultAddr.String()},
+	}
+
+	s.Require().NoError(genesis.Validate(), "a genesis carrying a verification-set vault with no scheduled timeout should validate")
+	s.k.InitGenesis(s.ctx, genesis)
+	s.assertInPayoutVerificationQueue(vaultAddr, true)
+	s.assertInPayoutTimeoutQueue(vaultAddr, false)
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Equal([]string{vaultAddr.String()}, exported.PayoutVerificationSet,
+		"ExportGenesis should carry the payout verification set membership for vault %s", vaultAddr)
+	s.Require().NoError(exported.Validate(), "ExportGenesis output should pass stateless validation")
+
+	s.SetupTest()
+	s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, exported) },
+		"importing the exported genesis into a fresh chain should succeed")
+	s.assertInPayoutVerificationQueue(vaultAddr, true)
+	s.assertInPayoutTimeoutQueue(vaultAddr, false)
+}
+
+func (s *TestSuite) TestVaultGenesis_RestoresPayoutVerificationSetFromVaultState() {
+	shareDenom := "restoreshare"
+	underlying := "restoreunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	periodStart := time.Now().Add(-time.Hour).Unix()
+	periodTimeout := time.Now().Add(time.Hour).Unix()
+
+	tests := []struct {
+		name              string
+		periodStart       int64
+		periodTimeout     int64
+		paused            bool
+		expectVerifying   bool
+		expectTimeoutHeld bool
+	}{
+		{
+			name:            "open interest period with no scheduled timeout is restored to the verification set",
+			periodStart:     periodStart,
+			expectVerifying: true,
+		},
+		{
+			name:              "vault holding a scheduled timeout stays in the payout timeout queue",
+			periodStart:       periodStart,
+			periodTimeout:     periodTimeout,
+			expectTimeoutHeld: true,
+		},
+		{
+			name: "vault with no accrual period is left out of both structures",
+		},
+		{
+			name:        "paused vault is left out of both structures",
+			periodStart: periodStart,
+			paused:      true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			vault := makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())
+			vault.PeriodStart = tc.periodStart
+			vault.PeriodTimeout = tc.periodTimeout
+			vault.Paused = tc.paused
+
+			genesis := &types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{vault},
+			}
+			if tc.periodTimeout != 0 {
+				genesis.PayoutTimeoutQueue = []types.QueueEntry{
+					{Time: uint64(tc.periodTimeout), Addr: vaultAddr.String()},
+				}
+			}
+
+			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
+				"importing a genesis with no payout_verification_set field should succeed")
+
+			s.assertInPayoutVerificationQueue(vaultAddr, tc.expectVerifying)
+			s.assertInPayoutTimeoutQueue(vaultAddr, tc.expectTimeoutHeld)
+		})
+	}
+}
+
+func (s *TestSuite) TestVaultGenesis_RestoredVerificationSetVaultResumesAutomaticReconciliation() {
+	shareDenom := "resumeshare"
+	underlying := sdk.NewInt64Coin("resumeunder", 1_000_000)
+	blockTime := time.Unix(1_700_000_000, 0).UTC()
+
+	vaultAddr, vault := s.setupReconcileVault("0.05", blockTime.Add(-time.Hour).Unix(), false,
+		underlying, shareDenom, sdk.NewInt64Coin(shareDenom, 1_000), blockTime)
+
+	s.Require().NoError(s.k.SafeAddPayoutVerification(s.ctx, vault),
+		"moving vault %s into the payout verification set should not error", vaultAddr)
+	s.assertInPayoutVerificationQueue(vaultAddr, true)
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Contains(exported.PayoutVerificationSet, vaultAddr.String(),
+		"ExportGenesis should carry vault %s in the payout verification set", vaultAddr)
+
+	exported.PayoutVerificationSet = nil
+	s.Require().NoError(s.k.PayoutVerificationSet.Remove(s.ctx, vaultAddr),
+		"clearing the live set to emulate a pre-fix export should not error")
+	s.assertInPayoutVerificationQueue(vaultAddr, false)
+
+	s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, exported) },
+		"importing a genesis exported before payout_verification_set existed should succeed")
+	s.assertInPayoutVerificationQueue(vaultAddr, true)
+
+	s.SetCtxBlockTime(blockTime.Add(time.Minute))
+	s.Require().NoError(s.k.EndBlocker(s.ctx), "EndBlocker should not error for the restored vault")
+
+	s.assertInPayoutVerificationQueue(vaultAddr, false)
+	s.assertInPayoutTimeoutQueue(vaultAddr, true)
+}
+
+func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPayoutVerificationSet() {
+	shareDenom := "badverifyshare"
+	underlying := "badverifyunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	unknownVaultAddr := types.GetVaultAddress("baddenom")
+
+	tests := []struct {
+		name                  string
+		periodTimeout         int64
+		payoutTimeoutQueue    []types.QueueEntry
+		payoutVerificationSet []string
+		expectedPanic         string
+	}{
+		{
+			name:                  "address is not valid bech32",
+			payoutVerificationSet: []string{"invalid-bech32"},
+			expectedPanic:         "invalid vault genesis state: invalid payout verification set address at index 0: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:                  "address is not an imported vault",
+			payoutVerificationSet: []string{unknownVaultAddr.String()},
+			expectedPanic:         fmt.Sprintf("invalid vault genesis state: payout verification set address at index 0 is not an imported vault: %s", unknownVaultAddr),
+		},
+		{
+			name:                  "duplicate entry for the same vault",
+			payoutVerificationSet: []string{vaultAddr.String(), vaultAddr.String()},
+			expectedPanic:         fmt.Sprintf("invalid vault genesis state: duplicate payout verification set entry for vault: %s", vaultAddr),
+		},
+		{
+			name:                  "vault is also in the payout timeout queue",
+			periodTimeout:         1_700_000_000,
+			payoutTimeoutQueue:    []types.QueueEntry{{Time: 1_700_000_000, Addr: vaultAddr.String()}},
+			payoutVerificationSet: []string{vaultAddr.String()},
+			expectedPanic:         fmt.Sprintf("invalid vault genesis state: vault %s is in both the payout verification set and the payout timeout queue", vaultAddr),
+		},
+		{
+			name:                  "vault carries a scheduled period timeout",
+			periodTimeout:         1_700_000_000,
+			payoutVerificationSet: []string{vaultAddr.String()},
+			expectedPanic:         fmt.Sprintf("invalid vault genesis state: payout verification set vault %s has period timeout %d, expected 0", vaultAddr, 1_700_000_000),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			vault := makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())
+			vault.PeriodTimeout = tc.periodTimeout
+
+			genesis := &types.GenesisState{
+				Params:                types.DefaultParams(),
+				Vaults:                []types.VaultAccount{vault},
+				PayoutTimeoutQueue:    tc.payoutTimeoutQueue,
+				PayoutVerificationSet: tc.payoutVerificationSet,
+			}
+
+			s.Require().PanicsWithError(tc.expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should reject a payout verification set whose %s", tc.name)
+		})
+	}
 }
 
 // TestVaultGenesis_RoundTrip_NAVs verifies the internal NAV table survives a
@@ -795,4 +1075,35 @@ func (s *TestSuite) TestVaultGenesis_ExportPanicsOnNAVKeyValueDenomMismatch() {
 		func() { s.k.ExportGenesis(s.ctx) },
 		"ExportGenesis should panic when a NAV row's key denom does not match value.Denom",
 	)
+}
+
+func (s *TestSuite) TestInitGenesis_SeedsTotalValueForVaultReachedThroughTheAuthStore() {
+	underlying := "ylds"
+	shareDenom := "vshare"
+	const parked = 4_242
+
+	vault := s.setupBaseVault(underlying, shareDenom)
+	vaultAddr := vault.GetAddress()
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlying, parked))),
+		"funding the principal of vault %s should succeed", vaultAddr,
+	)
+
+	s.Require().NoError(s.k.Vaults.Remove(s.ctx, vaultAddr),
+		"dropping the vault lookup entry should succeed for vault %s", vaultAddr)
+	s.dropStoredTotalValue(vaultAddr)
+
+	genesis := &types.GenesisState{Params: types.DefaultParams()}
+	s.Require().Empty(genesis.Vaults,
+		"the genesis payload must not list vault %s; it can only be found through the auth store", vaultAddr)
+
+	s.k.InitGenesis(s.ctx, genesis)
+
+	stored, err := s.k.TotalValues.Get(s.ctx, vaultAddr)
+	s.Require().NoError(err, "InitGenesis must seed a total for vault %s, which it recovered from the auth store", vaultAddr)
+	s.Require().Equal(sdkmath.NewInt(parked).String(), stored.String(),
+		"the seeded total must be the %d%s standing at the principal", parked, underlying)
+
+	msg, broken := keeper.TotalValueInvariant(s.k)(s.ctx)
+	s.Require().False(broken, "the total value invariant must hold after a genesis import: %s", msg)
 }

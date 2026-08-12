@@ -25,6 +25,45 @@ func (k *Keeper) GetVaults(ctx context.Context) ([]sdk.AccAddress, error) {
 	return vaults, nil
 }
 
+// resolveVaults returns the vault account behind every entry in the vault lookup, plus the number of
+// entries it could not resolve. Every consumer of the lookup goes through here, so none of them can
+// disagree about which entries count as vaults.
+//
+// An entry with no account, or one whose address holds a non-vault account, is inert: nothing else
+// reads it and the vault it names owns nothing. It is logged and skipped rather than failing an
+// upgrade or halting a chain. purpose names the caller in those logs.
+func (k Keeper) resolveVaults(ctx sdk.Context, purpose string) ([]types.VaultAccount, int, error) {
+	addrs, err := k.GetVaults(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to list vaults: %w", err)
+	}
+
+	vaults := make([]types.VaultAccount, 0, len(addrs))
+	skipped := 0
+	for _, addr := range addrs {
+		vault, err := k.GetVault(ctx, addr)
+		switch {
+		case err != nil:
+			skipped++
+			k.getLogger(ctx).Error("skipping unloadable vault lookup entry",
+				"purpose", purpose,
+				"vault", addr.String(),
+				"err", err,
+			)
+		case vault == nil:
+			skipped++
+			k.getLogger(ctx).Error("skipping vault lookup entry with no vault account",
+				"purpose", purpose,
+				"vault", addr.String(),
+			)
+		default:
+			vaults = append(vaults, *vault)
+		}
+	}
+
+	return vaults, skipped, nil
+}
+
 // SetVaultLookup stores a vault in the Vaults collection, keyed by its bech32 address.
 // NOTE: should only be called by genesis and at vault creation.
 // Returns an error if the vault is nil or the address cannot be parsed.

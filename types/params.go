@@ -9,21 +9,28 @@ import (
 // DefaultParams returns default vault module parameters.
 func DefaultParams() Params {
 	return Params{
-		DefaultAumFeeBips: DefaultAumFeeBips,
-		TechFeeAddress:    DefaultTechFeeAddress.String(),
+		DefaultAumFeeBips:    DefaultAumFeeBips,
+		TechFeeAddress:       DefaultTechFeeAddress.String(),
+		GovOnlyVaultCreation: DefaultGovOnlyVaultCreation,
 	}
 }
 
 // GetDefaultTechFeeAddress returns the default tech fee address based on the chain ID.
 func GetDefaultTechFeeAddress(chainID string) sdk.AccAddress {
 	switch chainID {
-	case "pio-mainnet-1":
+	case MainnetChainID:
 		return MainnetTechFeeAddress
-	case "pio-testnet-1":
+	case TestnetChainID:
 		return TestnetTechFeeAddress
 	default:
 		return DefaultTechFeeAddress
 	}
+}
+
+// GetDefaultGovOnlyVaultCreation reports whether a chain gates vault creation on governance
+// by default. Only mainnet does.
+func GetDefaultGovOnlyVaultCreation(chainID string) bool {
+	return chainID == MainnetChainID
 }
 
 // Validate checks that the parameters have valid values.

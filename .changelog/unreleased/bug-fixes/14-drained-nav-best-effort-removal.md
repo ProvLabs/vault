@@ -1,0 +1,1 @@
+* Treat the drained-denom NAV cleanup at the end of an outbound `AcceptAsset` as best-effort, logging and continuing when the entry is already absent instead of reverting a settlement whose funds have already moved [PR 270](https://github.com/provlabs/vault/pull/270).

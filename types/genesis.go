@@ -56,6 +56,28 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	verificationSetAddrs := make(map[string]bool)
+	for i, addr := range gs.PayoutVerificationSet {
+		if _, err := sdk.AccAddressFromBech32(addr); err != nil {
+			return fmt.Errorf("invalid payout verification set address at index %d: %w", i, err)
+		}
+		v, exists := vaults[addr]
+		if !exists {
+			return fmt.Errorf("payout verification set address at index %d is not an imported vault: %s", i, addr)
+		}
+		if verificationSetAddrs[addr] {
+			return fmt.Errorf("duplicate payout verification set entry for vault: %s", addr)
+		}
+		verificationSetAddrs[addr] = true
+
+		if payoutQueueAddrs[addr] {
+			return fmt.Errorf("vault %s is in both the payout verification set and the payout timeout queue", addr)
+		}
+		if v.PeriodTimeout != 0 {
+			return fmt.Errorf("payout verification set vault %s has period timeout %d, expected 0", addr, v.PeriodTimeout)
+		}
+	}
+
 	feeQueueAddrs := make(map[string]bool)
 	for i, entry := range gs.FeeTimeoutQueue {
 		if _, err := sdk.AccAddressFromBech32(entry.Addr); err != nil {
@@ -90,6 +112,12 @@ func (gs GenesisState) Validate() error {
 			}
 			if _, exists := vaults[entry.SwapOut.VaultAddress]; !exists {
 				return fmt.Errorf("pending swap out queue vault address at index %d is not an imported vault: %s", i, entry.SwapOut.VaultAddress)
+			}
+			if err := entry.SwapOut.Validate(); err != nil {
+				return fmt.Errorf("invalid pending swap out at index %d: %w", i, err)
+			}
+			if entry.Time < 0 {
+				return fmt.Errorf("pending swap out queue entry at index %d has negative time %d", i, entry.Time)
 			}
 		}
 	}

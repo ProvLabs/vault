@@ -64,18 +64,21 @@ Processing model (safe “collect-then-mutate”):
    for later blocks.
 
    * Dequeue paused vaults without reconciling them (they count against the visit budget).
-2. **Dequeue** each collected `(timeout, vault)` before processing (prevents iterator invalidation).
+2. **Mutate after the walk completes** (prevents iterator invalidation): each collected
+   `(timeout, vault)` is dequeued as part of the atomic write that settles or retires it, never before,
+   so a failed transition leaves the entry queued for a later block. An entry whose vault account
+   cannot be loaded is dequeued as cleanup.
 3. **For each vault**:
 
    * Compute `periodDuration` as `timeout - PeriodStart` (fallback to `now - PeriodStart` if needed).
    * **Check ability to pay/refund** over `periodDuration` via `CanPayInterestDuration`.
 
-     * If **insufficient** → mark **depleted**.
-     * If **sufficient** → execute `PerformVaultInterestTransfer` (emits `EventVaultReconcile`) and mark **reconciled**.
-4. **Advance state**:
-
-   * For **reconciled** vaults → `SafeEnqueuePayoutTimeout` (starts new period and enqueues next timeout).
-   * For **depleted** vaults → `handleDepletedVaults` (sets `current_rate = "0"`; interest disabled, desired preserved).
+     * If **insufficient** → **retire** the vault: set `current_rate = "0"` (interest disabled, desired
+       preserved) and drop its timeout entry in one atomic write. A failed rate update leaves the entry
+       queued as it was found, so the vault is retried on a later block rather than leaving the queue
+       with a rate it cannot pay.
+     * If **sufficient** → execute `PerformVaultInterestTransfer` (emits `EventVaultReconcile`) and
+       `SafeEnqueuePayoutTimeout` (starts a new period and enqueues the next timeout).
 
 **Never reconciles paused vaults.** Pausing already dequeues the vault; any entry still present
 (filed under another key, or a vault paused after the walk began) is dequeued on sight so it does not
@@ -95,6 +98,8 @@ Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapse
      - Computes fee based on **Gross TVV**.
      - Collects from principal marker into the configured ProvLabs collection address.
      - **Success (Partial/Full Collection)**: If the marker lacks liquidity, the uncollected remainder is recorded in `outstanding_aum_fee`. This is considered a successful transfer.
+     - **Success (Rejected Transfer)**: If the transfer itself is rejected (e.g. a restricted underlying whose collection address lacks the required attribute), the error is logged, the whole fee is recorded in `outstanding_aum_fee`, and the fee period still advances. An uncollectable fee never fails reconciliation, so it cannot brick user operations.
+     - **Liability cap**: `outstanding_aum_fee` is capped at the vault's **Gross TVV** before collection, and the excess is forfeited with an error log. A persistently uncollectable fee therefore cannot accumulate into a claim larger than the vault holds, which keeps net TVV non-negative without relying on its zero floor.
      - **Schedules next fee timeout** and commits state changes.
    - **Failure (Transient Error)**:
      - If reconciliation fails (e.g., missing NAV for denom conversion), the `CacheContext` is discarded.
@@ -133,13 +138,37 @@ To prevent a large queue from consuming excessive block time and memory, a maxim
 This advances vaults from the **verification set**:
 
 1. **Collect keys** from `PayoutVerificationSet`, visiting at most `MaxPayoutVerificationsPerBlock`
-   (currently 100) entries per block; paused vaults are removed from the set without being processed
-   (they count against the visit budget), and a failed removal is logged and retried on a later block.
-2. **Remove** each from the set (before processing).
-3. **Partition** into:
+   (currently 100) entries per block and resuming after the entry the previous block stopped on, so
+   retained entries cannot monopolize the budget; paused vaults are removed from the set without being
+   processed (they count against the visit budget), and a failed removal is retried on a later block.
+2. **Transition each collected vault individually**, classified by whether it can cover the
+   **forecast window** (see below):
 
-   * **Payable**: can cover the **forecast window** (see below) → re-enqueue next timeout (`SafeEnqueuePayoutTimeout`).
-   * **Depleted**: cannot cover forecast → disable interest (`current_rate = "0"`; desired preserved).
+   * **Payable** → enqueue the next timeout (`SafeEnqueuePayoutTimeout`).
+   * **Depleted** → disable interest (`current_rate = "0"`; desired preserved).
+   * **Unforecastable** (the payout-ability check itself errored, e.g. an unreadable NAV) → defer to
+     the next timeout window with `PeriodStart` preserved, so a persistent error backs off to one
+     retry per window instead of re-failing on every block.
+
+**The set entry is the retry token.** A vault is removed from `PayoutVerificationSet` only in the same
+atomic write that promotes it into the `PayoutTimeoutQueue`, zeroes a rate it can no longer cover, or
+defers it — never before. Any per-vault failure discards that write, so the vault keeps its entry and
+is retried on a later block rather than falling out of both collections and accruing interest and AUM
+fees that nothing is left to settle. An entry whose account is present but cannot be read as a vault
+also stays in the set: it cannot be filed in the timeout queue, whose entries must key off a real
+vault's `period_timeout`, so the entry is the only remaining record that the vault is owed a reconcile.
+Because the sweep resumes after the last entry visited rather than restarting each block, retained
+entries are revisited once per sweep and every other vault is still reached within one sweep of the set.
+
+**An orphaned entry is dropped.** If the account behind an entry no longer exists there is no vault to
+transition and no future block can resolve it, so the entry is removed outright instead of spending a
+slot of the visit budget on every sweep forever. This mirrors the orphan cleanup
+`handleVaultInterestTimeouts` already performs on the `PayoutTimeoutQueue`. The distinction from the
+unreadable case above is deliberate: a missing account is proof there is nothing left to settle, while a
+decode failure could still be masking a live vault.
+
+Per-vault failures are always logged and swallowed; only a failure to walk the set is returned, since
+an error out of `EndBlocker` would halt the chain.
 
 ---
 
@@ -190,7 +219,7 @@ A request that can neither be settled nor refunded stays queued, because the ent
 Every path that preserves a request therefore re-keys it:
 
 1. `failure_count` on the request is incremented and stored.
-2. The entry is re-filed under `now + backoff(failure_count)`, which puts it behind the work that is currently due. The re-key is atomic; if it fails, the entry is left in place and retried on the next block.
+2. The entry is re-filed under `now + delay(request_id, failure_count)`, which puts it behind the work that is currently due. The re-key is atomic; if it fails, the entry is left in place and retried on the next block.
 3. `EventSwapOutRetryScheduled{ request_id, reason, failure_count, retry_time }` is emitted.
 
 The delay grows with the failure count and is capped, so a permanently failing request is still revisited at a cost the budget can absorb:
@@ -202,6 +231,8 @@ The delay grows with the failure count and is capped, so a permanently failing r
 | 3, 4, … | doubles each time |
 | capped at | `SwapOutRetryBackoffMax` (6 hours) |
 
+Any non-zero delay also carries a jitter of `request_id % SwapOutRetryJitterSpread` (10 minutes) seconds. Without it, entries failing in the same block with the same `failure_count` receive the same retry time and re-form as a cluster on every cycle, re-consuming the whole batch budget together and delaying legitimate swap-outs on *other* vaults, since the budget is global. The jitter is derived from the request id, which is already consensus state, so the spread stays deterministic. The one immediate retry granted by `SwapOutImmediateRetries` is deliberately not jittered.
+
 `MsgExpeditePendingSwapOut` clears `failure_count` and re-keys the entry to time 0, which is how an operator forces an immediate retry after fixing the underlying cause. Note that a re-keyed request reports its retry time as the `timeout` in the `PendingSwapOuts` and `VaultPendingSwapOuts` queries, so a rising `failure_count` there marks escrow that needs attention.
 
 ---
@@ -210,7 +241,7 @@ The delay grows with the failure count and is capped, so a permanently failing r
 
 * **AutoReconcilePayoutDuration = 24 hours**
   Used when deciding if a vault remains **payable**.
-  `handleReconciledVaults` calls `partitionVaults` which uses `CanPayInterestDuration` over this window:
+  `handleReconciledVaults` classifies each vault with `CanPayInterestDuration` over this window:
 
   * **Positive interest** → must have reserves ≥ forecasted interest.
   * **Negative interest** → principal must be > 0.
@@ -234,7 +265,8 @@ The delay grows with the failure count and is capped, so a permanently failing r
     `EventSwapOutRefunded{ reason = "vault_paused" }`; owners resubmit after unpause.
 * A paused vault freezes its value at the `PausedBalance` snapshot, so operations that would change that value are rejected:
 
-  * **UpdateVaultNAV** is rejected — a NAV write would assert a price the frozen vault ignores until unpause.
+  * **UpdateVaultNAV** remains available, and is in fact the only state in which a denom the vault holds may be repriced. The new price is ignored by the frozen valuation until unpause, when `PausedBalance` is cleared and the materialized total vault value — which the repricing already folded its change into — takes over as the live number.
+  * **RepriceVault** is available only while paused, and only to a NAV authority resuming a strict pause it took itself. It writes a batch of prices and performs that same resume in one state transition.
   * **AcceptAsset** is rejected — settlement moves principal funds and the vault's value.
   * **RejectAsset** remains available — it only cancels a pending payment and refunds the source's escrow, with no vault state change.
 * Admins can still:

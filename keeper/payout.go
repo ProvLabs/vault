@@ -52,12 +52,14 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 // by a partially committed outcome.
 //
 // The processing strategy involves:
-//  1. Verifying the vault exists; jobs for non-existent vaults are dequeued and skipped, and jobs
+//  1. Verifying the request is well formed and deferring it if not, since the payout and refund paths
+//     both build sdk.Coins from the escrowed shares and would panic the EndBlocker on a bad amount.
+//  2. Verifying the vault exists; jobs for non-existent vaults are dequeued and skipped, and jobs
 //     for paused vaults are dequeued and refunded atomically in their own cache context.
-//  2. Executing the withdrawal logic (reconciliation, payout, and burning) within a cache context, then
+//  3. Executing the withdrawal logic (reconciliation, payout, and burning) within a cache context, then
 //     dequeuing in that same cache context and committing only on success.
-//  3. Handling recoverable failures by dequeuing and refunding atomically in a fresh cache context.
-//  4. Handling critical or unrecoverable failures by auto-pausing the vault and discarding the cache so
+//  4. Handling recoverable failures by dequeuing and refunding atomically in a fresh cache context.
+//  5. Handling critical or unrecoverable failures by auto-pausing the vault and discarding the cache so
 //     the request is preserved. Because the vault is now paused, the preserved request is refunded on a
 //     later block rather than re-executed, so it is never double-processed.
 //
@@ -70,6 +72,17 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 // auto-pauses the vault to signal operators while the escrowed shares are preserved.
 func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.PayoutJob) {
 	for _, j := range jobsToProcess {
+		if err := j.Req.Validate(); err != nil {
+			k.getLogger(ctx).Error(
+				"CRITICAL: skipping malformed pending withdrawal request",
+				"request_id", j.ID,
+				"vault_address", j.VaultAddr.String(),
+				"error", err,
+			)
+			k.deferSwapOutRetry(ctx, j, types.RetryReasonInvalidRequest)
+			continue
+		}
+
 		vault, ok := k.tryGetVault(ctx, j.VaultAddr)
 		if !ok {
 			if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
@@ -190,7 +203,7 @@ func (k *Keeper) refundPausedVaultSwapOut(ctx sdk.Context, j types.PayoutJob) {
 func (k *Keeper) deferSwapOutRetry(ctx sdk.Context, j types.PayoutJob, reason string) {
 	req := j.Req
 	req.FailureCount++
-	retryTime := ctx.BlockTime().Unix() + swapOutRetryBackoff(req.FailureCount)
+	retryTime := ctx.BlockTime().Unix() + swapOutRetryDelay(j.ID, req.FailureCount)
 
 	cacheCtx, write := ctx.CacheContext()
 	if err := k.PendingSwapOutQueue.Reschedule(cacheCtx, j.Timestamp, j.VaultAddr, j.ID, retryTime, &req); err != nil {
@@ -213,6 +226,17 @@ func (k *Keeper) deferSwapOutRetry(ctx sdk.Context, j types.PayoutJob, reason st
 		"retry_time", retryTime,
 	)
 	k.emitEvent(ctx, types.NewEventSwapOutRetryScheduled(req.VaultAddress, req.Owner, req.Shares, j.ID, reason, req.FailureCount, retryTime))
+}
+
+// swapOutRetryDelay returns how many seconds to delay the next attempt for swap out id, spreading a
+// delayed retry across SwapOutRetryJitterSpread so entries failing together stop coming due together.
+func swapOutRetryDelay(id uint64, failureCount uint32) int64 {
+	backoff := swapOutRetryBackoff(failureCount)
+	if backoff == 0 {
+		return 0
+	}
+
+	return backoff + int64(id%SwapOutRetryJitterSpread)
 }
 
 // swapOutRetryBackoff returns how many seconds to delay the next attempt for a swap out that has
@@ -262,6 +286,12 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 
 	if err = k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
 		return fmt.Errorf("failed to payout assets to owner: %w", err)
+	}
+
+	if err = k.adjustTotalValue(ctx, vault, assets.Amount.Neg()); err != nil {
+		errMsg := fmt.Sprintf("failed to record payout of %s from vault %s in total vault value", assets, vaultAddr)
+		k.getLogger(ctx).Error("CRITICAL: "+errMsg, "error", err)
+		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
 	if err = k.BankKeeper.SendCoins(ctx, vaultAddr, principalAddress, sdk.NewCoins(req.Shares)); err != nil {

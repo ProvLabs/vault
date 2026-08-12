@@ -24,10 +24,12 @@ if ! [ -f .vaulty/data/priv_validator_state.json ]; then
   "$SIMD_BIN" genesis add-genesis-account provlabs19ftpcggezgal5ascglq5m022z4e453khv4j3k2 1000000uusdc --home .vaulty
   "$SIMD_BIN" genesis add-genesis-account provlabs1evyv7neax9qtxxzuexnhylxyz4guvsyjhxyv47 1000000uusdc --home .vaulty
 
-  # Vault creation is governance-gated, so gov is tuned for a fast local proposal loop.
+  # Vault creation is left open to any signer locally, and gov is tuned for a fast proposal
+  # loop so the governance-gated path can still be exercised by flipping the param.
   TEMP=.vaulty/genesis.json
   touch $TEMP && jq '
-      .app_state.staking.params.bond_denom = "ustake"
+      .app_state.vault.params.gov_only_vault_creation = false
+    | .app_state.staking.params.bond_denom = "ustake"
     | .app_state.gov.params.min_deposit = [{"denom": "ustake", "amount": "1000000"}]
     | .app_state.gov.params.expedited_min_deposit = [{"denom": "ustake", "amount": "2000000"}]
     | .app_state.gov.params.max_deposit_period = "60s"

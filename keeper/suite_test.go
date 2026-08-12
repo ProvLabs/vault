@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -29,6 +29,7 @@ import (
 	"github.com/provlabs/vault/simapp"
 	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 )
 
 // TestSuite wires up a full SimApp and exposes helpers for keeper tests.
@@ -96,18 +97,98 @@ func (s *TestSuite) CreateAndFundAccount(coin sdk.Coin) sdk.AccAddress {
 	key2 := secp256k1.GenPrivKey()
 	pub2 := key2.PubKey()
 	addr2 := sdk.AccAddress(pub2.Address())
-	FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.Coins{coin})
+	FundAccount(s.ctx, s.simApp, addr2, sdk.Coins{coin})
 	return addr2
 }
 
-// FundAccount mints the provided coins to the mint module account and then
-// sends them to the given address. This is a convenient way to seed balances
-// in tests without requiring faucet-style logic.
-func FundAccount(ctx context.Context, bankKeeper bankkeeper.Keeper, addr sdk.AccAddress, amounts sdk.Coins) error {
+// FundAccount mints the provided coins to the mint module account and then sends them to the
+// given address, seeding balances in tests without faucet-style logic.
+//
+// It also calls SyncVaultValues, because the send bypasses marker send restrictions and so is
+// invisible to the module's own accounting. Prefer a helper that does not sync when the test is
+// about whether a production path reports its own change; syncing here would hide that.
+func FundAccount(ctx context.Context, app *simapp.SimApp, addr sdk.AccAddress, amounts sdk.Coins) error {
+	bankKeeper := app.BankKeeper
 	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
 		return err
 	}
-	return bankKeeper.SendCoinsFromModuleToAccount(markertypes.WithBypass(ctx), minttypes.ModuleName, addr, amounts)
+	if err := bankKeeper.SendCoinsFromModuleToAccount(markertypes.WithBypass(ctx), minttypes.ModuleName, addr, amounts); err != nil {
+		return err
+	}
+	return SyncVaultValues(sdk.UnwrapSDKContext(ctx), app)
+}
+
+// sendCoinsBypass moves coins with marker send restrictions bypassed, then re-derives vault totals.
+// It is for arranging state, not for asserting that a production path reported its own change.
+func (s *TestSuite) sendCoinsBypass(ctx context.Context, from, to sdk.AccAddress, amt sdk.Coins) error {
+	if err := s.simApp.BankKeeper.SendCoins(ctx, from, to, amt); err != nil {
+		return err
+	}
+	return SyncVaultValues(sdk.UnwrapSDKContext(ctx), s.simApp)
+}
+
+// withdrawMarkerCoins withdraws coins from a marker account and re-derives vault totals, for the
+// same reason as sendCoinsBypass.
+func (s *TestSuite) withdrawMarkerCoins(ctx sdk.Context, caller, recipient sdk.AccAddress, denom string, coins sdk.Coins) error {
+	if err := s.simApp.MarkerKeeper.WithdrawCoins(ctx, caller, recipient, denom, coins); err != nil {
+		return err
+	}
+	return SyncVaultValues(ctx, s.simApp)
+}
+
+// fundPrincipalForBrokenValuation funds a vault's principal out of band and drops its stored
+// total, leaving a vault no consensus path can value. Use materializeTotalValue instead when
+// valuation should succeed on a specific number.
+func (s *TestSuite) fundPrincipalForBrokenValuation(vault *types.VaultAccount, coins sdk.Coins) {
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(s.simApp.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, coins),
+		"minting %s should succeed", coins)
+	s.Require().NoError(
+		s.simApp.BankKeeper.SendCoinsFromModuleToAccount(markertypes.WithBypass(s.ctx), minttypes.ModuleName, principal, coins),
+		"funding the principal with %s should succeed", coins,
+	)
+	s.Require().NoError(
+		s.k.TotalValues.Remove(s.ctx, vault.GetAddress()),
+		"dropping the materialized total for vault %s should succeed", vault.GetAddress(),
+	)
+}
+
+// dropStoredTotalValue removes a vault's materialized total, staging the "never materialized"
+// state that seeding and the total-value invariant care about.
+func (s *TestSuite) dropStoredTotalValue(vaultAddr sdk.AccAddress) {
+	s.Require().NoError(s.k.TotalValues.Remove(s.ctx, vaultAddr),
+		"dropping the stored total value for vault %s should succeed", vaultAddr)
+}
+
+// storedTotalValueExists reports whether a vault has a materialized total.
+func (s *TestSuite) storedTotalValueExists(vaultAddr sdk.AccAddress) bool {
+	found, err := s.k.TotalValues.Has(s.ctx, vaultAddr)
+	s.Require().NoError(err, "checking for a materialized total on vault %s should succeed", vaultAddr)
+	return found
+}
+
+// materializeTotalValue writes a vault's materialized total directly, staging a number the
+// reporting paths could not have produced.
+func (s *TestSuite) materializeTotalValue(vaultAddr sdk.AccAddress, total sdkmath.Int) {
+	s.Require().NoError(s.k.TotalValues.Set(s.ctx, vaultAddr, total),
+		"storing a materialized total of %s for vault %s should succeed", total, vaultAddr)
+}
+
+// SyncVaultValues re-derives every vault's materialized total value from current state. Tests
+// that bypass marker send restrictions or write balances directly must call it so the stored
+// total agrees with the balances again.
+func SyncVaultValues(ctx sdk.Context, app *simapp.SimApp) error {
+	k := app.VaultKeeper
+	for _, acc := range app.AccountKeeper.GetAllAccounts(ctx) {
+		vault, ok := acc.(*types.VaultAccount)
+		if !ok {
+			continue
+		}
+		if _, err := k.RecomputeTotalValue(ctx, *vault); err != nil {
+			return fmt.Errorf("failed to sync total value for vault %s: %w", vault.GetAddress(), err)
+		}
+	}
+	return nil
 }
 
 // countingBankKeeper wraps a types.BankKeeper and records how often the
@@ -150,9 +231,77 @@ func (s *TestSuite) assertInPayoutVerificationQueue(vaultAddr sdk.AccAddress, sh
 	s.Assert().Equal(shouldContain, isInQueue, "vault should be enqueued in payout verification queue at expected period start")
 }
 
-// assertInReconciliationQueues asserts whether a vault is present in the payout timeout queue,
-// the fee timeout queue, and the payout verification set, matching the expectation flag.
-func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shouldContain bool) {
+// assertSinglePayoutTimeoutAt asserts the vault has exactly one PayoutTimeoutQueue entry and that it is
+// keyed at the expected timeout.
+func (s *TestSuite) assertSinglePayoutTimeoutAt(vaultAddr sdk.AccAddress, expected int64) {
+	count := 0
+	found := false
+	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			count++
+			found = found || timeout == uint64(expected)
+		}
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the payout timeout queue should not error")
+	s.Assert().True(found, "missing payout timeout entry at %d for vault %s", expected, vaultAddr)
+	s.Assert().Equal(1, count, "there should be exactly one payout timeout entry for vault %s", vaultAddr)
+}
+
+// countPayoutTimeoutsForVault returns how many PayoutTimeoutQueue entries exist for a vault,
+// regardless of the timeout they are keyed under.
+func (s *TestSuite) countPayoutTimeoutsForVault(vaultAddr sdk.AccAddress) int {
+	count := 0
+	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			count++
+		}
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the payout timeout queue should not error")
+	return count
+}
+
+// writeVaultDesiredRate writes a desired interest rate straight through the auth keeper, bypassing the
+// validation SetVaultAccount performs, so tests can install a rate the module would reject and later
+// repair it. It returns the stored vault.
+func (s *TestSuite) writeVaultDesiredRate(vaultAddr sdk.AccAddress, rate string) *types.VaultAccount {
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault should not error for vault %s", vaultAddr)
+	s.Require().NotNil(vault, "vault %s should exist before its desired rate is rewritten", vaultAddr)
+	vault.DesiredInterestRate = rate
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	return vault
+}
+
+// requireUnpersistableVault installs an unparsable desired interest rate so the account still loads and
+// prices normally while any later SetVaultAccount fails validation. It returns the stored vault.
+func (s *TestSuite) requireUnpersistableVault(vaultAddr sdk.AccAddress) *types.VaultAccount {
+	return s.writeVaultDesiredRate(vaultAddr, "not-a-rate")
+}
+
+// requireUnpriceableVault corrupts a held-denom NAV entry so GetTVV cannot value the vault, forcing the
+// payout-ability forecast to error while the account itself stays valid.
+func (s *TestSuite) requireUnpriceableVault(vaultAddr sdk.AccAddress) {
+	s.Require().NoError(
+		s.k.TestAccessor_corruptVaultNAV(s.T(), s.ctx, vaultAddr, "heldasset"),
+		"corrupting the NAV entry should not error for vault %s", vaultAddr,
+	)
+}
+
+// requireUnvaluableVault corrupts a held-denom NAV entry and drops the materialized total so any
+// valuation must recompute and fail, letting tests drive the GetTVV/GetNetTVV error branches.
+func (s *TestSuite) requireUnvaluableVault(vaultAddr sdk.AccAddress) {
+	s.requireUnpriceableVault(vaultAddr)
+	s.Require().NoError(
+		s.k.TotalValues.Remove(s.ctx, vaultAddr),
+		"removing the materialized total value should not error for vault %s", vaultAddr,
+	)
+}
+
+// assertInPayoutTimeoutQueue asserts whether a vault address holds an entry in the payout
+// timeout queue, under any timeout key, matching the expectation flag.
+func (s *TestSuite) assertInPayoutTimeoutQueue(vaultAddr sdk.AccAddress, shouldContain bool) {
 	payoutQueued := false
 	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
 		payoutQueued = payoutQueued || addr.Equals(vaultAddr)
@@ -160,21 +309,31 @@ func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shoul
 	})
 	s.Require().NoError(err, "walking the payout timeout queue should not error")
 	s.Assert().Equal(shouldContain, payoutQueued, "payout timeout queue membership for vault %s", vaultAddr)
+}
 
+// assertInFeeTimeoutQueue asserts whether a vault address holds an entry in the fee timeout
+// queue, under any timeout key, matching the expectation flag.
+func (s *TestSuite) assertInFeeTimeoutQueue(vaultAddr sdk.AccAddress, shouldContain bool) {
 	feeQueued := false
-	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+	err := s.k.FeeTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
 		feeQueued = feeQueued || addr.Equals(vaultAddr)
 		return false, nil
 	})
 	s.Require().NoError(err, "walking the fee timeout queue should not error")
 	s.Assert().Equal(shouldContain, feeQueued, "fee timeout queue membership for vault %s", vaultAddr)
+}
 
+// assertInReconciliationQueues asserts whether a vault is present in the payout timeout queue,
+// the fee timeout queue, and the payout verification set, matching the expectation flag.
+func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shouldContain bool) {
+	s.assertInPayoutTimeoutQueue(vaultAddr, shouldContain)
+	s.assertInFeeTimeoutQueue(vaultAddr, shouldContain)
 	s.assertInPayoutVerificationQueue(vaultAddr, shouldContain)
 }
 
-// createVaultWithDueInterestTimeout creates a funded vault with a due PayoutTimeoutQueue
-// entry at dueTime, optionally paused, for exercising the per-block visit budget.
-func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime int64, paused bool) {
+// createVaultWithDueInterestTimeout creates a funded vault with a due PayoutTimeoutQueue entry at
+// dueTime, optionally paused, and returns the stored vault.
+func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime int64, paused bool) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(info.underlying, s.adminAddr)
 	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 		Admin:           s.adminAddr.String(),
@@ -193,17 +352,19 @@ func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime in
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
+		FundAccount(s.ctx, s.simApp, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
 		"funding reserves should not error for vault %s", info.vaultAddr,
 	)
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
+		FundAccount(s.ctx, s.simApp, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
 		"funding principal should not error for marker %s", info.shareDenom,
 	)
 	s.Require().NoError(
 		s.k.PayoutTimeoutQueue.Enqueue(s.ctx, dueTime, info.vaultAddr),
 		"enqueuing due payout timeout should not error for vault %s", info.vaultAddr,
 	)
+
+	return vault
 }
 
 // createVaultWithDueFeeTimeout creates a funded vault with a due FeeTimeoutQueue entry at
@@ -252,6 +413,36 @@ func (s *TestSuite) countPayoutVerificationEntries() int {
 	return count
 }
 
+// countVaultAccrualEntries returns how many accrual records a vault still holds across the
+// payout timeout queue, the fee timeout queue, and the payout verification set. It is the
+// observable signal that haltVaultAccrual removed a vault from the per-block work budgets.
+func (s *TestSuite) countVaultAccrualEntries(vaultAddr sdk.AccAddress) int {
+	count := 0
+	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			count++
+		}
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the payout timeout queue should not error")
+
+	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			count++
+		}
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the fee timeout queue should not error")
+
+	hasVerification, err := s.k.PayoutVerificationSet.Has(s.ctx, vaultAddr)
+	s.Require().NoError(err, "reading the payout verification set should not error")
+	if hasVerification {
+		count++
+	}
+
+	return count
+}
+
 // countPendingSwapOuts returns the number of entries in the PendingSwapOutQueue.
 func (s *TestSuite) countPendingSwapOuts() int {
 	count := 0
@@ -296,6 +487,12 @@ func normalizeEvent(event sdk.Event) sdk.Event {
 	return event
 }
 
+// attributeExpiry returns a fixed far-future expiration so suite attributes never expire under any block time.
+func attributeExpiry() *time.Time {
+	expiry := time.Date(2200, 1, 1, 0, 0, 0, 0, time.UTC)
+	return &expiry
+}
+
 // SetupTechFeeAccount ensures the AUM fee collector account exists and has the required
 // attributes to receive the specified restricted asset. It returns the fee collector address.
 func (s *TestSuite) SetupTechFeeAccount(restrictedUnderlyingDenom string) sdk.AccAddress {
@@ -308,8 +505,7 @@ func (s *TestSuite) SetupTechFeeAccount(restrictedUnderlyingDenom string) sdk.Ac
 	if !s.simApp.NameKeeper.NameExists(s.ctx, restrictedUnderlyingDenom) {
 		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false), "should successfully bind name for %s", restrictedUnderlyingDenom)
 	}
-	expireTime := time.Now().Add(24 * time.Hour)
-	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), attributeExpiry(), "")
 	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
 
 	return provlabsAddr
@@ -345,8 +541,7 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 		if !s.simApp.NameKeeper.NameExists(s.ctx, attrName) {
 			s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, attrName, s.adminAddr, false), "should successfully bind the name")
 		}
-		expireTime := time.Now().Add(365 * 24 * time.Hour)
-		attribute := attrtypes.NewAttribute(attrName, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+		attribute := attrtypes.NewAttribute(attrName, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), attributeExpiry(), "")
 		s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the tech fee account")
 	}
 
@@ -372,6 +567,23 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 	}
 	err = s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
 	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
+}
+
+// requireAttribute grants attrName to addr, binding the attribute name first if needed.
+func (s *TestSuite) requireAttribute(addr sdk.AccAddress, attrName string) {
+	if !s.simApp.NameKeeper.NameExists(s.ctx, attrName) {
+		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, attrName, s.adminAddr, false), "should successfully bind the attribute name %s", attrName)
+	}
+	attribute := attrtypes.NewAttribute(attrName, addr.String(), attrtypes.AttributeType_String, []byte("true"), attributeExpiry(), "")
+	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully grant attribute %s to %s", attrName, addr)
+}
+
+// requireSendDeny freezes addr on the deny list of the denom's marker, the control an issuer
+// uses to stop a sanctioned holder from sending a restricted asset.
+func (s *TestSuite) requireSendDeny(denom string, addr sdk.AccAddress) {
+	markerAddr := markertypes.MustGetMarkerAddress(denom)
+	s.simApp.MarkerKeeper.AddSendDeny(s.ctx, markerAddr, addr)
+	s.Require().True(s.simApp.MarkerKeeper.IsSendDeny(s.ctx, markerAddr, addr), "%s should be on the deny list of marker %s", addr, denom)
 }
 
 // requireSimpleMarker registers denom as an unrestricted Coin marker so it passes the
@@ -453,15 +665,27 @@ func (s *TestSuite) setupAssetSettlementVault(underlying, share string) (*types.
 }
 
 // createPayment creates an exchange payment from source to target and places the escrow hold.
-func (s *TestSuite) createPayment(source, target sdk.AccAddress, sourceAmount, targetAmount sdk.Coins, externalID string) {
-	err := s.simApp.ExchangeKeeper.CreatePayment(s.ctx, &exchange.Payment{
+// It returns the staged terms in the vault's Payment view, which is what an asset manager
+// submits to approve settling it.
+func (s *TestSuite) createPayment(source, target sdk.AccAddress, sourceAmount, targetAmount sdk.Coins, externalID string) types.Payment {
+	payment := &exchange.Payment{
 		Source:       source.String(),
 		SourceAmount: sourceAmount,
 		Target:       target.String(),
 		TargetAmount: targetAmount,
 		ExternalId:   externalID,
-	})
-	s.Require().NoError(err, "failed to create payment %q", externalID)
+	}
+	s.Require().NoError(s.simApp.ExchangeKeeper.CreatePayment(s.ctx, payment), "failed to create payment %q", externalID)
+	return types.NewPaymentFromExchange(payment)
+}
+
+// cancelPayment cancels the source's pending payment and releases its escrow hold, which the
+// source may do at any time and which frees the (source, external_id) label for reuse.
+func (s *TestSuite) cancelPayment(source sdk.AccAddress, externalID string) {
+	s.Require().NoError(
+		s.simApp.ExchangeKeeper.CancelPayments(s.ctx, source, []string{externalID}),
+		"failed to cancel payment %q", externalID,
+	)
 }
 
 // acceptAssetScenario describes the shared fixture for an AcceptAsset settlement test:
@@ -485,8 +709,9 @@ type acceptAssetScenario struct {
 // vault, the optional asset marker and seeded NAV, a funded source account (which always
 // carries a stake coin) and principal, and a staged payment from the source to the vault
 // (unless omitPayment is set).
-// It returns the vault, its principal marker address, and the payment source address.
-func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.VaultAccount, sdk.AccAddress, sdk.AccAddress) {
+// It returns the vault, its principal marker address, the payment source address, and the
+// staged payment's terms for the asset manager to approve (zero when omitPayment is set).
+func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.VaultAccount, sdk.AccAddress, sdk.AccAddress, types.Payment) {
 	vault, principalAddr := s.setupAssetSettlementVault(sc.underlying, sc.share)
 	if sc.assetMarker != "" {
 		s.requireSimpleMarker(sc.assetMarker)
@@ -501,16 +726,17 @@ func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.Vau
 
 	source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
 	if !sc.fundSource.IsZero() {
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sc.fundSource), "failed to fund source with %s", sc.fundSource)
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, source, sc.fundSource), "failed to fund source with %s", sc.fundSource)
 	}
 	if !sc.fundPrincipal.IsZero() {
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sc.fundPrincipal), "failed to fund principal with %s", sc.fundPrincipal)
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, principalAddr, sc.fundPrincipal), "failed to fund principal with %s", sc.fundPrincipal)
 	}
 
+	var approved types.Payment
 	if !sc.omitPayment {
-		s.createPayment(source, vault.GetAddress(), sc.sourceAmount, sc.targetAmount, sc.externalID)
+		approved = s.createPayment(source, vault.GetAddress(), sc.sourceAmount, sc.targetAmount, sc.externalID)
 	}
-	return vault, principalAddr, source
+	return vault, principalAddr, source, approved
 }
 
 // requireTypedEventEmitted asserts that the given typed event was emitted on the current context.
@@ -677,12 +903,61 @@ func (s *TestSuite) setupBaseVaultRestricted(underlyingDenom, shareDenom string)
 	})
 }
 
+// setupRestrictedVaultWithDeposit creates a vault over a restricted underlying asset and swaps the
+// given amount in from a freshly attributed holder, leaving the deposit in the principal marker.
+// It returns the vault and the depositor.
+func (s *TestSuite) setupRestrictedVaultWithDeposit(underlyingDenom, shareDenom string, amount sdkmath.Int) (*types.VaultAccount, sdk.AccAddress) {
+	vault := s.setupBaseVaultRestricted(underlyingDenom, shareDenom)
+	depositor := s.fundRestrictedHolder(underlyingDenom, amount)
+
+	_, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositor, sdk.NewCoin(underlyingDenom, amount))
+	s.Require().NoError(err, "swapping %s%s into vault %s should succeed", amount, underlyingDenom, shareDenom)
+
+	return vault, depositor
+}
+
+// fundRestrictedHolder creates an account holding the restricted marker's required attribute and
+// withdraws the given amount of the restricted underlying asset to it.
+func (s *TestSuite) fundRestrictedHolder(underlyingDenom string, amount sdkmath.Int) sdk.AccAddress {
+	holder := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	s.grantRequiredMarkerAttribute(holder)
+	s.Require().NoError(
+		s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, holder, underlyingDenom, sdk.NewCoins(sdk.NewCoin(underlyingDenom, amount))),
+		"withdrawing %s%s to holder %s should succeed", amount, underlyingDenom, holder,
+	)
+	return holder
+}
+
+// grantRequiredMarkerAttribute assigns the attribute required by the restricted markers the test
+// fixtures create, so the address may send and receive that restricted asset.
+func (s *TestSuite) grantRequiredMarkerAttribute(addr sdk.AccAddress) {
+	expiration := s.ctx.BlockTime().Add(365 * 24 * time.Hour)
+	attribute := attrtypes.NewAttribute(simulation.RequiredMarkerAttribute, addr.String(), attrtypes.AttributeType_String, []byte("true"), &expiration, "")
+	s.Require().NoError(
+		s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr),
+		"setting required attribute %s on %s should succeed", simulation.RequiredMarkerAttribute, addr,
+	)
+}
+
+// revokeTechFeeAttribute deletes the AUM fee collector's required attribute for the restricted
+// markers the test fixtures create, simulating an expiry, a revocation, or a governance change of
+// the collection address to an unattributed one. It returns the fee collector address.
+func (s *TestSuite) revokeTechFeeAttribute() sdk.AccAddress {
+	feeCollector, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
+	s.Require().NoError(
+		s.simApp.AttributeKeeper.DeleteAttribute(s.ctx, feeCollector.String(), simulation.RequiredMarkerAttribute, nil, s.adminAddr),
+		"revoking required attribute %s from fee collector %s should succeed", simulation.RequiredMarkerAttribute, feeCollector,
+	)
+	return feeCollector
+}
+
 // setupBaseVault creates and activates the marker for the underlying denom, withdraws some
 // underlying coins to the admin, and creates a single-denom vault. It returns the newly
 // created vault account.
 func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
-	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000)))
+	s.withdrawMarkerCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000)))
 
 	return s.createSingleDenomVault(vaultAttrs{
 		admin:      s.adminAddr.String(),
@@ -714,10 +989,18 @@ func (s *TestSuite) CreateAndActivateVault(admin sdk.AccAddress, share, underlyi
 	return types.GetVaultAddress(share)
 }
 
+// SetGovOnlyVaultCreation flips the module's gov_only_vault_creation param.
+func (s *TestSuite) SetGovOnlyVaultCreation(govOnly bool) {
+	params, err := s.k.Params.Get(s.ctx)
+	s.Require().NoError(err, "failed to read params before setting gov_only_vault_creation to %t", govOnly)
+	params.GovOnlyVaultCreation = govOnly
+	s.Require().NoError(s.k.Params.Set(s.ctx, params), "failed to set gov_only_vault_creation to %t", govOnly)
+}
+
 // FundMarker mints and sends the provided coins to the marker account associated with the share denom.
 func (s *TestSuite) FundMarker(shareDenom string, coins sdk.Coins) {
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, coins), "funding marker %s should not error", shareDenom)
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr, coins), "funding marker %s should not error", shareDenom)
 }
 
 // SetVaultRatesAndPeriod updates a vault's interest rates and fee period settings.
@@ -761,6 +1044,18 @@ func (s *TestSuite) enqueueDueSwapOut(underlyingDenom, shareDenom string, assets
 	return ownerAddr, *minted, id, req
 }
 
+// forceEnqueuePendingSwapOut writes a pending swap-out straight into the queue's indexed map,
+// bypassing the validation performed by Enqueue and Import. Use it to reproduce malformed state
+// that a hand-authored genesis or a state import could have committed to the store.
+func (s *TestSuite) forceEnqueuePendingSwapOut(timestamp int64, id uint64, req types.PendingSwapOut) {
+	vaultAddr, err := sdk.AccAddressFromBech32(req.VaultAddress)
+	s.Require().NoError(err, "vault address %s should be valid", req.VaultAddress)
+	s.Require().NoError(
+		s.k.PendingSwapOutQueue.IndexedMap.Set(s.ctx, collections.Join3(timestamp, id, vaultAddr), req),
+		"should force-write pending swap out %d into the queue at time %d", id, timestamp,
+	)
+}
+
 // enqueueUnrefundableSwapOut enqueues an escrowed swap-out for a paused vault and then drains the
 // escrowed shares, so every refund attempt fails deterministically the way a deactivated share
 // marker or a revoked owner attribute would in production.
@@ -774,11 +1069,33 @@ func (s *TestSuite) enqueueUnrefundableSwapOut(underlyingDenom, shareDenom strin
 	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should pause vault for share denom %s", shareDenom)
 
 	s.Require().NoError(
-		s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), vaultAddr, s.adminAddr, sdk.NewCoins(minted)),
+		s.sendCoinsBypass(markertypes.WithBypass(s.ctx), vaultAddr, s.adminAddr, sdk.NewCoins(minted)),
 		"should drain escrowed shares for share denom %s to force the refund to fail", shareDenom,
 	)
 
 	return ownerAddr, minted, reqID
+}
+
+// enqueueUnrefundableSwapOutCluster enqueues count identical unrefundable swap-outs against a single
+// paused vault, reproducing a cluster of entries that all fail in the same block. It returns their ids.
+func (s *TestSuite) enqueueUnrefundableSwapOutCluster(underlyingDenom, shareDenom string, assets sdk.Coin, duePayoutTime int64, count int) []uint64 {
+	ownerAddr, minted, firstID := s.enqueueUnrefundableSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+
+	req := types.PendingSwapOut{
+		Owner:        ownerAddr.String(),
+		VaultAddress: types.GetVaultAddress(shareDenom).String(),
+		RedeemDenom:  underlyingDenom,
+		Shares:       minted,
+	}
+
+	ids := []uint64{firstID}
+	for i := 1; i < count; i++ {
+		id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
+		s.Require().NoError(err, "should enqueue clustered swap-out %d of %d for share denom %s", i, count, shareDenom)
+		ids = append(ids, id)
+	}
+
+	return ids
 }
 
 // assertSwapOutEntryPreservedAndPaused verifies the invariant that protects escrowed funds when a
@@ -806,14 +1123,14 @@ func (s *TestSuite) assertSwapOutEntryPreservedAndPaused(reqID uint64, vaultAddr
 }
 
 // assertSwapOutRetryDeferred asserts request reqID is still queued with the given failure count and
-// has been re-keyed to the retry time that count implies for the current block time.
+// has been re-keyed to the retry time that its id and count imply for the current block time.
 func (s *TestSuite) assertSwapOutRetryDeferred(reqID uint64, expectedFailureCount uint32) types.PendingSwapOut {
 	retryTime, req, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, reqID)
 	s.Require().NoError(err, "should find preserved request %d in the queue", reqID)
 	s.Require().Equal(expectedFailureCount, req.FailureCount, "request %d should have recorded %d failed attempts", reqID, expectedFailureCount)
 
-	expectedRetryTime := s.ctx.BlockTime().Unix() + s.k.TestAccessor_swapOutRetryBackoff(expectedFailureCount)
-	s.Require().Equal(expectedRetryTime, retryTime, "request %d should be re-keyed to the retry time implied by its backoff", reqID)
+	expectedRetryTime := s.ctx.BlockTime().Unix() + s.k.TestAccessor_swapOutRetryDelay(reqID, expectedFailureCount)
+	s.Require().Equal(expectedRetryTime, retryTime, "request %d should be re-keyed to the retry time implied by its backoff and jitter", reqID)
 
 	return *req
 }
@@ -952,8 +1269,31 @@ func createSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shar
 func (s *TestSuite) setupHeldAssetVault(underlyingDenom, shareDenom, heldDenom string, price, volume int64) *types.VaultAccount {
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(heldDenom, 2_000_000), s.adminAddr)
-	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, heldDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 100_000)))
+	s.withdrawMarkerCoins(s.ctx, s.adminAddr, s.adminAddr, heldDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 100_000)))
 	s.setVaultNAV(vault, heldDenom, sdk.NewInt64Coin(underlyingDenom, price), volume)
+	return vault
+}
+
+// fundPrincipal funds the vault's principal marker account, the store the valuation engine reads
+// held balances from, and re-derives vault totals. For arranging state, not for asserting that a
+// production path reported its own change. See sendCoinsBypass.
+func (s *TestSuite) fundPrincipal(vault *types.VaultAccount, coins ...sdk.Coin) {
+	funding := sdk.NewCoins(coins...)
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, vault.PrincipalMarkerAddress(), funding),
+		"failed to fund the principal marker of vault %s with %s", vault.Address, funding)
+}
+
+// setupHeldNAVVault creates a live vault holding heldAmount of heldDenom at its principal
+// marker, priced in the internal NAV table at price per volume units. The NAV entry is
+// seeded through the keeper, which skips the msg server's pause requirement for repricing
+// a held asset.
+func (s *TestSuite) setupHeldNAVVault(underlyingDenom, shareDenom, heldDenom string, price sdk.Coin, volume, heldAmount int64) *types.VaultAccount {
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	s.requireSimpleMarker(heldDenom)
+	if heldAmount > 0 {
+		s.fundPrincipal(vault, sdk.NewInt64Coin(heldDenom, heldAmount))
+	}
+	s.setVaultNAV(vault, heldDenom, price, volume)
 	return vault
 }
 
@@ -1012,10 +1352,55 @@ func (s *TestSuite) setVaultNAV(vault *types.VaultAccount, denom string, price s
 // use this to stage it directly, leaving the handler's reconcile, balance snapshot, and
 // queue teardown to the tests that actually exercise pausing.
 func (s *TestSuite) pauseVault(vaultAddr sdk.AccAddress) *types.VaultAccount {
+	return s.pauseVaultBy(vaultAddr, "", false)
+}
+
+// pauseVaultBy stages a paused vault carrying the attribution the PauseVault handler
+// records: pausedBy is the initiating address, empty for an automatic pause, and forced
+// marks a pause that waived the strict reconcile and valuation gate. RepriceVault
+// gates its self-resume on both, so tests exercising that gate stage the pause here.
+func (s *TestSuite) pauseVaultBy(vaultAddr sdk.AccAddress, pausedBy string, forced bool) *types.VaultAccount {
 	vault, err := s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err, "should get vault %s to pause it", vaultAddr)
 	vault.Paused = true
+	vault.PausedBy = pausedBy
+	vault.PausedForced = forced
 	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should persist paused vault %s", vaultAddr)
+	return vault
+}
+
+// setNAVAuthority points the vault's NAV authority at a dedicated address, separating
+// pricing from vault management the way a vault running an external pricing oracle does.
+func (s *TestSuite) setNAVAuthority(vaultAddr sdk.AccAddress, authority string) *types.VaultAccount {
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should get vault %s to set its NAV authority", vaultAddr)
+	vault.NavAuthority = authority
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should persist NAV authority %q on vault %s", authority, vaultAddr)
+	return vault
+}
+
+// setupZeroNetTVVVault stages a live vault holding shares outstanding whose net TVV is zero.
+// grossUnderlying is funded into the principal marker and outstandingFee is recorded as the
+// AUM fee liability, so grossUnderlying=0 models the drained-principal route (FIND-029 route A)
+// and outstandingFee >= grossUnderlying > 0 models the uncollectable-fee route (route B).
+func (s *TestSuite) setupZeroNetTVVVault(underlyingDenom, shareDenom string, grossUnderlying, outstandingFee int64) *types.VaultAccount {
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	shares := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1_000_000))
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), shares),
+		"minting %s should succeed for vault %s", shares, shareDenom)
+	vault.TotalShares = shares
+	vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, outstandingFee)
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "persisting zero-net-TVV vault %s should succeed", shareDenom)
+
+	if grossUnderlying > 0 {
+		s.fundPrincipal(vault, sdk.NewInt64Coin(underlyingDenom, grossUnderlying))
+	}
+
+	netTVV, err := s.k.GetNetTVV(s.ctx, *vault)
+	s.Require().NoError(err, "computing net TVV for staged vault %s should succeed", shareDenom)
+	s.Require().True(netTVV.IsZero(), "staged vault %s should have zero net TVV, got %s", shareDenom, netTVV)
+
 	return vault
 }
 
@@ -1041,17 +1426,45 @@ func maxValidNAVPrice() sdkmath.Int {
 	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
 }
 
-// seedOversizedNAV overwrites the vault's internal NAV entry for navDenom,
-// pricing volume units of it at priceAmount of underlyingDenom. The internal
-// NAV write path bounds neither price nor volume magnitude, so this lets the
-// overflow guard tests stage values far beyond any realistic NAV and drive the
-// SafeMul/SafeAdd guards on the valuation paths into overflow. Seed an oversized
-// priceAmount to trip the forward (denom->underlying) multiply, or an oversized
-// volume to trip the reverse (underlying->denom) multiply.
+// seedOversizedNAV writes a NAV entry straight to the store, bypassing the MaxNAVComponentBits bound
+// that now rejects these magnitudes. Oversized priceAmount trips the forward multiply, oversized
+// volume the reverse.
 func (s *TestSuite) seedOversizedNAV(vault *types.VaultAccount, navDenom, underlyingDenom string, priceAmount, volume sdkmath.Int) {
 	nav := types.NewVaultNAV(navDenom, sdk.NewCoin(underlyingDenom, priceAmount), volume, "test-oversized")
-	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()),
+	nav.UpdatedBlockHeight = s.ctx.BlockHeight()
+	nav.UpdatedTime = s.ctx.BlockTime().UTC()
+	s.Require().NoError(s.k.NAVs.Set(s.ctx, collections.Join(vault.GetAddress(), navDenom), nav),
 		"should seed oversized internal NAV for %s priced %s/%s", navDenom, priceAmount, volume)
+}
+
+// seedShareNav writes a share-denom NAV onto the vault's principal marker, standing in for a mirror published by an earlier reconcile.
+func (s *TestSuite) seedShareNav(vault *types.VaultAccount, price sdk.Coin, volume uint64) {
+	marker, err := s.k.MarkerKeeper.GetMarker(s.ctx, vault.PrincipalMarkerAddress())
+	s.Require().NoError(err, "should get principal marker for vault %s", vault.GetAddress())
+	s.Require().NoError(
+		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, marker, markertypes.NetAssetValue{Price: price, Volume: volume}, types.ModuleName),
+		"should seed share NAV %s/%d for vault %s", price, volume, vault.GetAddress(),
+	)
+}
+
+// requireShareNav returns the marker's mirrored share-denom NAV, failing the test if none is published.
+func (s *TestSuite) requireShareNav(vault *types.VaultAccount) markertypes.NetAssetValue {
+	stored, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, vault.TotalShares.Denom, vault.UnderlyingAsset)
+	s.Require().NoError(err, "should read mirrored share NAV for vault %s", vault.GetAddress())
+	s.Require().NotNil(stored, "a mirrored share NAV should be published for vault %s", vault.GetAddress())
+	return *stored
+}
+
+// assertShareNavMirrorsNetTVV asserts the mirrored share NAV matches the reloaded vault's live net TVV and recorded share supply.
+func (s *TestSuite) assertShareNavMirrorsNetTVV(vault *types.VaultAccount) {
+	stored := s.requireShareNav(vault)
+	netTVV, err := s.k.GetNetTVV(s.ctx, *vault)
+	s.Require().NoError(err, "should compute live net TVV for vault %s", vault.GetAddress())
+
+	s.Assert().Equal(netTVV.String(), stored.Price.Amount.String(),
+		"mirrored share NAV price should equal live net TVV for vault %s", vault.GetAddress())
+	s.Assert().Equal(vault.TotalShares.Amount.Uint64(), stored.Volume,
+		"mirrored share NAV volume should equal the recorded share supply for vault %s", vault.GetAddress())
 }
 
 // setupReconcileVault initializes a vault with the provided parameters, including markers and funding.
@@ -1075,9 +1488,9 @@ func (s *TestSuite) setupReconcileVault(interestRate string, periodStartSeconds 
 	vault.TotalShares = totalShares
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying))
+	err = FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(underlying))
 	s.Require().NoError(err, "failed to fund vault account %s with %s", vaultAddr.String(), underlying.String())
-	err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
+	err = FundAccount(s.ctx, s.simApp, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
 	s.Require().NoError(err, "failed to fund share marker account for denom %s with %s", shareDenom, underlying.String())
 
 	s.ctx = s.ctx.WithBlockTime(testBlockTime)
@@ -1233,6 +1646,20 @@ func buildSingleVaultGenesisState(shareDenom, underlying, admin string, navs []t
 		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{makeGenesisVaultAccount(shareDenom, underlying, admin)},
 		Navs:   navs,
+	}
+}
+
+// buildSingleVaultPendingSwapOutGenesisState constructs a GenesisState containing one vault and a
+// single pending swap-out queue entry without touching chain state. Use this to prepare a genesis
+// payload for pending swap-out validation tests where InitGenesis must not be called in advance.
+func buildSingleVaultPendingSwapOutGenesisState(shareDenom, underlying, admin string, entry types.PendingSwapOutQueueEntry) *types.GenesisState {
+	return &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{makeGenesisVaultAccount(shareDenom, underlying, admin)},
+		PendingSwapOutQueue: types.PendingSwapOutQueue{
+			LatestSequenceNumber: 55,
+			Entries:              []types.PendingSwapOutQueueEntry{entry},
+		},
 	}
 }
 

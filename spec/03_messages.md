@@ -14,7 +14,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [BridgeMintShares](#bridgemintshares)
 - [BridgeBurnShares](#bridgeburnshares)
 - [SetBridgeAddress](#setbridgeaddress)
-- [ToggleBridgeEnabled](#togglebridgeenabled)
+- [ToggleBridge](#togglebridge)
 - [UpdateMinInterestRate](#updatemininterestrate)
 - [UpdateMaxInterestRate](#updatemaxinterestrate)
 - [UpdateInterestRate](#updateinterestrate)
@@ -34,6 +34,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [UnpauseVault](#unpausevault)
 - [SetAssetManager](#setassetmanager)
 - [UpdateVaultNAV](#updatevaultnav)
+- [RepriceVault](#repricevault)
 - [RemoveVaultNAV](#removevaultnav)
 - [UpdateNAVAuthority](#updatenavauthority)
 - [AcceptAsset](#acceptasset)
@@ -46,13 +47,13 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 
 | Endpoint                 | Admin required (or Asset Manager) | Works when UNPAUSED | Works when PAUSED | Notes / gates that still apply                                                                                |
 | ------------------------ | --------------------------------- | ------------------: | ----------------: | ------------------------------------------------------------------------------------------------------------- |
-| `CreateVault`            | Governance only                   |                   ✅ |                 ✅ | Creation only. Must be signed by the governance module account.                                               |
-| `SwapIn`                 | No                                |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, reconcile.                         |
+| `CreateVault`            | Governance when gated             |                   ✅ |                 ✅ | Creation only. Must be signed by the governance module account while `gov_only_vault_creation` is enabled.     |
+| `SwapIn`                 | No                                |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, underlying deny list, reconcile, non-zero net TVV when shares are outstanding.                         |
 | `SwapOut`                | No                                |                   ✅ |                 ❌ | Keeper `SwapOut` enforces `!vault.Paused`, `SwapOutEnabled`, share denom match, payout restrictions, enqueue. |
-| `BridgeMintShares`       | Bridge only                       |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
-| `BridgeBurnShares`       | Bridge only                       |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount; burns from marker. |
-| `SetBridgeAddress`       | Admin only                        |                   ✅ |                 ✅ | Sets or updates the single authorized `bridge_address`.                                                       |
-| `ToggleBridgeEnabled`    | Admin only                        |                   ✅ |                 ✅ | Enables/disables bridge operations; no mint/burn allowed when disabled.                                       |
+| `BridgeMintShares`       | Bridge only                       |                   ✅ |                 ❌ | Enforces `!vault.Paused`, then `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
+| `BridgeBurnShares`       | Bridge only                       |                   ✅ |                 ❌ | Enforces `!vault.Paused`, then `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount; burns from marker. |
+| `SetBridgeAddress`       | Admin only                        |                   ✅ |                 ✅ | Sets or updates the single authorized `bridge_address`. Configuration only, so it stays available while paused. |
+| `ToggleBridge`           | Admin only                        |                   ✅ |                 ✅ | Enables/disables bridge operations; no mint/burn allowed when disabled. Configuration only, so it stays available while paused. |
 | `UpdateMinInterestRate`  | Admin only                        |                   ✅ |                 ✅ | Validates and updates the minimum allowable interest rate.                                                    |
 | `UpdateMaxInterestRate`  | Admin only                        |                   ✅ |                 ✅ | Validates and updates the maximum allowable interest rate.                                                    |
 | `UpdateInterestRate`     | Admin or Asset Manager            |                   ✅ |                 ✅ | Validates bounds, may reconcile, updates enable/disable flows.                                                |
@@ -63,15 +64,16 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `UpdateMaxSwapOutValue`  | Admin or Asset Manager            |                   ✅ |                 ✅ | Updates the maximum allowed value for a swap-out operation.                                                   |
 | `ToggleSwapIn`           | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-in operations.                                                              |
 | `ToggleSwapOut`          | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-out operations.                                                             |
-| `DepositInterestFunds`   | Admin or Asset Manager            |                   ✅ |                 ✅ | Underlying denom only; reconciles after deposit.                                                              |
+| `DepositInterestFunds`   | Admin or Asset Manager            |                   ✅ |                 ✅ | Underlying denom only; rejects a depositor on the underlying deny list; reconciles after deposit.                                                              |
 | `WithdrawInterestFunds`  | Admin or Asset Manager            |                   ✅ |                 ✅ | Underlying denom only; reconciles before withdrawal.                                                          |
-| `DepositPrincipalFunds`  | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; reconciles then deposit to principal marker.                                     |
+| `DepositPrincipalFunds`  | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; rejects a depositor on the underlying deny list; reconciles then deposit to principal marker.                                     |
 | `WithdrawPrincipalFunds` | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; reconciles then withdraw from principal marker.                                  |
 | `ExpeditePendingSwapOut` | Admin or Asset Manager            |                   ✅ |                 ✅ | No pause gating;                                                                                              |
-| `PauseVault`             | Admin or Asset Manager            |                   ✅ |                 ❌ | Strict by default: reconciles, snapshots `PausedBalance`, sets paused; aborts if reconcile/valuation fails. `force=true` pauses best-effort, tolerating failures and recording them on `EventVaultPaused`. |
-| `UnpauseVault`           | Admin or Asset Manager            |                   ❌ |                 ✅ | Clears `PausedBalance`, unpauses, emits with current TVV.                                                     |
+| `PauseVault`             | Admin, Asset Manager, or NAV authority |              ✅ |                 ❌ | Strict by default: reconciles, snapshots `PausedBalance`, sets paused; aborts if reconcile/valuation fails. `force=true` pauses best-effort, tolerating failures and recording them on `EventVaultPaused`. Records `paused_by` and `paused_forced`. The NAV authority may pause but has no matching unpause. |
+| `UnpauseVault`           | Admin or Asset Manager            |                   ❌ |                 ✅ | Clears `PausedBalance` and the pause attribution, unpauses, emits with current TVV.                           |
 | `SetAssetManager`        | Admin only                        |                   ✅ |                 ✅ | Sets or clears the delegated asset manager.                                                                   |
-| `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Upserts the internal NAV entry; the price is never mirrored to the marker module. Reconciles first when unpaused; leaves `PausedBalance` frozen when paused, so a pause-reprice-unpause sequence cannot be front-run and the new price takes effect at unpause. |
+| `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | **Paused only when repricing a denom the vault holds**, so no user can swap across the share price step; pricing an unheld denom or restating a held asset at its current unit price works while live. Upserts the internal NAV entry; the price is never mirrored to the marker module. Reconciles first when unpaused; leaves `PausedBalance` frozen when paused, so the new price takes effect at unpause. |
+| `RepriceVault`           | NAV authority only                |                   ✅ |                 ✅ | Batched `UpdateVaultNAV` with the same per-entry rules, so a held denom still needs a paused vault. `resume=true` also unpauses, and requires a strict pause this same NAV authority took; leaving it false keeps the vault frozen so an oversized restatement can continue across several messages. At most `MaxRepriceBatchSize` (1000) updates, no duplicate denoms. |
 | `RemoveVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Deletes the internal NAV entry for a denom the vault does not hold. Value-neutral in both states, since an unheld denom contributes nothing to total vault value. |
 | `UpdateNAVAuthority`     | Admin only                        |                   ✅ |                 ✅ | Rotates the address authorized to mutate the internal NAV table.                                              |
 | `AcceptAsset`            | Asset Manager only                |                   ✅ |                 ❌ | Rejected while paused (settlement would move value); otherwise reconciles first, requires an internal NAV entry and enforces its price exactly, then settles the `x/exchange` payment. Never writes the NAV table. |
@@ -89,8 +91,8 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 
 Creates a new vault account with a configured underlying asset, withdrawal delay, and minimum/maximum swap values.
 
-* **Governance Only:** `authority` must be the governance module account, so a vault can only come into existence through a passed governance proposal. Any other signer is rejected.
-* **Designated Admin:** `admin` is the address recorded as the vault administrator. It is chosen by the proposal and is unrelated to the signer.
+* **Configurable Gate:** the module's `gov_only_vault_creation` param decides who may sign. While it is enabled, `authority` must be the governance module account, so a vault can only come into existence through a passed governance proposal and any other signer is rejected. While it is disabled — the default, intended for development, docker, and testnet chains — `authority` may be any account creating the vault directly.
+* **Designated Admin:** `admin` is the address recorded as the vault administrator. It is chosen by the signer and is unrelated to the signer's own address.
 * **Single Denom:** Vaults are strictly single-denom on `underlying_asset`; it is the only denom for deposits, redemptions, interest, and fees.
 * **Units:** All swap limit values (`min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, `max_swap_out_value`) are denominated in the vault's **underlying_asset**.
 * **Clearing Limits:** 
@@ -117,7 +119,9 @@ Admin-only. Sets Bank module metadata for a vault’s share denom, defining how 
 
 ## SwapIn
 
-Deposits the vault's underlying asset into a vault in exchange for newly minted shares. The underlying asset is the only accepted deposit denom.
+Deposits the vault's underlying asset into a vault in exchange for newly minted shares. The underlying asset is the only accepted deposit denom. A depositor on the underlying marker's deny list is rejected, since the deposit itself moves funds with a marker bypass.
+
+A deposit is also rejected when the vault's net TVV is zero while shares are outstanding — either the AUM fee sweep drained the principal or an uncollectable `OutstandingAumFee` consumed the gross value. Share pricing has no meaningful basis in that state, and minting against it would overstate shares by roughly the vault's whole unit price. `EstimateSwapIn` rejects the same state with `FailedPrecondition`, so the query and the transaction agree. Recovery is `DepositPrincipalFunds`, which restores value without minting shares.
 
 * **Request:** `MsgSwapInRequest { owner, vault_address, assets }`
 * **Response:** `MsgSwapInResponse {}`
@@ -129,6 +133,7 @@ Deposits the vault's underlying asset into a vault in exchange for newly minted 
 Redeems shares from a vault in exchange for the vault's underlying asset.
 Payouts are always made in the underlying asset.
 Swap-outs are queued with respect to `withdrawal_delay_seconds`.
+The vault is reconciled before the redemption is priced, so `min_swap_out_value` and `max_swap_out_value` gate the current net valuation. They are enforced only at admission; the payout is re-priced at maturity without a second limit check.
 
 * **Request:** `MsgSwapOutRequest { owner, vault_address, assets (shares) }`
 * **Response:** `MsgSwapOutResponse { request_id }`
@@ -290,7 +295,11 @@ Expediting also clears the request's `failure_count`, so it is the lever for for
 
 ## PauseVault
 
-Admin or Asset Manager. Pauses a vault, disabling swap-ins and swap-outs, and recording reason + balance snapshot.
+Admin, Asset Manager, or NAV authority. Pauses a vault, disabling swap-ins and swap-outs, and recording reason + balance snapshot.
+
+The NAV authority is included for two reasons. As a pricing oracle it is the first to observe an event that warrants freezing the vault, such as a depeg on an asset it prices, and freezing is the appropriate response. And repricing a held asset requires a pause window, so an authority that could not pause could not run its own repricing cadence. It gets no matching unpause: resuming is a management decision, except through [RepriceVault](#repricevault) for a pause it took itself.
+
+The handler records `paused_by` (the signer, or empty for an automatic pause) and `paused_forced` (true for `force = true` and for every automatic pause). Both are cleared on unpause. `RepriceVault` reads them to decide whether the NAV authority may resume the vault on its own.
 
 By default the pause is **strict**: it reconciles outstanding interest and fees and values the vault first, and any failure (insufficient reserves to settle positive interest, or a broken TVV/NAV conversion) aborts the request and leaves the vault unpaused. The failed transaction is the operator's signal that the vault is in an unexpected state.
 
@@ -305,7 +314,7 @@ Both paths remove the vault from the `PayoutVerificationSet` and from its `Payou
 
 ## UnpauseVault
 
-Admin or Asset Manager. Resumes a paused vault, clears paused balance, and recalculates NAV.
+Admin or Asset Manager. Resumes a paused vault, clears paused balance and pause attribution, and recalculates NAV. The NAV authority is deliberately excluded: it can pause, but resuming a vault outright stays a management decision.
 
 It also re-arms what pausing cleared: the vault is added back to the `PayoutVerificationSet` and a fresh fee timeout is enqueued, with both period starts set to the unpause block time so the paused span is never charged interest or AUM fees.
 
@@ -318,23 +327,42 @@ It also re-arms what pausing cleared: the vault is added back to the `PayoutVeri
 
 Admin-only. Sets or updates the single authorized external bridge address for a vault.
 
+Rotation does not move or burn anything the outgoing bridge still holds. `BridgeBurnShares` only accepts the
+*current* `bridge_address` and only burns from the signer's own account, so once the rotation is submitted the
+old balance can no longer be burned from where it sits: local supply stays elevated and mint capacity
+(`total_shares - local_supply`) is reduced by that amount.
+
+**Drain before rotating.** Have the outgoing bridge burn its share balance via `BridgeBurnShares` (or transfer
+it to the incoming bridge address) *before* submitting `SetBridgeAddress`, and verify the outgoing address holds
+zero shares afterward.
+
+**Recovery after rotating.** The share denom is an unrestricted coin, so the balance can still be moved: transfer
+the old bridge's holdings to the new bridge with a bank send, then burn them via `BridgeBurnShares`. The burn
+re-widens mint capacity by the burned amount.
+
 * **Request:** `MsgSetBridgeAddressRequest { admin, vault_address, bridge_address }`
 * **Response:** `MsgSetBridgeAddressResponse {}`
 
 ---
 
-## ToggleBridgeEnabled
+## ToggleBridge
 
-Admin-only. Enables or disables bridge operations for a vault.
+Admin-only. Enables or disables bridge operations for a vault. Together with rotating `bridge_address` via
+[SetBridgeAddress](#setbridgeaddress) and pausing the vault, this is one of the bridge containment levers described
+in the [Bridge Trust Model](01_concepts.md#bridge-trust-model--supply-of-record).
 
-* **Request:** `MsgToggleBridgeEnabledRequest { admin, vault_address, enabled }`
-* **Response:** `MsgToggleBridgeEnabledResponse {}`
+* **Request:** `MsgToggleBridgeRequest { admin, vault_address, enabled }`
+* **Response:** `MsgToggleBridgeResponse {}`
 
 ---
 
 ## BridgeMintShares
 
 Mints local share marker supply to the bridge within capacity (`total_shares - local_supply`) and transfers the minted shares to the bridge address. The mint re-materializes shares that already exist on a remote chain, so it raises local supply toward `total_shares` but does **not** change `total_shares`.
+
+Capacity is computed with a checked subtraction: if state ever violates the `total_shares >= local_supply` invariant (only reachable through a faulty migration or a crafted genesis import), the message fails with a descriptive invariant error instead of panicking.
+
+A **paused vault rejects the mint** before any other gate is evaluated: pausing is the module's incident circuit breaker and covers the bridge along with every other value-touching path.
 
 * **Request:** `MsgBridgeMintSharesRequest { bridge, vault_address, shares }`
 * **Response:** `MsgBridgeMintSharesResponse {}`
@@ -345,7 +373,9 @@ Mints local share marker supply to the bridge within capacity (`total_shares - l
 
 Transfers shares from the bridge back to the vault and burns them from the marker, reducing local supply. It does **not** change `total_shares`: a bridged-out share still exists on the remote chain, so — unlike the local redemption path — no `total_shares` decrement is performed. The burn re-widens mint capacity (`total_shares - local_supply`) by the burned amount, allowing those shares to be re-minted when they return.
 
-See [Bridge Trust Model & Supply-of-Record](01_concepts.md#bridge-trust-model--supply-of-record) for the full model and the off-chain operator trust assumption.
+A **paused vault rejects the burn** before any other gate is evaluated, for the same reason the mint is rejected.
+
+See [Bridge Trust Model & Supply-of-Record](01_concepts.md#bridge-trust-model--supply-of-record) for the full model, the off-chain operator trust assumption, and the containment levers.
 
 * **Request:** `MsgBridgeBurnSharesRequest { bridge, vault_address, shares }`
 * **Response:** `MsgBridgeBurnSharesResponse {}`
@@ -366,11 +396,13 @@ Passing an empty `asset_manager` clears the configured value.
 
 NAV authority only (the vault admin when no `nav_authority` is configured). Creates or updates the vault's **internal NAV entry** for a denom: the price of `volume` units of `denom`, denominated in the vault's underlying asset.
 
-The handler is accepted **whether or not the vault is paused**, so an operator can pause, reprice, and unpause as one deliberate sequence. Swap-ins and swap-outs are closed for the whole paused span, which keeps a repricing from being front-run by a user transaction ordered ahead of it.
+Repricing an asset the vault **currently holds** requires the vault to be **paused**. A held asset is valued through this table, so its price step moves the share price, and on a live vault a user could swap in ahead of the step and out after it, taking the difference from the existing shareholders. Correcting a held asset's price is therefore a pause, reprice, unpause sequence, with swap-ins and swap-outs closed for the whole span. [RepriceVault](#repricevault) is the batched form of this message and can fold the unpause into the same transaction for a NAV authority resuming its own pause.
+
+Two updates move no value and are accepted **whether or not the vault is paused**: pricing a denom the vault does not hold, and restating a held asset at the unit price it already carries (an unchanged `price / volume` ratio, so a re-post at a new volume or from a new source is allowed).
 
 When the vault is **not paused**, the handler reconciles first, so accrued interest settles against the TVV that held before the price change.
 
-When the vault **is paused**, the reconcile is a no-op (accrual is already halted) and `PausedBalance` is left untouched, still holding the value as of the moment of pausing. This matches how the pause already treats `DepositPrincipalFunds` and `WithdrawPrincipalFunds`, which are themselves only allowed while paused and likewise do not move the frozen value. Everything done during the pause, repricings and principal movements alike, takes effect together at `UnpauseVault`, when the snapshot is cleared and total vault value is recomputed from live balances and the NAV table.
+When the vault **is paused**, the reconcile is a no-op (accrual is already halted) and `PausedBalance` is left untouched, still holding the value as of the moment of pausing. This matches how the pause already treats `DepositPrincipalFunds` and `WithdrawPrincipalFunds`, which are themselves only allowed while paused and likewise do not move the frozen value. Everything done during the pause, repricings and principal movements alike, takes effect together at `UnpauseVault`, when the snapshot is cleared and the materialized total vault value takes over as the live number. Each of those repricings and movements folded its own change into that total as it happened, so unpausing reads it rather than re-deriving it from the NAV table.
 
 The price stays **internal to the vault**. A vault does not own the assets it prices, so an asset price is never mirrored into that asset's marker-module NAV records, where it would compete with prices set by the marker's own administrators. Only the vault's share denom, which the vault does own, gets a published marker NAV.
 
@@ -378,10 +410,49 @@ The price stays **internal to the vault**. A vault does not own the assets it pr
 * `volume` must be positive. The per-unit value is `price / volume`.
 * `source` is an optional origin label (e.g., an oracle name).
 
-The vault does **not** have to hold the denom. The internal NAV table is a price list rather than a held-asset inventory, and an entry for a denom the vault does not hold contributes nothing to total vault value until the asset arrives at the principal marker. Pricing a denom ahead of time is how the NAV authority authorizes the asset manager to acquire it: `AcceptAsset` requires an entry and settles only at exactly that price.
+The vault does **not** have to hold the denom. The internal NAV table is a price list rather than a held-asset inventory, and an entry for a denom the vault does not hold contributes nothing to total vault value until the asset arrives at the principal marker. Pricing a denom ahead of time is how the NAV authority authorizes the asset manager to acquire it: `AcceptAsset` requires an entry and settles only at exactly that price. This is why pricing an unheld denom needs no pause, and it keeps the acquisition path a live-vault operation.
+
+Each write stamps `updated_block_height` and `updated_time` on the entry. No valuation path enforces either one, so a price keeps pricing shares for as long as it stands, and holding it current is the NAV authority's job rather than a module rule. See [NAV Freshness](01_concepts.md#nav-freshness).
 
 * **Request:** `MsgUpdateVaultNAVRequest { signer, vault_address, denom, price, volume, source? }`
 * **Response:** `MsgUpdateVaultNAVResponse {}`
+
+---
+
+## RepriceVault
+
+NAV authority only. Applies a batch of internal NAV updates and, when `resume` is set, unpauses the vault in the same state transition.
+
+This is the **batched form of `UpdateVaultNAV`**, enforcing the identical per-entry rules: repricing a denom the vault holds requires the vault to be paused, while pricing an unheld denom or restating a held asset at its current unit price works on a live vault. What it adds is the batch and the optional resume.
+
+### The resume flag
+
+`resume = true` unpauses after the batch lands. This is what lets a NAV authority run a repricing cadence alone: splitting the reprice from the unpause costs a second signature and leaves the vault frozen until the admin or asset manager acts. Bundling them also closes a narrower gap, since there is no block in which the vault is live, a new price is public, and the share price step has not yet landed.
+
+`resume = false` (the default) applies the batch and leaves the pause exactly as it found it. Two flows need this:
+
+* **Continuation.** A book too large for one transaction is repriced by sending several batches with `resume` unset and a final one with `resume` set. The vault stays frozen for the whole restatement and reopens once, so no user ever trades against a half-restated book.
+* **Incident response.** The NAV authority can write a held asset down during a pause somebody else took — an operator pause after a depeg, say — without being able to lift that pause.
+
+### The self-resume gate
+
+Setting `resume` requires **all** of the following; otherwise the handler errors and nothing is written:
+
+* the vault is paused,
+* the pause is **not** forced (`paused_forced = false`), which excludes `force = true` pauses and every automatic pause,
+* `paused_by` equals the signer, which is also the current NAV authority — so an operator pause, and a pause taken before an `UpdateNAVAuthority` rotation, both fall back to a management unpause.
+
+The gate is checked **before** any price is written, so a batch that cannot resume changes nothing rather than repricing and then failing.
+
+### Ordering and events
+
+The reconcile runs first, settling accrued interest against the total vault value that held before the batch; it is a no-op on a paused vault whose accrual is already halted. Prices are then written in order, and the resume, if requested, clears `PausedBalance` and the pause attribution, resumes reporting live total vault value from the materialized total the batch has just updated, and re-arms the payout verification and fee timeout exactly as `UnpauseVault` does. `EventNAVUpdated` is emitted per update, followed by a single `EventVaultUnpaused` when resuming.
+
+* At least one update is required, at most `MaxRepriceBatchSize` (1000), and a denom may appear only once.
+* Each update carries the same `denom`, `price`, `volume`, and optional `source` fields that `UpdateVaultNAV` takes, under the same rules.
+
+* **Request:** `MsgRepriceVaultRequest { signer, vault_address, navs[], resume }` where each nav is `NAVUpdate { denom, price, volume, source? }`
+* **Response:** `MsgRepriceVaultResponse {}`
 
 ---
 
@@ -391,7 +462,7 @@ NAV authority only (the vault admin when no `nav_authority` is configured). Dele
 
 Only entries for denoms the vault does **not** hold may be removed. Because total vault value is computed by valuing held balances against the entries in the NAV table, dropping the entry for a held asset would erase that balance from the vault's value rather than restate it. A held asset that has lost its value is written down to a zero price through `UpdateVaultNAV` instead, and the settlement path removes the entry on its own once an outbound trade drains the denom.
 
-The handler is accepted **whether or not the vault is paused**, matching `UpdateVaultNAV`, so the NAV table stays editable across a pause-reprice-unpause sequence. No reconcile is needed in either state: the held-balance check above already restricts removal to denoms that contribute nothing to total vault value, so a removal cannot move the valuation basis.
+The handler is accepted **whether or not the vault is paused**, so the NAV table stays editable across a pause-reprice-unpause sequence. No reconcile is needed in either state: the held-balance check above already restricts removal to denoms that contribute nothing to total vault value, so a removal cannot move the valuation basis. That same held balance is what obliges `UpdateVaultNAV` to pause before repricing.
 
 * `denom` must have an existing internal NAV entry on the vault.
 
@@ -411,7 +482,9 @@ Admin-only. Rotates the address authorized to mutate the vault's internal NAV ta
 
 ## AcceptAsset
 
-Asset Manager only — the admin cannot settle, and a vault without an asset manager cannot settle at all. Settles a pending `x/exchange` payment whose target is the vault, exchanging an external asset for the vault's underlying asset. The payment is identified by its `source` account and `external_id`.
+Asset Manager only — the admin cannot settle, and a vault without an asset manager cannot settle at all. Settles a pending `x/exchange` payment whose target is the vault, exchanging an external asset for the vault's underlying asset.
+
+The message carries the **complete payment**, so the asset manager signs the economic terms of the deal — denom, quantity, and direction on both legs. The payment held by the exchange module must match those terms field for field at execution. This mirrors `MsgAcceptPaymentRequest` in `x/exchange`, which carries the full `Payment`.
 
 Settlement is **rejected while the vault is paused**: a paused vault freezes its value at `PausedBalance`, and settling would move principal funds and the vault's value. Reject the payment or unpause first.
 
@@ -424,16 +497,18 @@ Each leg must carry exactly one coin, and the asset denom must carry an internal
 
 Settlement layers several responsibilities into one atomic transaction:
 
-1. **Reconcile** — the vault reconciles before any value change, so interest settles against the pre-settlement TVV.
-2. **NAV guardrail** — the asset denom must already have an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding). A denom the NAV authority has never priced cannot be acquired.
-3. **Settle** — funds stage through the vault account as an atomic hop (`Principal -> Vault`, exchange `AcceptPayment`, `Vault -> Principal`); the principal marker remains the long-term store.
-4. **Drained-denom cleanup** — when an outbound settlement drains the principal of the asset denom, its internal NAV entry is removed (see `EventNAVRemoved`), so reacquiring the denom requires a fresh price. Nothing else about the NAV table changes: the guardrail has already proven the trade executed at the authority's recorded price, so settling never writes a price.
+1. **Approval binding** — the stored payment must match the terms carried in the message exactly (source, external_id, target, and both legs). This runs first, so the rest of settlement operates only on the payment the manager approved.
+2. **Reconcile** — the vault reconciles before any value change, so interest settles against the pre-settlement TVV.
+3. **NAV guardrail** — the asset denom must already have an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding). A denom the NAV authority has never priced cannot be acquired.
+4. **Settle** — funds stage through the vault account as an atomic hop (`Principal -> Vault`, exchange `AcceptPayment`, `Vault -> Principal`); the principal marker remains the long-term store.
+5. **Drained-denom cleanup** — when an outbound settlement drains the principal of the asset denom, its internal NAV entry is removed (see `EventNAVRemoved`), so reacquiring the denom requires a fresh price. Nothing else about the NAV table changes: the guardrail has already proven the trade executed at the authority's recorded price, so settling never writes a price. This cleanup is **best-effort**: it runs after the funds have already moved, so an entry that is already gone is logged and waved through rather than rolling back a committed settlement.
 
 Any failure reverts the whole transaction.
 
 Because pricing and settling are separate messages, a first acquisition takes two: `UpdateVaultNAV` from the NAV authority, then `AcceptAsset` from the asset manager. Both can ride in a single transaction — with two signatures when the roles are held by different entities — so the price and the settlement commit atomically.
 
-* **Request:** `MsgAcceptAssetRequest { authority, vault_address, source, external_id }`
+* **Request:** `MsgAcceptAssetRequest { authority, vault_address, payment }`
+  * `payment` is the vault module's `Payment` view — `{ source, source_amount, target, target_amount, external_id }` — carrying the terms the manager reviewed. `target` must be the vault.
 * **Response:** `MsgAcceptAssetResponse {}`
 
 ---

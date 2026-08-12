@@ -25,6 +25,7 @@ type MarkerKeeper interface {
 	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error)
 	SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error
 	SendRestrictionFn(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error)
+	IsSendDeny(ctx sdk.Context, markerAddr, senderAddr sdk.AccAddress) bool
 	GetUnrestrictedDenomRegex(ctx sdk.Context) (regex string)
 }
 

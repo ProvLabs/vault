@@ -8,10 +8,12 @@ import (
 	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -37,13 +39,28 @@ type Keeper struct {
 	ExchangeKeeper      types.ExchangeKeeper
 	ExchangeQueryServer types.ExchangeQueryServer
 
-	Params                collections.Item[types.Params]
-	Vaults                collections.Map[sdk.AccAddress, []byte]
-	NAVs                  collections.Map[collections.Pair[sdk.AccAddress, string], types.VaultNAV]
+	// Params holds the module-wide parameters.
+	Params collections.Item[types.Params]
+	// Vaults indexes every vault address; the vault itself lives in the auth account store.
+	Vaults collections.Map[sdk.AccAddress, []byte]
+	// NAVs prices each denom a vault holds, keyed by vault address and denom.
+	NAVs collections.Map[collections.Pair[sdk.AccAddress, string], types.VaultNAV]
+	// TotalValues materializes each vault's total value in its underlying asset.
+	TotalValues collections.Map[sdk.AccAddress, math.Int]
+	// NAVCounts tracks how many denoms each vault prices, so MaxVaultNAVEntries can be enforced
+	// without walking the table on every write.
+	NAVCounts collections.Map[sdk.AccAddress, uint64]
+	// PayoutVerificationSet holds the vaults awaiting a payout verification sweep, each entry doubling
+	// as that vault's retry token.
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
-	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
-	FeeTimeoutQueue       *queue.FeeTimeoutQueue
-	PendingSwapOutQueue   *queue.PendingSwapOutQueue
+	// PayoutVerificationCursor is the address the next payout verification sweep resumes after.
+	PayoutVerificationCursor collections.Item[sdk.AccAddress]
+	// PayoutTimeoutQueue schedules the vaults due for an interest payout.
+	PayoutTimeoutQueue *queue.PayoutTimeoutQueue
+	// FeeTimeoutQueue schedules the vaults due for a fee collection.
+	FeeTimeoutQueue *queue.FeeTimeoutQueue
+	// PendingSwapOutQueue holds redemptions waiting out their configured delay.
+	PendingSwapOutQueue *queue.PendingSwapOutQueue
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -70,27 +87,30 @@ func NewKeeper(
 	builder := collections.NewSchemaBuilder(storeService)
 
 	keeper := &Keeper{
-		cdc:                   cdc,
-		storeService:          storeService,
-		eventService:          eventService,
-		AddressCodec:          addressCodec,
-		authority:             authority,
-		authorityString:       authorityString,
-		Params:                collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsKeyName, codec.CollValue[types.Params](cdc)),
-		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		NAVs:                  collections.NewMap(builder, types.NAVsKeyPrefix, types.NAVsName, collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.VaultNAV](cdc)),
-		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
-		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
-		FeeTimeoutQueue:       queue.NewFeeTimeoutQueue(builder),
-		PendingSwapOutQueue:   queue.NewPendingSwapOutQueue(builder, cdc),
-		AuthKeeper:            authKeeper,
-		MarkerKeeper:          markerkeeper,
-		MetadataKeeper:        metadatakeeper,
-		BankKeeper:            bankkeeper,
-		NameKeeper:            namekeeper,
-		AttrKeeper:            attributekeeper,
-		ExchangeKeeper:        exchangekeeper,
-		ExchangeQueryServer:   exchangeQueryServer,
+		cdc:                      cdc,
+		storeService:             storeService,
+		eventService:             eventService,
+		AddressCodec:             addressCodec,
+		authority:                authority,
+		authorityString:          authorityString,
+		Params:                   collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsKeyName, codec.CollValue[types.Params](cdc)),
+		Vaults:                   collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		NAVs:                     collections.NewMap(builder, types.NAVsKeyPrefix, types.NAVsName, collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.VaultNAV](cdc)),
+		TotalValues:              collections.NewMap(builder, types.TotalValuesKeyPrefix, types.TotalValuesName, sdk.AccAddressKey, sdk.IntValue),
+		NAVCounts:                collections.NewMap(builder, types.NAVCountsKeyPrefix, types.NAVCountsName, sdk.AccAddressKey, collections.Uint64Value),
+		PayoutVerificationSet:    collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
+		PayoutVerificationCursor: collections.NewItem(builder, types.VaultPayoutVerificationCursorPrefix, types.VaultPayoutVerificationCursorName, collcodec.KeyToValueCodec(sdk.AccAddressKey)),
+		PayoutTimeoutQueue:       queue.NewPayoutTimeoutQueue(builder),
+		FeeTimeoutQueue:          queue.NewFeeTimeoutQueue(builder),
+		PendingSwapOutQueue:      queue.NewPendingSwapOutQueue(builder, cdc),
+		AuthKeeper:               authKeeper,
+		MarkerKeeper:             markerkeeper,
+		MetadataKeeper:           metadatakeeper,
+		BankKeeper:               bankkeeper,
+		NameKeeper:               namekeeper,
+		AttrKeeper:               attributekeeper,
+		ExchangeKeeper:           exchangekeeper,
+		ExchangeQueryServer:      exchangeQueryServer,
 	}
 
 	schema, err := builder.Build()
@@ -137,6 +157,21 @@ func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) (sdk.AccAddress, error) {
 	}
 
 	return addr, nil
+}
+
+// IsVaultCreationGovOnly reports whether CreateVault may only be signed by the governance
+// module account. Unset params fall back to the module default; any other read failure is
+// surfaced so the gate never fails open on an unreadable store.
+func (k Keeper) IsVaultCreationGovOnly(ctx sdk.Context) (bool, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.DefaultParams().GovOnlyVaultCreation, nil
+		}
+		return false, fmt.Errorf("failed to retrieve params: %w", err)
+	}
+
+	return params.GovOnlyVaultCreation, nil
 }
 
 // getLogger returns a logger with vault module context.

@@ -1,0 +1,1 @@
+* Validate every genesis pending swap-out entry, rejecting a nil, negative, zero, or otherwise invalid escrowed share coin and a negative queue time, and skip a malformed request in the `EndBlocker` instead of building `sdk.Coins` from it, so an imported entry can no longer panic and halt the chain when it matures [PR 270](https://github.com/provlabs/vault/pull/270).

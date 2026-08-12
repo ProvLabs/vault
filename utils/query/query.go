@@ -35,6 +35,8 @@ type TestCase[R any, S any] struct {
 	// ExpectedErrSubstrs is the strings that are expected to be in the error returned by the endpoint.
 	// If empty, that error is expected to be nil.
 	ExpectedErrSubstrs []string
+	// UnexpectedErrSubstrs is the strings that must not appear in the error returned by the endpoint.
+	UnexpectedErrSubstrs []string
 }
 
 type TestSuiter interface {
@@ -78,6 +80,9 @@ func RunTestCase[R any, S any](s TestSuiter, td TestDef[R, S], tc TestCase[R, S]
 		s.Assert().Errorf(err, "%s error", td.QueryName)
 		for _, substr := range tc.ExpectedErrSubstrs {
 			s.Assert().Containsf(err.Error(), substr, "%s error missing expected substring", td.QueryName)
+		}
+		for _, substr := range tc.UnexpectedErrSubstrs {
+			s.Assert().NotContainsf(err.Error(), substr, "%s error contains substring it must not", td.QueryName)
 		}
 	}
 }

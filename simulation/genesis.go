@@ -22,8 +22,9 @@ func RandomizedGenState(simState *module.SimulationState) {
 		PayoutTimeoutQueue:  []types.QueueEntry{},
 		PendingSwapOutQueue: types.PendingSwapOutQueue{},
 		Params: types.Params{
-			TechFeeAddress:    techFeeAddr.String(),
-			DefaultAumFeeBips: uint32(simState.Rand.Intn(1001)), // 0 to 1000 bips
+			TechFeeAddress:       techFeeAddr.String(),
+			DefaultAumFeeBips:    uint32(simState.Rand.Intn(1001)), // 0 to 1000 bips
+			GovOnlyVaultCreation: simState.Rand.Intn(2) == 0,
 		},
 	}
 

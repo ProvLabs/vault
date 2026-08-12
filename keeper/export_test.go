@@ -21,18 +21,32 @@ func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Co
 	return k.handleReconciledVaults(sdkCtx, limit)
 }
 
-// TestAccessor_handlePayableVaults exposes this keeper's handlePayableVaults function for unit tests.
-func (k Keeper) TestAccessor_handlePayableVaults(t *testing.T, ctx context.Context, payouts []*types.VaultAccount) {
+// TestAccessor_promotePayableVault exposes this keeper's promotePayableVault function for unit tests.
+func (k Keeper) TestAccessor_promotePayableVault(t *testing.T, ctx context.Context, vault *types.VaultAccount) {
 	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	k.handlePayableVaults(sdkCtx, payouts)
+	k.promotePayableVault(sdkCtx, vault)
 }
 
-// TestAccessor_handleDepletedVaults exposes this keeper's handleDepletedVaults function for unit tests.
-func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Context, failedPayouts []*types.VaultAccount) {
+// TestAccessor_demoteDepletedVault exposes this keeper's demoteDepletedVault function for unit tests.
+func (k Keeper) TestAccessor_demoteDepletedVault(t *testing.T, ctx context.Context, vault *types.VaultAccount) {
 	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	k.handleDepletedVaults(sdkCtx, failedPayouts)
+	k.demoteDepletedVault(sdkCtx, vault)
+}
+
+// TestAccessor_deferPayoutVerification exposes this keeper's deferPayoutVerification function for unit tests.
+func (k Keeper) TestAccessor_deferPayoutVerification(t *testing.T, ctx context.Context, vault *types.VaultAccount) {
+	t.Helper()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.deferPayoutVerification(sdkCtx, vault)
+}
+
+// TestAccessor_retireDepletedVault exposes this keeper's retireDepletedVault function for unit tests.
+func (k Keeper) TestAccessor_retireDepletedVault(t *testing.T, ctx context.Context, vault *types.VaultAccount, walkedTimeout int64) {
+	t.Helper()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.retireDepletedVault(sdkCtx, vault, walkedTimeout)
 }
 
 // TestAccessor_handleVaultInterestTimeouts exposes this keeper's handleVaultInterestTimeouts function for unit tests.
@@ -61,6 +75,13 @@ func (k Keeper) TestAccessor_autoPauseVault(t *testing.T, ctx context.Context, v
 	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	k.autoPauseVault(sdkCtx, vault, reason)
+}
+
+// TestAccessor_applyPausedState exposes this keeper's applyPausedState function for unit tests.
+func (k Keeper) TestAccessor_applyPausedState(t *testing.T, ctx context.Context, vault *types.VaultAccount, reason, pausedBy string, pausedBalance sdk.Coin) {
+	t.Helper()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.applyPausedState(sdkCtx, vault, reason, pausedBy, pausedBalance)
 }
 
 // TestAccessor_reconcileVault exposes this keeper's reconcileVault function for unit tests.
@@ -98,6 +119,10 @@ func (k Keeper) TestAccessor_setShareDenomNAV(t *testing.T, ctx context.Context,
 // assert the scaled-volume behavior against the real constant rather than a duplicated literal.
 var NavReferenceVolume = navReferenceVolume
 
+// MigrationInvalidVaultPauseReason exposes the unexported migrationInvalidVaultPauseReason so
+// migration tests assert against the real constant rather than a duplicated literal.
+var MigrationInvalidVaultPauseReason = migrationInvalidVaultPauseReason
+
 // TestAccessor_publishShareNav exposes this keeper's publishShareNav function for unit tests.
 func (k Keeper) TestAccessor_publishShareNav(t *testing.T, ctx context.Context, vault *types.VaultAccount) error {
 	t.Helper()
@@ -108,6 +133,12 @@ func (k Keeper) TestAccessor_publishShareNav(t *testing.T, ctx context.Context, 
 func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.Context, vault *types.VaultAccount, owner sdk.AccAddress, assets sdk.Coin) error {
 	t.Helper()
 	return k.checkPayoutRestrictions(sdk.UnwrapSDKContext(ctx), vault, owner, assets)
+}
+
+// TestAccessor_checkDepositDenyList exposes this keeper's checkDepositDenyList function for unit tests.
+func (k Keeper) TestAccessor_checkDepositDenyList(t *testing.T, ctx context.Context, depositor sdk.AccAddress, denom string) error {
+	t.Helper()
+	return k.checkDepositDenyList(sdk.UnwrapSDKContext(ctx), depositor, denom)
 }
 
 // TestAccessor_deferSwapOutRetry exposes this keeper's deferSwapOutRetry function for unit tests.
@@ -121,6 +152,11 @@ func (k Keeper) TestAccessor_swapOutRetryBackoff(failureCount uint32) int64 {
 	return swapOutRetryBackoff(failureCount)
 }
 
+// TestAccessor_swapOutRetryDelay exposes the swapOutRetryDelay function for unit tests.
+func (k Keeper) TestAccessor_swapOutRetryDelay(id uint64, failureCount uint32) int64 {
+	return swapOutRetryDelay(id, failureCount)
+}
+
 // TestAccessor_getRefundReason exposes this keeper's getRefundReason function for unit tests.
 func (k Keeper) TestAccessor_getRefundReason(err error) string {
 	return k.getRefundReason(err)
@@ -130,6 +166,18 @@ func (k Keeper) TestAccessor_getRefundReason(err error) string {
 func (k Keeper) TestAccessor_checkSettlementNAVGuardrail(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin) error {
 	t.Helper()
 	return k.checkSettlementNAVGuardrail(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin)
+}
+
+// TestAccessor_sendAUMFee exposes this keeper's sendAUMFee function for unit tests.
+func (k Keeper) TestAccessor_sendAUMFee(t *testing.T, ctx context.Context, vault *types.VaultAccount, recipient sdk.AccAddress, fee sdk.Coin) error {
+	t.Helper()
+	return k.sendAUMFee(sdk.UnwrapSDKContext(ctx), vault, recipient, fee)
+}
+
+// TestAccessor_capAumFeeLiability exposes the capAumFeeLiability function for unit tests.
+func (k Keeper) TestAccessor_capAumFeeLiability(t *testing.T, carried, accrued, grossTVV sdkmath.Int) (sdkmath.Int, bool) {
+	t.Helper()
+	return capAumFeeLiability(carried, accrued, grossTVV)
 }
 
 // TestAccessor_removeDrainedSettlementNAV exposes this keeper's removeDrainedSettlementNAV function for unit tests.
@@ -154,6 +202,12 @@ func (k Keeper) TestAccessor_stageFromPrincipal(t *testing.T, ctx context.Contex
 func (k Keeper) TestAccessor_returnToPrincipal(t *testing.T, ctx context.Context, vault *types.VaultAccount, amt sdk.Coins) error {
 	t.Helper()
 	return k.returnToPrincipal(sdk.UnwrapSDKContext(ctx), vault, amt)
+}
+
+// TestAccessor_requirePausedHeldReprice exposes this keeper's requirePausedHeldReprice function for unit tests.
+func (k Keeper) TestAccessor_requirePausedHeldReprice(t *testing.T, ctx context.Context, vault *types.VaultAccount, nav types.VaultNAV) error {
+	t.Helper()
+	return k.requirePausedHeldReprice(sdk.UnwrapSDKContext(ctx), vault, nav)
 }
 
 // TestAccessor_corruptVaultNAV writes undecodable bytes at the internal NAV entry for

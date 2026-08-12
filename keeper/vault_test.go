@@ -94,6 +94,18 @@ func (s *TestSuite) TestCreateVault_AssetMarkerMissing() {
 	s.Require().ErrorContains(err, "underlying asset marker")
 }
 
+func (s *TestSuite) TestCreateVault_IBCUnderlyingFails() {
+	attrs := vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      "vaultshare",
+		underlying: "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+	}
+
+	_, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().Error(err, "CreateVault should fail for an IBC underlying asset")
+	s.Require().ErrorContains(err, "cannot be used by a vault", "error message should mention the IBC denom ban")
+}
+
 func (s *TestSuite) TestCreateVault_DuplicateMarkerFails() {
 	denom := "dupecoin"
 	base := "basecoin"

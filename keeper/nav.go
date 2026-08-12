@@ -44,6 +44,9 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 	if nav.Denom == vault.TotalShares.Denom {
 		return fmt.Errorf("cannot set NAV for vault share denom %q", nav.Denom)
 	}
+	if err := types.ValidateNotIBCDenom(nav.Denom); err != nil {
+		return err
+	}
 	if nav.Denom == nav.Price.Denom {
 		return fmt.Errorf("NAV denom %q and price denom must differ", nav.Denom)
 	}
@@ -74,8 +77,9 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 // is stored.
 //
 // The denom may not be the vault's share denom, whose value is derived from
-// the vault's total holdings rather than set externally. The denom must also
-// name an asset that exists on-chain: a registered marker, or for a metadata
+// the vault's total holdings rather than set externally, and may not be an IBC
+// voucher denom (see types.ValidateNotIBCDenom). The denom must also name an
+// asset that exists on-chain: a registered marker, or for a metadata
 // value-owner denom (nft/<scope-id>) an existing metadata scope.
 // The price must be a valid coin denominated in the vault's underlying asset.
 // Its amount may be zero so the authority can write a worthless held asset

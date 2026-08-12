@@ -155,9 +155,9 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_OverwriteReStamps() {
 }
 
 // TestKeeper_SetVaultNAV_RejectsInvalidInput verifies SetVaultNAV rejects every
-// invalid input before persisting an entry: the vault share denom, an invalid
-// price coin, a negative price amount, a price denom that is not the vault
-// underlying asset, a nil or non-positive volume, a denom that is not a
+// invalid input before persisting an entry: the vault share denom, an IBC voucher
+// denom, an invalid price coin, a negative price amount, a price denom that is not
+// the vault underlying asset, a nil or non-positive volume, a denom that is not a
 // registered marker, and an nft/ denom that does not name an existing scope.
 func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 	underlying := "under"
@@ -180,6 +180,15 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 				Volume: sdkmath.NewInt(1),
 			},
 			expectedErrSubstr: "cannot set NAV for vault share denom",
+		},
+		{
+			name: "rejects an IBC voucher denom",
+			nav: types.VaultNAV{
+				Denom:  "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "cannot be used by a vault",
 		},
 		{
 			name: "rejects an invalid price coin",

@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 	"math"
+	"strings"
 
 	gproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/protoadapt"
@@ -393,6 +394,16 @@ func (v *VaultAccount) GetNAVAuthority() string {
 func (v *VaultAccount) ValidateNAVAuthority(signer string) error {
 	if signer != v.GetNAVAuthority() {
 		return fmt.Errorf("unauthorized: %s is not the vault NAV authority", signer)
+	}
+	return nil
+}
+
+// ValidateNotIBCDenom rejects ICS-20 voucher denoms (ibc/<hash>). IBC receives bypass the
+// marker send restriction, so a valued IBC balance would drift the materialized total value;
+// review that flow before lifting this ban.
+func ValidateNotIBCDenom(denom string) error {
+	if strings.HasPrefix(denom, "ibc/") {
+		return fmt.Errorf("ibc denom %q cannot be used by a vault", denom)
 	}
 	return nil
 }

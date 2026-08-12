@@ -1328,6 +1328,47 @@ func TestVaultAccount_ValidateAcceptedDenom(t *testing.T) {
 	}
 }
 
+func TestValidateNotIBCDenom(t *testing.T) {
+	tests := []struct {
+		name        string
+		denom       string
+		expectedErr string
+	}{
+		{
+			name:        "ICS-20 voucher denom is rejected",
+			denom:       "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+			expectedErr: `ibc denom "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2" cannot be used by a vault`,
+		},
+		{
+			name:        "native marker denom passes",
+			denom:       "uusd",
+			expectedErr: "",
+		},
+		{
+			name:        "denom starting with ibc but without the voucher separator passes",
+			denom:       "ibccoin",
+			expectedErr: "",
+		},
+		{
+			name:        "uppercase IBC/ prefix is not a voucher denom and passes",
+			denom:       "IBC/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2",
+			expectedErr: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := types.ValidateNotIBCDenom(tc.denom)
+			if tc.expectedErr == "" {
+				assert.NoError(t, err, "expected no error for case: %s", tc.name)
+			} else {
+				assert.Error(t, err, "expected an error for case: %s", tc.name)
+				assert.Equal(t, tc.expectedErr, err.Error(), "error message mismatch for case: %s", tc.name)
+			}
+		})
+	}
+}
+
 func TestVaultAccount_ValidateAcceptedCoin(t *testing.T) {
 	tests := []struct {
 		name            string

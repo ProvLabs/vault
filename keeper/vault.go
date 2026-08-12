@@ -56,6 +56,10 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 	maxSwapIn := attributes.GetMaxSwapInValue()
 	maxSwapOut := attributes.GetMaxSwapOutValue()
 
+	if err := types.ValidateNotIBCDenom(underlying); err != nil {
+		return nil, fmt.Errorf("invalid underlying asset: %w", err)
+	}
+
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get underlying asset marker address: %w", err)

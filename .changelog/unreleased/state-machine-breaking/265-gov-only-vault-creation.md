@@ -1,1 +1,0 @@
-* Made vault creation governance-gateable: `MsgCreateVaultRequest` is now signed by the `authority` field, which must be the governance module account while `gov_only_vault_creation` is enabled. The `admin` field designates the vault administrator and no longer has to be the signer [PR 270](https://github.com/provlabs/vault/pull/270).

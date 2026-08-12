@@ -1,1 +1,0 @@
-* Changed the `tx vault create` CLI command to take `[authority] [admin] [share_denom] [underlying_asset]`, adding the leading signer argument. While `gov_only_vault_creation` is enabled, run the command with `--generate-only` and submit the resulting message as a governance proposal [PR 270](https://github.com/provlabs/vault/pull/270).

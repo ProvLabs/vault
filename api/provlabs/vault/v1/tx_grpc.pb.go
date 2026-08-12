@@ -116,6 +116,10 @@ type MsgClient interface {
 	// RepriceVault.
 	UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+	//
+	// Rotation does not move or burn any share balance the outgoing bridge holds. Drain the outgoing bridge
+	// before rotating; otherwise mint capacity stays reduced by that balance until it is transferred to the
+	// new bridge and burned.
 	SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error)
 	// ToggleBridge enables or disables the bridge functionality for a vault.
 	ToggleBridge(ctx context.Context, in *MsgToggleBridgeRequest, opts ...grpc.CallOption) (*MsgToggleBridgeResponse, error)
@@ -563,6 +567,10 @@ type MsgServer interface {
 	// RepriceVault.
 	UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+	//
+	// Rotation does not move or burn any share balance the outgoing bridge holds. Drain the outgoing bridge
+	// before rotating; otherwise mint capacity stays reduced by that balance until it is transferred to the
+	// new bridge and burned.
 	SetBridgeAddress(context.Context, *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error)
 	// ToggleBridge enables or disables the bridge functionality for a vault.
 	ToggleBridge(context.Context, *MsgToggleBridgeRequest) (*MsgToggleBridgeResponse, error)

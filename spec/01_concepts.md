@@ -134,7 +134,7 @@ Bridging lets vault shares move across chains. The on-chain accounting model and
 
   1. **`PauseVault`** — the fastest and broadest lever. It stops the bridge along with all user flow and freezes valuation at `PausedBalance`. Available to the admin, the asset manager, or the NAV authority. Because it is the widest response, it is the correct first move when the nature of the incident is still unknown.
   2. **`ToggleBridge`** (`enabled = false`) — admin-only, and the surgical lever: it stops only the bridge and leaves swaps and accrual running. Use this when the bridge is the confirmed and isolated problem and there is no reason to halt depositors.
-  3. **`SetBridgeAddress`** — admin-only rotation to a fresh key, for recovering after containment rather than for stopping an in-flight incident.
+  3. **`SetBridgeAddress`** — admin-only rotation to a fresh key, for recovering after containment rather than for stopping an in-flight incident. Rotation leaves any share balance on the outgoing address in place, reducing mint capacity by that amount until the balance is transferred to the new bridge and burned; see the drain-before-rotate procedure in [SetBridgeAddress](03_messages.md#setbridgeaddress).
 
   Nothing is recoverable from the bridge while paused either: a mint performed before the pause cannot be redeemed during it, because `SwapOut` also refuses on a paused vault. Off-chain monitoring should watch `EventBridgeMintShares`/`EventBridgeBurnShares` volume and the running `total_shares - local_supply` gap, which is the only on-chain quantity reflecting bridge activity — bridge ops leave `total_shares` untouched.
 

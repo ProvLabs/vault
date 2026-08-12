@@ -34294,6 +34294,9 @@ func (*MsgUnpauseVaultResponse) Descriptor() ([]byte, []int) {
 }
 
 // MsgSetBridgeAddressRequest is the request message for configuring the bridge address for a vault.
+//
+// Rotation leaves any share balance on the outgoing bridge in place, reducing mint capacity by that amount
+// until it is transferred to the new bridge and burned. Drain the outgoing bridge before rotating.
 type MsgSetBridgeAddressRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

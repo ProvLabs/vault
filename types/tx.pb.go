@@ -2285,6 +2285,9 @@ func (m *MsgUnpauseVaultResponse) XXX_DiscardUnknown() {
 var xxx_messageInfo_MsgUnpauseVaultResponse proto.InternalMessageInfo
 
 // MsgSetBridgeAddressRequest is the request message for configuring the bridge address for a vault.
+//
+// Rotation leaves any share balance on the outgoing bridge in place, reducing mint capacity by that amount
+// until it is transferred to the new bridge and burned. Drain the outgoing bridge before rotating.
 type MsgSetBridgeAddressRequest struct {
 	// admin is the address of the vault administrator.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
@@ -4025,6 +4028,10 @@ type MsgClient interface {
 	// RepriceVault.
 	UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+	//
+	// Rotation does not move or burn any share balance the outgoing bridge holds. Drain the outgoing bridge
+	// before rotating; otherwise mint capacity stays reduced by that balance until it is transferred to the
+	// new bridge and burned.
 	SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error)
 	// ToggleBridge enables or disables the bridge functionality for a vault.
 	ToggleBridge(ctx context.Context, in *MsgToggleBridgeRequest, opts ...grpc.CallOption) (*MsgToggleBridgeResponse, error)
@@ -4434,6 +4441,10 @@ type MsgServer interface {
 	// RepriceVault.
 	UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+	//
+	// Rotation does not move or burn any share balance the outgoing bridge holds. Drain the outgoing bridge
+	// before rotating; otherwise mint capacity stays reduced by that balance until it is transferred to the
+	// new bridge and burned.
 	SetBridgeAddress(context.Context, *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error)
 	// ToggleBridge enables or disables the bridge functionality for a vault.
 	ToggleBridge(context.Context, *MsgToggleBridgeRequest) (*MsgToggleBridgeResponse, error)

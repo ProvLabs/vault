@@ -91,6 +91,10 @@ service Msg {
   rpc UnpauseVault(MsgUnpauseVaultRequest) returns (MsgUnpauseVaultResponse);
 
   // SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+  //
+  // Rotation does not move or burn any share balance the outgoing bridge holds. Drain the outgoing bridge
+  // before rotating; otherwise mint capacity stays reduced by that balance until it is transferred to the
+  // new bridge and burned.
   rpc SetBridgeAddress(MsgSetBridgeAddressRequest) returns (MsgSetBridgeAddressResponse);
 
   // ToggleBridge enables or disables the bridge functionality for a vault.
@@ -528,6 +532,9 @@ message MsgUnpauseVaultRequest {
 message MsgUnpauseVaultResponse {}
 
 // MsgSetBridgeAddressRequest is the request message for configuring the bridge address for a vault.
+//
+// Rotation leaves any share balance on the outgoing bridge in place, reducing mint capacity by that amount
+// until it is transferred to the new bridge and burned. Drain the outgoing bridge before rotating.
 message MsgSetBridgeAddressRequest {
   option (cosmos.msg.v1.signer) = "admin";
 

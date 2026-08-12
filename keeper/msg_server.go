@@ -682,6 +682,10 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 }
 
 // SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+//
+// Rotation does not move or burn any share balance the outgoing bridge holds; drain the outgoing bridge first,
+// or mint capacity stays reduced by that balance until it is transferred to the new bridge and burned. See the
+// drain-before-rotate procedure in spec/03_messages.md.
 func (k msgServer) SetBridgeAddress(goCtx context.Context, msg *types.MsgSetBridgeAddressRequest) (*types.MsgSetBridgeAddressResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

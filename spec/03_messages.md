@@ -327,6 +327,19 @@ It also re-arms what pausing cleared: the vault is added back to the `PayoutVeri
 
 Admin-only. Sets or updates the single authorized external bridge address for a vault.
 
+Rotation does not move or burn anything the outgoing bridge still holds. `BridgeBurnShares` only accepts the
+*current* `bridge_address` and only burns from the signer's own account, so once the rotation is submitted the
+old balance can no longer be burned from where it sits: local supply stays elevated and mint capacity
+(`total_shares - local_supply`) is reduced by that amount.
+
+**Drain before rotating.** Have the outgoing bridge burn its share balance via `BridgeBurnShares` (or transfer
+it to the incoming bridge address) *before* submitting `SetBridgeAddress`, and verify the outgoing address holds
+zero shares afterward.
+
+**Recovery after rotating.** The share denom is an unrestricted coin, so the balance can still be moved: transfer
+the old bridge's holdings to the new bridge with a bank send, then burn them via `BridgeBurnShares`. The burn
+re-widens mint capacity by the burned amount.
+
 * **Request:** `MsgSetBridgeAddressRequest { admin, vault_address, bridge_address }`
 * **Response:** `MsgSetBridgeAddressResponse {}`
 

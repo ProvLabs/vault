@@ -467,7 +467,9 @@ Admin-only. Rotates the address authorized to mutate the vault's internal NAV ta
 
 ## AcceptAsset
 
-Asset Manager only — the admin cannot settle, and a vault without an asset manager cannot settle at all. Settles a pending `x/exchange` payment whose target is the vault, exchanging an external asset for the vault's underlying asset. The payment is identified by its `source` account and `external_id`.
+Asset Manager only — the admin cannot settle, and a vault without an asset manager cannot settle at all. Settles a pending `x/exchange` payment whose target is the vault, exchanging an external asset for the vault's underlying asset.
+
+The message carries the **complete payment**, so the asset manager signs the economic terms of the deal — denom, quantity, and direction on both legs. The payment held by the exchange module must match those terms field for field at execution. This mirrors `MsgAcceptPaymentRequest` in `x/exchange`, which carries the full `Payment`.
 
 Settlement is **rejected while the vault is paused**: a paused vault freezes its value at `PausedBalance`, and settling would move principal funds and the vault's value. Reject the payment or unpause first.
 
@@ -480,16 +482,18 @@ Each leg must carry exactly one coin, and the asset denom must carry an internal
 
 Settlement layers several responsibilities into one atomic transaction:
 
-1. **Reconcile** — the vault reconciles before any value change, so interest settles against the pre-settlement TVV.
-2. **NAV guardrail** — the asset denom must already have an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding). A denom the NAV authority has never priced cannot be acquired.
-3. **Settle** — funds stage through the vault account as an atomic hop (`Principal -> Vault`, exchange `AcceptPayment`, `Vault -> Principal`); the principal marker remains the long-term store.
-4. **Drained-denom cleanup** — when an outbound settlement drains the principal of the asset denom, its internal NAV entry is removed (see `EventNAVRemoved`), so reacquiring the denom requires a fresh price. Nothing else about the NAV table changes: the guardrail has already proven the trade executed at the authority's recorded price, so settling never writes a price. This cleanup is **best-effort**: it runs after the funds have already moved, so an entry that is already gone is logged and waved through rather than rolling back a committed settlement.
+1. **Approval binding** — the stored payment must match the terms carried in the message exactly (source, external_id, target, and both legs). This runs first, so the rest of settlement operates only on the payment the manager approved.
+2. **Reconcile** — the vault reconciles before any value change, so interest settles against the pre-settlement TVV.
+3. **NAV guardrail** — the asset denom must already have an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding). A denom the NAV authority has never priced cannot be acquired.
+4. **Settle** — funds stage through the vault account as an atomic hop (`Principal -> Vault`, exchange `AcceptPayment`, `Vault -> Principal`); the principal marker remains the long-term store.
+5. **Drained-denom cleanup** — when an outbound settlement drains the principal of the asset denom, its internal NAV entry is removed (see `EventNAVRemoved`), so reacquiring the denom requires a fresh price. Nothing else about the NAV table changes: the guardrail has already proven the trade executed at the authority's recorded price, so settling never writes a price. This cleanup is **best-effort**: it runs after the funds have already moved, so an entry that is already gone is logged and waved through rather than rolling back a committed settlement.
 
 Any failure reverts the whole transaction.
 
 Because pricing and settling are separate messages, a first acquisition takes two: `UpdateVaultNAV` from the NAV authority, then `AcceptAsset` from the asset manager. Both can ride in a single transaction — with two signatures when the roles are held by different entities — so the price and the settlement commit atomically.
 
-* **Request:** `MsgAcceptAssetRequest { authority, vault_address, source, external_id }`
+* **Request:** `MsgAcceptAssetRequest { authority, vault_address, payment }`
+  * `payment` is the vault module's `Payment` view — `{ source, source_amount, target, target_amount, external_id }` — carrying the terms the manager reviewed. `target` must be the vault.
 * **Response:** `MsgAcceptAssetResponse {}`
 
 ---

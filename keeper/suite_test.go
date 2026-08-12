@@ -653,15 +653,27 @@ func (s *TestSuite) setupAssetSettlementVault(underlying, share string) (*types.
 }
 
 // createPayment creates an exchange payment from source to target and places the escrow hold.
-func (s *TestSuite) createPayment(source, target sdk.AccAddress, sourceAmount, targetAmount sdk.Coins, externalID string) {
-	err := s.simApp.ExchangeKeeper.CreatePayment(s.ctx, &exchange.Payment{
+// It returns the staged terms in the vault's Payment view, which is what an asset manager
+// submits to approve settling it.
+func (s *TestSuite) createPayment(source, target sdk.AccAddress, sourceAmount, targetAmount sdk.Coins, externalID string) types.Payment {
+	payment := &exchange.Payment{
 		Source:       source.String(),
 		SourceAmount: sourceAmount,
 		Target:       target.String(),
 		TargetAmount: targetAmount,
 		ExternalId:   externalID,
-	})
-	s.Require().NoError(err, "failed to create payment %q", externalID)
+	}
+	s.Require().NoError(s.simApp.ExchangeKeeper.CreatePayment(s.ctx, payment), "failed to create payment %q", externalID)
+	return types.NewPaymentFromExchange(payment)
+}
+
+// cancelPayment cancels the source's pending payment and releases its escrow hold, which the
+// source may do at any time and which frees the (source, external_id) label for reuse.
+func (s *TestSuite) cancelPayment(source sdk.AccAddress, externalID string) {
+	s.Require().NoError(
+		s.simApp.ExchangeKeeper.CancelPayments(s.ctx, source, []string{externalID}),
+		"failed to cancel payment %q", externalID,
+	)
 }
 
 // acceptAssetScenario describes the shared fixture for an AcceptAsset settlement test:
@@ -685,8 +697,9 @@ type acceptAssetScenario struct {
 // vault, the optional asset marker and seeded NAV, a funded source account (which always
 // carries a stake coin) and principal, and a staged payment from the source to the vault
 // (unless omitPayment is set).
-// It returns the vault, its principal marker address, and the payment source address.
-func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.VaultAccount, sdk.AccAddress, sdk.AccAddress) {
+// It returns the vault, its principal marker address, the payment source address, and the
+// staged payment's terms for the asset manager to approve (zero when omitPayment is set).
+func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.VaultAccount, sdk.AccAddress, sdk.AccAddress, types.Payment) {
 	vault, principalAddr := s.setupAssetSettlementVault(sc.underlying, sc.share)
 	if sc.assetMarker != "" {
 		s.requireSimpleMarker(sc.assetMarker)
@@ -707,10 +720,11 @@ func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.Vau
 		s.Require().NoError(FundAccount(s.ctx, s.simApp, principalAddr, sc.fundPrincipal), "failed to fund principal with %s", sc.fundPrincipal)
 	}
 
+	var approved types.Payment
 	if !sc.omitPayment {
-		s.createPayment(source, vault.GetAddress(), sc.sourceAmount, sc.targetAmount, sc.externalID)
+		approved = s.createPayment(source, vault.GetAddress(), sc.sourceAmount, sc.targetAmount, sc.externalID)
 	}
-	return vault, principalAddr, source
+	return vault, principalAddr, source, approved
 }
 
 // requireTypedEventEmitted asserts that the given typed event was emitted on the current context.

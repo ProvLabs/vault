@@ -436,7 +436,7 @@ func (k queryServer) VaultPayment(goCtx context.Context, req *types.QueryVaultPa
 	}
 
 	return &types.QueryVaultPaymentResponse{
-		Payment: toPayment(payment),
+		Payment: types.NewPaymentFromExchange(payment),
 	}, nil
 }
 
@@ -466,22 +466,11 @@ func (k queryServer) VaultPayments(goCtx context.Context, req *types.QueryVaultP
 
 	payments := make([]types.Payment, 0, len(res.Payments))
 	for _, payment := range res.Payments {
-		payments = append(payments, toPayment(payment))
+		payments = append(payments, types.NewPaymentFromExchange(payment))
 	}
 
 	return &types.QueryVaultPaymentsResponse{
 		Payments:   payments,
 		Pagination: res.Pagination,
 	}, nil
-}
-
-// toPayment maps an exchange-module payment into the vault module's Payment view.
-func toPayment(payment *exchange.Payment) types.Payment {
-	return types.Payment{
-		Source:       payment.Source,
-		SourceAmount: payment.SourceAmount,
-		Target:       payment.Target,
-		TargetAmount: payment.TargetAmount,
-		ExternalId:   payment.ExternalId,
-	}
 }

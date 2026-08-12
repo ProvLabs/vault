@@ -2428,14 +2428,27 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 	vaultAddr := NewTestAddress()
 	source := NewTestAddress()
 
+	approvedPayment := func(mutate func(*types.Payment)) types.Payment {
+		payment := types.Payment{
+			Source:       source,
+			SourceAmount: sdk.NewCoins(sdk.NewInt64Coin("rwacoin", 10)),
+			Target:       vaultAddr,
+			TargetAmount: sdk.NewCoins(sdk.NewInt64Coin("under", 5)),
+			ExternalId:   "payment-1",
+		}
+		if mutate != nil {
+			mutate(&payment)
+		}
+		return payment
+	}
+
 	RunValidateBasicTable(t, []validateBasicCase{
 		{
 			name: "valid",
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(nil),
 			},
 		},
 		{
@@ -2443,8 +2456,7 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   "",
+				Payment:      approvedPayment(func(p *types.Payment) { p.ExternalId = "" }),
 			},
 		},
 		{
@@ -2452,8 +2464,15 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   strings.Repeat("x", 100),
+				Payment:      approvedPayment(func(p *types.Payment) { p.ExternalId = strings.Repeat("x", 100) }),
+			},
+		},
+		{
+			name: "valid with a zero-priced leg",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment:      approvedPayment(func(p *types.Payment) { p.TargetAmount = sdk.NewCoins() }),
 			},
 		},
 		{
@@ -2461,8 +2480,7 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    "bad",
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(nil),
 			},
 			expectedErr: "invalid authority address",
 		},
@@ -2471,8 +2489,7 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    "",
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(nil),
 			},
 			expectedErr: "invalid authority address",
 		},
@@ -2481,40 +2498,88 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: "bad",
-				Source:       source,
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(nil),
 			},
 			expectedErr: "invalid vault address",
 		},
 		{
-			name: "invalid source",
+			name: "invalid payment source",
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       "bad",
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(func(p *types.Payment) { p.Source = "bad" }),
 			},
-			expectedErr: "invalid source address",
+			expectedErr: "invalid payment: invalid source address",
 		},
 		{
-			name: "empty source",
+			name: "empty payment source",
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       "",
-				ExternalId:   "payment-1",
+				Payment:      approvedPayment(func(p *types.Payment) { p.Source = "" }),
 			},
-			expectedErr: "invalid source address",
+			expectedErr: "invalid payment: invalid source address",
+		},
+		{
+			name: "invalid payment target",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment:      approvedPayment(func(p *types.Payment) { p.Target = "bad" }),
+			},
+			expectedErr: "invalid payment: invalid target address",
+		},
+		{
+			name: "empty payment target",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment:      approvedPayment(func(p *types.Payment) { p.Target = "" }),
+			},
+			expectedErr: "invalid payment: invalid target address",
+		},
+		{
+			name: "unsorted payment source amount",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment: approvedPayment(func(p *types.Payment) {
+					p.SourceAmount = sdk.Coins{sdk.NewInt64Coin("zcoin", 1), sdk.NewInt64Coin("acoin", 1)}
+				}),
+			},
+			expectedErr: "invalid payment: invalid source amount",
+		},
+		{
+			name: "zero payment target amount coin",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment: approvedPayment(func(p *types.Payment) {
+					p.TargetAmount = sdk.Coins{sdk.NewInt64Coin("under", 0)}
+				}),
+			},
+			expectedErr: "invalid payment: invalid target amount",
+		},
+		{
+			name: "both payment legs zero",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Payment: approvedPayment(func(p *types.Payment) {
+					p.SourceAmount = sdk.NewCoins()
+					p.TargetAmount = sdk.NewCoins()
+				}),
+			},
+			expectedErr: "invalid payment: source amount and target amount cannot both be zero",
 		},
 		{
 			name: "external id too long",
 			msg: types.MsgAcceptAssetRequest{
 				Authority:    authority,
 				VaultAddress: vaultAddr,
-				Source:       source,
-				ExternalId:   strings.Repeat("x", 101),
+				Payment:      approvedPayment(func(p *types.Payment) { p.ExternalId = strings.Repeat("x", 101) }),
 			},
-			expectedErr: "invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
+			expectedErr: "invalid payment: invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
 		},
 	})
 }

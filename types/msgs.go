@@ -697,11 +697,8 @@ func (m MsgAcceptAssetRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
-		return fmt.Errorf("invalid source address: %q: %w", m.Source, err)
-	}
-	if err := exchange.ValidateExternalID(m.ExternalId); err != nil {
-		return fmt.Errorf("invalid external id: %w", err)
+	if err := m.Payment.Validate(); err != nil {
+		return fmt.Errorf("invalid payment: %w", err)
 	}
 	return nil
 }

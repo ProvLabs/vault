@@ -7,6 +7,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "provlabs/vault/v1/params.proto";
+import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
@@ -746,20 +747,28 @@ message MsgUpdateNAVAuthorityRequest {
 message MsgUpdateNAVAuthorityResponse {}
 
 // MsgAcceptAssetRequest is the request message for settling a pending exchange-module
-// payment whose target is the vault. The payment is identified by its source account and
-// external_id. The vault settles only payments where one leg is the vault's underlying
-// asset; the settlement direction (inbound or outbound) is derived from which leg that is.
+// payment whose target is the vault. The vault settles only payments where one leg is the
+// vault's underlying asset; the settlement direction (inbound or outbound) is derived from
+// which leg that is.
+//
+// The message carries the complete payment, so the asset manager's signature commits to the
+// economic terms of the deal. Settlement requires the payment held by the exchange module to
+// match those terms exactly.
 message MsgAcceptAssetRequest {
   option (cosmos.msg.v1.signer) = "authority";
+
+  reserved 3, 4;
+  reserved "source", "external_id";
 
   // authority is the address of the vault's asset manager authorizing the settlement.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault, which must be the payment's target.
   string vault_address = 2;
-  // source is the bech32 address of the account that created the pending payment.
-  string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // external_id, together with source, uniquely identifies the pending payment to settle.
-  string external_id = 4;
+  // payment is the full set of terms the asset manager reviewed and is approving. It
+  // identifies the pending payment by its source and external_id, and binds the approval
+  // to that payment's exact legs. Settlement fails if any field does not match the
+  // payment held by the exchange module.
+  Payment payment = 5 [(gogoproto.nullable) = false];
 }
 
 // MsgAcceptAssetResponse is the response message for the AcceptAsset endpoint.

@@ -1110,13 +1110,19 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		return nil, fmt.Errorf("vault %s is paused: assets cannot be accepted while paused", msg.VaultAddress)
 	}
 
-	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)
-	payment, err := k.ExchangeKeeper.GetPayment(ctx, sourceAddr, msg.ExternalId)
+	sourceAddr, err := sdk.AccAddressFromBech32(msg.Payment.Source)
+	if err != nil {
+		return nil, fmt.Errorf("invalid payment source address %q: %w", msg.Payment.Source, err)
+	}
+	payment, err := k.ExchangeKeeper.GetPayment(ctx, sourceAddr, msg.Payment.ExternalId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get payment: %w", err)
 	}
 	if payment == nil {
-		return nil, fmt.Errorf("payment not found for source %s and external id %q", msg.Source, msg.ExternalId)
+		return nil, fmt.Errorf("payment not found for source %s and external id %q", msg.Payment.Source, msg.Payment.ExternalId)
+	}
+	if err = msg.Payment.ValidateMatches(payment); err != nil {
+		return nil, fmt.Errorf("stored payment no longer matches the approved terms: %w", err)
 	}
 	if payment.Target != msg.VaultAddress {
 		return nil, fmt.Errorf("payment target %s is not vault %s", payment.Target, msg.VaultAddress)
@@ -1159,7 +1165,7 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		return nil, fmt.Errorf("failed to move source amount from vault to principal: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, msg.Source, msg.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
+	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, payment.Source, payment.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
 
 	if err := k.removeDrainedSettlementNAV(ctx, vault, assetCoin.Denom, direction); err != nil {
 		return nil, err

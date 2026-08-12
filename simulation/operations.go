@@ -1613,8 +1613,7 @@ func SimulateMsgAcceptAsset(k keeper.Keeper) simtypes.Operation {
 		msg := &types.MsgAcceptAssetRequest{
 			Authority:    authority,
 			VaultAddress: vault.GetAddress().String(),
-			Source:       payment.Source,
-			ExternalId:   payment.ExternalId,
+			Payment:      types.NewPaymentFromExchange(payment),
 		}
 
 		handler := keeper.NewMsgServer(&k)

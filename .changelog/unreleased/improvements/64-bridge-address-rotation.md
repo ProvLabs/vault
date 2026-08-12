@@ -1,1 +1,1 @@
-* Document the drain-before-rotate procedure for bridge address rotation [#64](https://github.com/provlabs/vault/issues/64).
+* Document the drain-before-rotate procedure for bridge address rotation [PR 270](https://github.com/provlabs/vault/pull/270).

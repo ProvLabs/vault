@@ -1,1 +1,1 @@
-* Remove a live vault from the `PayoutVerificationSet` only in the same atomic write that transitions it, so a failed transition retries instead of stalling the vault's accrual [#32](https://github.com/provlabs/vault/issues/32).
+* Remove a live vault from the `PayoutVerificationSet` only in the same atomic write that transitions it, so a failed transition retries instead of stalling the vault's accrual [PR 270](https://github.com/provlabs/vault/pull/270).

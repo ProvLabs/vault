@@ -1,1 +1,1 @@
-* Jitter swap-out retry times deterministically so identical failures stop re-clustering [#46](https://github.com/provlabs/vault/issues/46).
+* Jitter swap-out retry times deterministically so identical failures stop re-clustering [PR 270](https://github.com/provlabs/vault/pull/270).

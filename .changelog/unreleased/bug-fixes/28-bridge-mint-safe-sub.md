@@ -1,1 +1,1 @@
-* Compute bridge mint capacity with `SafeSub` in `BridgeMintShares` [#28](https://github.com/provlabs/vault/issues/28).
+* Compute bridge mint capacity with `SafeSub` in `BridgeMintShares` [PR 270](https://github.com/provlabs/vault/pull/270).

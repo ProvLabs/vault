@@ -399,6 +399,8 @@ The price stays **internal to the vault**. A vault does not own the assets it pr
 
 The vault does **not** have to hold the denom. The internal NAV table is a price list rather than a held-asset inventory, and an entry for a denom the vault does not hold contributes nothing to total vault value until the asset arrives at the principal marker. Pricing a denom ahead of time is how the NAV authority authorizes the asset manager to acquire it: `AcceptAsset` requires an entry and settles only at exactly that price. This is why pricing an unheld denom needs no pause, and it keeps the acquisition path a live-vault operation.
 
+Each write stamps `updated_block_height` and `updated_time` on the entry. No valuation path enforces either one, so a price keeps pricing shares for as long as it stands, and holding it current is the NAV authority's job rather than a module rule. See [NAV Freshness](01_concepts.md#nav-freshness).
+
 * **Request:** `MsgUpdateVaultNAVRequest { signer, vault_address, denom, price, volume, source? }`
 * **Response:** `MsgUpdateVaultNAVResponse {}`
 

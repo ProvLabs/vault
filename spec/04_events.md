@@ -458,7 +458,7 @@ Emitted when the vault's asset manager declines a pending `x/exchange` payment t
 
 ### EventNAVUpdated
 
-Emitted when a vault's internal NAV entry for a denom is created or updated (via `MsgUpdateVaultNAV`).
+Emitted when a vault's internal NAV entry for a denom is created or updated, once per entry written by `MsgUpdateVaultNAV` or `MsgRepriceVault`.
 
 **Fields**
 
@@ -473,6 +473,7 @@ Emitted when a vault's internal NAV entry for a denom is created or updated (via
 **Notes**
 
 * The upserted price stays internal to the vault: it is not mirrored into the priced asset's marker-module NAV records, so no `provenance.marker.v1.EventSetNetAssetValue` accompanies this event.
+* The event carries `updated_block_height` but not the entry's `updated_time`, so a consumer tracking wall-clock entry age reads it from `Query/VaultNavs` or `Query/NavValue`. See [NAV Freshness](01_concepts.md#nav-freshness).
 
 ---
 

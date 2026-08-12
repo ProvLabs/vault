@@ -137,13 +137,15 @@ The address authorized to receive collected AUM technology fees.
 
 ### Internal NAV Table (prefix 11)
 
-Per-vault price entries for asset denoms the vault holds or is authorized to acquire. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written only by the NAV authority (`MsgUpdateVaultNAV`, which requires a paused vault to reprice a denom the vault holds, and `MsgRepriceVault`, which writes a batch of them and unpauses in the same state transition) and removed either by the authority (`MsgRemoveVaultNAV`, restricted to denoms the vault does not hold) or by an outbound `MsgAcceptAsset` that drains the denom from the principal. Settlement never writes a price.
+Per-vault price entries for asset denoms the vault holds or is authorized to acquire. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written only by the NAV authority (`MsgUpdateVaultNAV`, which requires a paused vault to reprice a denom the vault holds, and `MsgRepriceVault`, which writes a batch of them and can unpause in the same state transition) and removed either by the authority (`MsgRemoveVaultNAV`, restricted to denoms the vault does not hold) or by an outbound `MsgAcceptAsset` that drains the denom from the principal. Settlement never writes a price.
 
 An entry may exist for a denom the vault does not hold: TVV values held balances against this table, so an unheld denom contributes nothing until the asset arrives at the principal marker.
 
 - **Prefix:** `NAVsKeyPrefix` (11)
 - **Key:** `(sdk.AccAddress vault, string denom)`
 - **Value:** `types.VaultNAV { denom, price, volume, source, updated_block_height, updated_time }` — `price` is the total value of `volume` units of `denom`; per-unit value is `price / volume`. The `price` denom must be the owning vault's underlying asset.
+
+`updated_block_height` and `updated_time` are stamped by the module on each `UpdateVaultNAV` and on every entry a `RepriceVault` batch writes. They are **informational only**. No valuation path compares them against block time, so an entry prices shares until the NAV authority restates it. Both fields survive a genesis export/import unchanged, so entry ages remain meaningful across a chain restart. See [NAV Freshness](01_concepts.md#nav-freshness) for the responsibility model.
 
 ### Materialized Total Vault Value (prefix 12)
 

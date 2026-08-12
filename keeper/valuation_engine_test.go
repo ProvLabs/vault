@@ -327,7 +327,7 @@ func (s *TestSuite) TestGetTVV_EmptyAndSharesOnly() {
 	s.Require().Equal(math.ZeroInt(), tvvSharesOnly, "TVV of shares-only vault should be zero")
 }
 
-func (s *TestSuite) TestGetTVV_AccumulatorOverflowReturnsErrorNotPanic() {
+func (s *TestSuite) TestWalkTotalValue_AccumulatorOverflowReturnsErrorNotPanic() {
 	vault, testKeeper, underlyingDenom, heldDenom := s.setupOversizedNAVVault()
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), math.OneInt())
 
@@ -336,10 +336,21 @@ func (s *TestSuite) TestGetTVV_AccumulatorOverflowReturnsErrorNotPanic() {
 		sdk.NewInt64Coin(underlyingDenom, 100),
 	))
 
-	_, err := testKeeper.GetTVV(s.ctx, *vault)
+	_, err := testKeeper.WalkTotalValue(s.ctx, *vault)
 	s.Require().Error(err, "summing balances past the 256-bit ceiling must degrade to an error, not panic")
 	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeAdd accumulator guard")
 	s.Require().ErrorContains(err, "total vault value", "error should carry the accumulator's wrapping context")
+}
+
+func (s *TestSuite) TestGetTVV_MissingMaterializedTotalIsReportedNotDerived() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	s.dropStoredTotalValue(vault.GetAddress())
+
+	_, err := s.k.GetTVV(s.ctx, *vault)
+	s.Require().ErrorIs(err, keeper.ErrNoMaterializedTotalValue,
+		"a vault with no materialized total must be reported rather than rebuilt by walking its NAV table")
 }
 
 func (s *TestSuite) TestGetTVV_IncludesUnderlyingPricedHeldAsset() {
@@ -1259,28 +1270,28 @@ func (s *TestSuite) TestInitTotalValue_SeedsFromBalanceAlreadyAtThePrincipal() {
 	s.assertTotalValueMatchesWalk(vault.GetAddress(), "vault creation over a pre-funded principal")
 }
 
-func (s *TestSuite) TestAdjustTotalValue_MissingEntryDoesNotDoubleCountTheDelta() {
+func (s *TestSuite) TestValueReportingPaths_RefuseAVaultWithNoMaterializedTotal() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
 	deposit := sdk.NewInt64Coin(underlyingDenom, 50_000)
 
 	tests := []struct {
 		name string
-		move func(vault *types.VaultAccount)
+		move func(vault *types.VaultAccount) error
 	}{
 		{
-			name: "swap-in prices off the total first, so the entry exists by the time it reports",
-			move: func(vault *types.VaultAccount) {
+			name: "swap-in prices off the total before it reports the deposit",
+			move: func(vault *types.VaultAccount) error {
 				owner := s.CreateAndFundAccount(deposit)
 				s.dropStoredTotalValue(vault.GetAddress())
 
 				_, err := s.k.SwapIn(s.ctx, vault.GetAddress(), owner, deposit)
-				s.Require().NoError(err, "swap-in of %s should succeed", deposit)
+				return err
 			},
 		},
 		{
-			name: "paused principal deposit is the first touch of a missing total",
-			move: func(vault *types.VaultAccount) {
+			name: "paused principal deposit reports against a missing total",
+			move: func(vault *types.VaultAccount) error {
 				s.pauseVault(vault.GetAddress())
 				s.dropStoredTotalValue(vault.GetAddress())
 
@@ -1289,7 +1300,7 @@ func (s *TestSuite) TestAdjustTotalValue_MissingEntryDoesNotDoubleCountTheDelta(
 					VaultAddress: vault.GetAddress().String(),
 					Amount:       deposit,
 				})
-				s.Require().NoError(err, "depositing %s of principal funds should succeed", deposit)
+				return err
 			},
 		},
 	}
@@ -1299,18 +1310,12 @@ func (s *TestSuite) TestAdjustTotalValue_MissingEntryDoesNotDoubleCountTheDelta(
 			s.SetupTest()
 			vault := s.setupBaseVault(underlyingDenom, shareDenom)
 
-			tc.move(vault)
+			err := tc.move(vault)
 
-			walked, err := s.k.WalkTotalValue(s.ctx, *vault)
-			s.Require().NoError(err, "walking total value after %s should succeed", tc.name)
-
-			stored, err := s.k.TotalValues.Get(s.ctx, vault.GetAddress())
-			s.Require().NoError(err, "the move should have materialized a total for vault %s", vault.GetAddress())
-
-			s.Require().Equal(walked.String(), stored.String(),
-				"deriving a missing total already reflects the move, so the delta must not be applied again")
-			s.Require().Equal(deposit.Amount.String(), stored.String(),
-				"the total should equal the %s that actually reached the principal, not twice it", deposit)
+			s.Require().ErrorIs(err, keeper.ErrNoMaterializedTotalValue,
+				"a move against a vault with no materialized total must be refused, never rebuilt by walking its NAV table")
+			s.Require().False(s.storedTotalValueExists(vault.GetAddress()),
+				"a refused move must leave the vault unmaterialized rather than seeding a total behind the failure")
 		})
 	}
 }
@@ -1325,6 +1330,7 @@ func (s *TestSuite) TestWithdrawPrincipalFunds_FoldsTheWithdrawalIntoTheStoredTo
 		withdrawal      sdk.Coin
 		dropStoredTotal bool
 		expectedTotal   int64
+		expRefused      bool
 	}{
 		{
 			name:          "a partial withdrawal subtracts exactly what left the principal",
@@ -1337,10 +1343,10 @@ func (s *TestSuite) TestWithdrawPrincipalFunds_FoldsTheWithdrawalIntoTheStoredTo
 			expectedTotal: 0,
 		},
 		{
-			name:            "withdrawal against a missing total derives it after the move instead of subtracting twice",
+			name:            "withdrawal against a missing total is refused rather than derived",
 			withdrawal:      sdk.NewInt64Coin(underlyingDenom, 20_000),
 			dropStoredTotal: true,
-			expectedTotal:   40_000,
+			expRefused:      true,
 		},
 	}
 
@@ -1368,6 +1374,14 @@ func (s *TestSuite) TestWithdrawPrincipalFunds_FoldsTheWithdrawalIntoTheStoredTo
 				VaultAddress: vaultAddr.String(),
 				Amount:       tc.withdrawal,
 			})
+
+			if tc.expRefused {
+				s.Require().ErrorIs(err, keeper.ErrNoMaterializedTotalValue,
+					"withdrawing %s against a vault with no materialized total must be refused", tc.withdrawal)
+				s.Require().False(s.storedTotalValueExists(vaultAddr),
+					"a refused withdrawal must not seed a total behind the failure")
+				return
+			}
 			s.Require().NoError(err, "withdrawing %s of principal funds should succeed", tc.withdrawal)
 
 			stored, err := s.k.TotalValues.Get(s.ctx, vaultAddr)
@@ -1381,4 +1395,73 @@ func (s *TestSuite) TestWithdrawPrincipalFunds_FoldsTheWithdrawalIntoTheStoredTo
 				"a reported withdrawal of %s must leave the stored total agreeing with the walk", tc.withdrawal)
 		})
 	}
+}
+
+func (s *TestSuite) TestAdjustTotalValue_RefusesADeltaThatWouldGoNegative() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	deposited := sdk.NewInt64Coin(underlyingDenom, 60_000)
+
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	vaultAddr := vault.GetAddress()
+	s.pauseVault(vaultAddr)
+
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+	_, err := msgServer.DepositPrincipalFunds(s.ctx, &types.MsgDepositPrincipalFundsRequest{
+		Authority:    s.adminAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Amount:       deposited,
+	})
+	s.Require().NoError(err, "depositing %s of principal funds should succeed", deposited)
+
+	understated := math.NewInt(1)
+	s.materializeTotalValue(vaultAddr, understated)
+
+	_, err = msgServer.WithdrawPrincipalFunds(s.ctx, &types.MsgWithdrawPrincipalFundsRequest{
+		Authority:    s.adminAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Amount:       deposited,
+	})
+	s.Require().ErrorIs(err, keeper.ErrNegativeTotalValue,
+		"withdrawing %s against a stored total of %s must be refused, never rebuilt by walking the NAV table", deposited, understated)
+
+	stored, err := s.k.TotalValues.Get(s.ctx, vaultAddr)
+	s.Require().NoError(err, "the refused withdrawal should leave the stored total in place for vault %s", vaultAddr)
+	s.Require().Equal(understated.String(), stored.String(),
+		"a refused withdrawal must leave the understated total untouched rather than silently repairing it")
+}
+
+func (s *TestSuite) TestResumeVault_BalanceLookupsDoNotGrowWithTheNAVTable() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+
+	balanceLookupsToUnpause := func(navEntries int) int {
+		s.SetupTest()
+		vault := s.setupBaseVault(underlyingDenom, shareDenom)
+		for i := range navEntries {
+			heldDenom := fmt.Sprintf("held%d", i)
+			s.requireSimpleMarker(heldDenom)
+			s.fundPrincipal(vault, sdk.NewInt64Coin(heldDenom, 1_000))
+			s.setVaultNAV(vault, heldDenom, sdk.NewInt64Coin(underlyingDenom, 2), 1)
+		}
+		s.pauseVault(vault.GetAddress())
+
+		spy := &countingBankKeeper{BankKeeper: s.simApp.VaultKeeper.BankKeeper}
+		s.simApp.VaultKeeper.BankKeeper = spy
+
+		_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).UnpauseVault(s.ctx, &types.MsgUnpauseVaultRequest{
+			Authority:    s.adminAddr.String(),
+			VaultAddress: vault.GetAddress().String(),
+		})
+		s.Require().NoError(err, "unpausing a vault pricing %d denoms should succeed", navEntries)
+		s.Require().Zero(spy.getAllBalancesCalls,
+			"unpausing must never fall back to the unbounded GetAllBalances walk")
+		return spy.getBalanceCalls
+	}
+
+	fewEntries := balanceLookupsToUnpause(2)
+	manyEntries := balanceLookupsToUnpause(20)
+
+	s.Require().Equal(fewEntries, manyEntries,
+		"unpause reads the materialized total, so its balance lookups must not scale with the %d NAV entries the vault prices", 20)
 }

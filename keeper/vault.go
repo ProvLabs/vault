@@ -557,6 +557,9 @@ func (k *Keeper) applyPausedState(ctx sdk.Context, vault *types.VaultAccount, re
 // resumeVault clears the paused state, re-arms interest and fee accrual from the current
 // block time so the paused span is never charged, and emits EventVaultUnpaused. Shared by
 // UnpauseVault and RepriceVault; the caller authorizes the resume.
+//
+// The total vault value it reports is read, not re-derived: everything done during the pause
+// folded its own change into the materialized total as it happened.
 func (k *Keeper) resumeVault(ctx sdk.Context, vault *types.VaultAccount, authority string) error {
 	if err := k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate); err != nil {
 		return fmt.Errorf("failed to update interest rates: %w", err)
@@ -571,9 +574,9 @@ func (k *Keeper) resumeVault(ctx sdk.Context, vault *types.VaultAccount, authori
 		return fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	tvv, err := k.RecomputeTotalValue(ctx, *vault)
+	tvv, err := k.totalValue(ctx, *vault)
 	if err != nil {
-		return fmt.Errorf("failed to recompute total vault value on unpause: %w", err)
+		return fmt.Errorf("failed to read total vault value on unpause: %w", err)
 	}
 
 	if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {

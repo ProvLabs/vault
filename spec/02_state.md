@@ -151,9 +151,22 @@ Each vault's total value, denominated in its underlying asset. This is **derived
 
 Every path that moves a priced balance or changes a price folds its change into this entry — swap-in, swap-out payout, principal deposit/withdraw, interest and AUM fee transfers, settlement staging, and NAV writes and removals. The walk over the NAV table remains the definition of the number, and a registered invariant asserts the two agree (see [Invariants](#invariants)).
 
-A missing entry is derived and stored on first read rather than treated as an error, so the value is self-healing. Vault creation, genesis import, and the v2→v3 migration all seed it up front so the invariant never observes a gap, and unpausing re-derives it. Because a mutation path reports its delta only after the balance has moved, deriving a missing entry supersedes the delta rather than adding to it.
+**The walk is not a consensus path.** Deriving this entry costs one balance lookup per priced denom, so its cost grows without bound with the size of the vault's NAV table. Walking is therefore confined to the three places where it is both affordable and unavoidable:
 
-Creation seeds by deriving rather than assuming zero: a vault's principal address follows from its share denom, so `x/marker` can adopt an account that already holds a balance no later path would report.
+| Where | Why the walk is needed | Why it is affordable |
+| --- | --- | --- |
+| Vault creation | The principal address follows from the share denom, so `x/marker` can adopt an account already holding a balance no later path would report | A vault being created prices no denoms yet, so the walk reads the underlying balance and stops |
+| Genesis import and the v2→v3 migration | Imported state arrives with no incremental history to fold | Neither runs under a transaction gas meter |
+| The `total-value` invariant | Comparing against the derived value is the whole point | Runs on demand, outside block processing |
+
+Everywhere else — every transaction and every block hook — the materialized entry is authoritative and is kept current by the reporting paths above. Two conditions that a walk would previously have repaired are now refused instead, because repairing means walking:
+
+- **A missing entry** (`ErrNoMaterializedTotalValue`). Creation, genesis import, and the migration all seed one, and no path removes one, so a vault without an entry is corrupt rather than merely unseeded.
+- **A delta that would drive the total negative** (`ErrNegativeTotalValue`). Some path misreported, and repricing off a number known to be wrong is worse than refusing.
+
+In a transaction either condition fails the message. In a block hook the enclosing per-vault handler logs and reschedules, so one bad vault never stops the block. The invariant still reports both without repairing either.
+
+Unpausing **reads** this entry rather than re-deriving it. Repricings and principal movements during a pause each fold their own change in as they happen, so the entry is already current when the pause lifts.
 
 - **Prefix:** `TotalValuesKeyPrefix` (12)
 - **Key:** `sdk.AccAddress vault`
@@ -202,7 +215,7 @@ The module's consensus version 1→2 migration flattens any pre-existing mixed-d
 
 The module's consensus version 2→3 migration materializes every vault's total value (prefix 12), which became module state alongside the materialized-TVV read path. It derives each total from current balances and the NAV table and stores it. No funds move and no vault configuration changes.
 
-Seeding is required rather than optional: `GetTVV` would repair each vault lazily on first read, but the `total-value` invariant reads state without repairing it, so an unseeded vault would report as broken — and because `x/crisis` panics on a broken invariant, an invariant-enabled chain would halt. The migration is idempotent, since it recomputes from the same source on every run.
+Seeding is required rather than optional, and is the only chance a pre-v3 vault gets: no consensus path derives a missing entry, so an unseeded vault cannot be read, cannot be moved against, and reports as broken to the `total-value` invariant — and because `x/crisis` panics on a broken invariant, an invariant-enabled chain would halt. The migration is idempotent, since it recomputes from the same source on every run.
 
 It seeds from the vault lookup, resolving it through the same path the invariant uses, so the two cannot disagree about which vaults must have an entry. A vault it cannot value is logged and skipped: such a vault fails the invariant's own derivation too, so seeding could not have satisfied it, and aborting the upgrade over one bad vault would be worse than leaving the rest of the chain seeded. A lookup entry that resolves to no vault account is skipped by both for the same reason (see [Invariants](#invariants)).
 

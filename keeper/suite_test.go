@@ -136,11 +136,9 @@ func (s *TestSuite) withdrawMarkerCoins(ctx sdk.Context, caller, recipient sdk.A
 	return SyncVaultValues(ctx, s.simApp)
 }
 
-// fundPrincipalForBrokenValuation funds a vault's principal and drops its stored total, forcing
-// the next read to rebuild by walking.
-//
-// Tests that exercise a valuation failure need this: a materialized read cannot fail, so NAV
-// conversion — and any overflow or corruption in it — only happens on the walk.
+// fundPrincipalForBrokenValuation funds a vault's principal out of band and drops its stored
+// total, leaving a vault no consensus path can value. Use materializeTotalValue instead when
+// valuation should succeed on a specific number.
 func (s *TestSuite) fundPrincipalForBrokenValuation(vault *types.VaultAccount, coins sdk.Coins) {
 	principal := vault.PrincipalMarkerAddress()
 	s.Require().NoError(s.simApp.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, coins),
@@ -156,10 +154,24 @@ func (s *TestSuite) fundPrincipalForBrokenValuation(vault *types.VaultAccount, c
 }
 
 // dropStoredTotalValue removes a vault's materialized total, staging the "never materialized"
-// state that seeding, repair and the total-value invariant care about.
+// state that seeding and the total-value invariant care about.
 func (s *TestSuite) dropStoredTotalValue(vaultAddr sdk.AccAddress) {
 	s.Require().NoError(s.k.TotalValues.Remove(s.ctx, vaultAddr),
 		"dropping the stored total value for vault %s should succeed", vaultAddr)
+}
+
+// storedTotalValueExists reports whether a vault has a materialized total.
+func (s *TestSuite) storedTotalValueExists(vaultAddr sdk.AccAddress) bool {
+	found, err := s.k.TotalValues.Has(s.ctx, vaultAddr)
+	s.Require().NoError(err, "checking for a materialized total on vault %s should succeed", vaultAddr)
+	return found
+}
+
+// materializeTotalValue writes a vault's materialized total directly, staging a number the
+// reporting paths could not have produced.
+func (s *TestSuite) materializeTotalValue(vaultAddr sdk.AccAddress, total sdkmath.Int) {
+	s.Require().NoError(s.k.TotalValues.Set(s.ctx, vaultAddr, total),
+		"storing a materialized total of %s for vault %s should succeed", total, vaultAddr)
 }
 
 // SyncVaultValues re-derives every vault's materialized total value from current state. Tests

@@ -389,7 +389,7 @@ Two updates move no value and are accepted **whether or not the vault is paused*
 
 When the vault is **not paused**, the handler reconciles first, so accrued interest settles against the TVV that held before the price change.
 
-When the vault **is paused**, the reconcile is a no-op (accrual is already halted) and `PausedBalance` is left untouched, still holding the value as of the moment of pausing. This matches how the pause already treats `DepositPrincipalFunds` and `WithdrawPrincipalFunds`, which are themselves only allowed while paused and likewise do not move the frozen value. Everything done during the pause, repricings and principal movements alike, takes effect together at `UnpauseVault`, when the snapshot is cleared and total vault value is recomputed from live balances and the NAV table.
+When the vault **is paused**, the reconcile is a no-op (accrual is already halted) and `PausedBalance` is left untouched, still holding the value as of the moment of pausing. This matches how the pause already treats `DepositPrincipalFunds` and `WithdrawPrincipalFunds`, which are themselves only allowed while paused and likewise do not move the frozen value. Everything done during the pause, repricings and principal movements alike, takes effect together at `UnpauseVault`, when the snapshot is cleared and the materialized total vault value takes over as the live number. Each of those repricings and movements folded its own change into that total as it happened, so unpausing reads it rather than re-deriving it from the NAV table.
 
 The price stays **internal to the vault**. A vault does not own the assets it prices, so an asset price is never mirrored into that asset's marker-module NAV records, where it would compete with prices set by the marker's own administrators. Only the vault's share denom, which the vault does own, gets a published marker NAV.
 
@@ -431,7 +431,7 @@ The gate is checked **before** any price is written, so a batch that cannot resu
 
 ### Ordering and events
 
-The reconcile runs first, settling accrued interest against the total vault value that held before the batch; it is a no-op on a paused vault whose accrual is already halted. Prices are then written in order, and the resume, if requested, clears `PausedBalance` and the pause attribution, recomputes total vault value from live balances and the new prices, and re-arms the payout verification and fee timeout exactly as `UnpauseVault` does. `EventNAVUpdated` is emitted per update, followed by a single `EventVaultUnpaused` when resuming.
+The reconcile runs first, settling accrued interest against the total vault value that held before the batch; it is a no-op on a paused vault whose accrual is already halted. Prices are then written in order, and the resume, if requested, clears `PausedBalance` and the pause attribution, resumes reporting live total vault value from the materialized total the batch has just updated, and re-arms the payout verification and fee timeout exactly as `UnpauseVault` does. `EventNAVUpdated` is emitted per update, followed by a single `EventVaultUnpaused` when resuming.
 
 * At least one update is required, at most `MaxRepriceBatchSize` (1000), and a denom may appear only once.
 * Each update carries the same `denom`, `price`, `volume`, and optional `source` fields that `UpdateVaultNAV` takes, under the same rules.

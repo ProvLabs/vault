@@ -28,6 +28,15 @@ var ErrInternalNAVNotFound = errors.New("internal NAV entry not found")
 // by a migration or a direct write) can never drive unbounded recursion.
 var ErrInternalNAVPriceCycle = errors.New("internal NAV price chain contains a cycle")
 
+// ErrNoMaterializedTotalValue is returned for a vault with no TotalValues entry. Seeding one is
+// the job of creation, genesis import and the migration, so reaching this means the vault was
+// skipped as unvaluable by one of them. See spec/02_state.md.
+var ErrNoMaterializedTotalValue = errors.New("vault has no materialized total value")
+
+// ErrNegativeTotalValue is returned when a delta would drive a vault's materialized total below
+// zero, meaning some path misreported its change.
+var ErrNegativeTotalValue = errors.New("materialized total value would go negative")
+
 // UnitPriceFraction returns the unit price of srcDenom expressed in the vault's
 // underlying asset as an integer fraction (numerator, denominator), sourced
 // exclusively from the per-vault Internal NAV table.
@@ -169,10 +178,9 @@ func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccoun
 // A paused vault returns vault.PausedBalance.Amount, which was captured net of the fee liability
 // at pause time, so paused pricing stays frozen and NAV-independent.
 //
-// Otherwise this is a single store read of the materialized total rather than a walk of the
-// vault's balances. WalkTotalValue defines the number, every path that moves a priced balance or
-// changes a price reports its change, and the total-value invariant enforces that the two agree.
-// A vault whose total has never been materialized has it derived and stored on first read.
+// Otherwise this is a single store read of the materialized total, never a walk of the vault's
+// balances. WalkTotalValue defines the number, every path that moves a priced balance or changes
+// a price reports its change, and the total-value invariant enforces that the two agree.
 //
 // Because a held asset's internal NAV is set by the vault's NAV authority, repricing moves TVV and
 // everything derived from it — a deliberate economic and trust surface.
@@ -184,14 +192,14 @@ func (k Keeper) GetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, err
 }
 
 // totalValue returns the materialized total, ignoring the paused snapshot. A missing entry is
-// derived and stored rather than treated as an error.
+// reported rather than derived, since deriving would walk the whole NAV table on a metered path.
 func (k Keeper) totalValue(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	total, found, err := k.storedTotalValue(ctx, vault)
 	if err != nil {
 		return math.Int{}, err
 	}
 	if !found {
-		return k.RecomputeTotalValue(ctx, vault)
+		return math.Int{}, fmt.Errorf("failed to read total value for vault %s: %w", vault.GetAddress(), ErrNoMaterializedTotalValue)
 	}
 	return total, nil
 }
@@ -210,8 +218,11 @@ func (k Keeper) storedTotalValue(ctx sdk.Context, vault types.VaultAccount) (mat
 	}
 }
 
-// RecomputeTotalValue derives a vault's total value from state, stores it, and returns it. This
-// is the repair path, used by genesis import and whenever the stored total is missing or wrong.
+// RecomputeTotalValue derives a vault's total value from state, stores it, and returns it.
+//
+// This is a seeding path, not a repair path available to consensus code: the walk is unbounded in
+// the number of denoms the vault prices. Callers are limited to genesis, the migration and vault
+// creation. See spec/02_state.md.
 func (k Keeper) RecomputeTotalValue(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	total, err := k.WalkTotalValue(ctx, vault)
 	if err != nil {
@@ -259,7 +270,9 @@ func (k Keeper) WalkTotalValue(ctx sdk.Context, vault types.VaultAccount) (math.
 	return total, nil
 }
 
-// InitTotalValue seeds a new vault's materialized total by deriving it rather than assuming zero
+// InitTotalValue seeds a new vault's materialized total by deriving it rather than assuming zero,
+// since its principal address may already hold a balance sent there before the vault existed. The
+// walk is bounded here: a vault being created prices no denoms yet.
 func (k Keeper) InitTotalValue(ctx sdk.Context, vault *types.VaultAccount) error {
 	if _, err := k.RecomputeTotalValue(ctx, *vault); err != nil {
 		return fmt.Errorf("failed to initialize materialized total value for vault %s: %w", vault.GetAddress(), err)
@@ -320,11 +333,12 @@ func (k Keeper) denomValue(ctx sdk.Context, vault types.VaultAccount, denom stri
 	return value, nil
 }
 
-// adjustTotalValue folds a signed change into a vault's materialized total. A delta that would
-// drive the total negative means some path misreported, so the total is logged and rebuilt from
-// state rather than carried into share pricing or failed inside a block hook. Callers must report
-// after the balance has moved, so a missing entry is derived instead of adjusted: deriving already
-// includes the move.
+// adjustTotalValue folds a signed change into a vault's materialized total, and is how every path
+// that moves a priced balance or changes a price keeps that total current. Callers must report
+// after the balance has moved.
+//
+// A missing entry or a total that would go negative is refused rather than repaired, since
+// repairing means walking the NAV table on a metered path. See spec/02_state.md.
 func (k Keeper) adjustTotalValue(ctx sdk.Context, vault types.VaultAccount, delta math.Int) error {
 	if delta.IsNil() || delta.IsZero() {
 		return nil
@@ -335,8 +349,7 @@ func (k Keeper) adjustTotalValue(ctx sdk.Context, vault types.VaultAccount, delt
 		return err
 	}
 	if !found {
-		_, err = k.RecomputeTotalValue(ctx, vault)
-		return err
+		return fmt.Errorf("failed to apply value delta %s for vault %s: %w", delta, vault.GetAddress(), ErrNoMaterializedTotalValue)
 	}
 
 	updated, err := current.SafeAdd(delta)
@@ -345,13 +358,12 @@ func (k Keeper) adjustTotalValue(ctx sdk.Context, vault types.VaultAccount, delt
 	}
 
 	if updated.IsNegative() {
-		k.getLogger(ctx).Error("materialized total value went negative; rebuilding from state",
+		k.getLogger(ctx).Error("materialized total value would go negative",
 			"vault", vault.GetAddress().String(),
 			"stored", current.String(),
 			"delta", delta.String(),
 		)
-		_, err = k.RecomputeTotalValue(ctx, vault)
-		return err
+		return fmt.Errorf("failed to apply value delta %s to total %s for vault %s: %w", delta, current, vault.GetAddress(), ErrNegativeTotalValue)
 	}
 
 	if err := k.TotalValues.Set(ctx, vault.GetAddress(), updated); err != nil {

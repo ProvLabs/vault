@@ -2428,6 +2428,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OversizedTVVDegradesToErr
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
 
 	s.fundPrincipalForBrokenValuation(vault, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 1)))
+	s.materializeTotalValue(vault.GetAddress(), maxValidNAVPrice())
 
 	now := s.ctx.BlockTime()
 	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
@@ -3094,8 +3095,8 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 
 	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault in FeeTimeoutQueue")
 
-	// An oversized held-asset NAV plus a nonzero balance overflows the 256-bit SafeMul during
-	// valuation, simulating a transient PerformVaultFeeTransfer failure.
+	// Funding the principal out of band leaves the vault unvaluable, simulating a transient
+	// PerformVaultFeeTransfer failure.
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
 	s.fundPrincipalForBrokenValuation(vault, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2)))
 
@@ -3188,8 +3189,8 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 
 	s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault")
 
-	// An oversized held-asset NAV plus a nonzero balance overflows the 256-bit SafeMul during
-	// valuation, simulating a transient failure without making the VaultAccount itself invalid.
+	// Funding the principal out of band leaves the vault unvaluable, simulating a transient
+	// failure without making the VaultAccount itself invalid.
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
 	s.fundPrincipalForBrokenValuation(vault, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2)))
 

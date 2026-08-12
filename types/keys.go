@@ -72,6 +72,11 @@ var (
 	// TotalValuesName is a human-readable name for the materialized total value collection.
 	TotalValuesName = "vault_total_values"
 
+	// NAVCountsKeyPrefix is the prefix for the number of NAV entries a vault prices, keyed by vault address.
+	NAVCountsKeyPrefix = collections.NewPrefix(13)
+	// NAVCountsName is a human-readable name for the NAV entry count collection.
+	NAVCountsName = "vault_nav_counts"
+
 	// VaultPayoutVerificationCursorPrefix is the prefix for the address the payout verification sweep
 	// resumes after. Progress tracking, not vault state, so it is not exported to genesis.
 	VaultPayoutVerificationCursorPrefix = collections.NewPrefix(9)

@@ -29,6 +29,12 @@ const MaxNAVComponentBits = 128
 // realistic book of priced positions.
 const MaxRepriceBatchSize = 1_000
 
+// MaxVaultNAVEntries bounds how many denoms a single vault may price. No metered path walks the
+// table, so the cap is not a gas bound: it sizes the un-metered walks that remain — genesis
+// import, the v2→v3 migration and the total-value invariant. A full table exceeds
+// MaxRepriceBatchSize, so restating one spans two batches. See spec/02_state.md.
+const MaxVaultNAVEntries = 2_000
+
 // ValidateNAVComponentMagnitudes rejects a NAV price amount or volume that would overflow valuation.
 // Genesis import skips such an entry rather than refusing to start, so this is checked separately.
 func ValidateNAVComponentMagnitudes(price sdk.Coin, volume sdkmath.Int) error {

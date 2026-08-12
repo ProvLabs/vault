@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"fmt"
+
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -722,4 +724,95 @@ func (s *TestSuite) TestVaultModule_RunMigrationsSeedsTotalValues() {
 		_, err = s.k.TotalValues.Get(s.ctx, v.GetAddress())
 		s.Require().NoError(err, "the v2->v3 migration should have seeded vault %s", v.GetAddress())
 	})
+}
+
+func (s *TestSuite) TestMigrate2to3_DerivesNAVEntryCounts() {
+	underlying := "navcountunder"
+
+	tests := []struct {
+		name     string
+		share    string
+		denoms   []string
+		expCount uint64
+	}{
+		{
+			name:     "vault pricing no denoms records nothing",
+			share:    "navcountnone",
+			denoms:   nil,
+			expCount: 0,
+		},
+		{
+			name:     "vault pricing one denom records one",
+			share:    "navcountone",
+			denoms:   []string{"navcountasseta"},
+			expCount: 1,
+		},
+		{
+			name:     "vault pricing several denoms records each of them",
+			share:    "navcountmany",
+			denoms:   []string{"navcountassetb", "navcountassetc", "navcountassetd"},
+			expCount: 3,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := s.setupBaseVault(underlying, tc.share)
+
+			for _, denom := range tc.denoms {
+				s.requireSimpleMarker(denom)
+				nav := types.NewVaultNAV(denom, sdk.NewInt64Coin(underlying, 1), sdkmath.NewInt(1), "migrationtest")
+				s.Require().NoError(s.k.NAVs.Set(s.ctx, collections.Join(vault.GetAddress(), denom), nav),
+					"failed to seed a pre-migration NAV entry for %s", denom)
+			}
+			s.Require().NoError(s.k.NAVCounts.Remove(s.ctx, vault.GetAddress()),
+				"failed to clear the NAV entry count so the vault looks pre-migration")
+
+			migrator := keeper.NewMigrator(s.simApp.VaultKeeper)
+			s.Require().NoError(migrator.Migrate2to3(s.ctx), "2->3 migration should succeed")
+
+			count, err := s.k.NAVEntryCount(s.ctx, vault.GetAddress())
+			s.Require().NoError(err, "failed to read the derived NAV entry count for vault %s", vault.Address)
+			s.Require().Equal(tc.expCount, count,
+				"the migration should derive %d priced denoms for vault %s", tc.expCount, vault.Address)
+
+			s.Require().NoError(migrator.Migrate2to3(s.ctx), "the 2->3 migration should be idempotent across retries")
+			count, err = s.k.NAVEntryCount(s.ctx, vault.GetAddress())
+			s.Require().NoError(err, "failed to re-read the NAV entry count for vault %s", vault.Address)
+			s.Require().Equal(tc.expCount, count,
+				"a repeated migration must not change the NAV entry count for vault %s", vault.Address)
+		})
+	}
+}
+
+func (s *TestSuite) TestMigrate2to3_GrandfathersATableOverTheCap() {
+	underlying := "grandunder"
+	share := "grandshares"
+	vault := s.setupBaseVault(underlying, share)
+
+	existingDenom := "grandheld"
+	s.requireSimpleMarker(existingDenom)
+	existing := types.NewVaultNAV(existingDenom, sdk.NewInt64Coin(underlying, 1), sdkmath.NewInt(1), "grandtest")
+	s.Require().NoError(s.k.NAVs.Set(s.ctx, collections.Join(vault.GetAddress(), existingDenom), existing),
+		"failed to seed an existing NAV entry on the over-cap vault")
+
+	overCap := uint64(types.MaxVaultNAVEntries + 1)
+	s.Require().NoError(s.k.NAVCounts.Set(s.ctx, vault.GetAddress(), overCap),
+		"failed to seed a recorded count above the cap")
+
+	newDenom := "grandasset"
+	s.requireSimpleMarker(newDenom)
+	nav := types.NewVaultNAV(newDenom, sdk.NewInt64Coin(underlying, 1), sdkmath.NewInt(1), "grandtest")
+	err := s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String())
+	s.Require().ErrorContains(err, fmt.Sprintf("max %d", types.MaxVaultNAVEntries),
+		"a vault over the cap must not be able to price another denom")
+
+	s.Require().NoError(s.k.RemoveVaultNAV(s.ctx, vault, existingDenom, s.adminAddr.String()),
+		"an over-cap vault must still be able to prune entries")
+
+	count, err := s.k.NAVEntryCount(s.ctx, vault.GetAddress())
+	s.Require().NoError(err, "failed to read the NAV entry count for vault %s", vault.Address)
+	s.Require().Equal(overCap-1, count,
+		"pruning an entry must walk an over-cap vault back toward the cap")
 }

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/big"
 	"strings"
 	"time"
@@ -803,4 +804,121 @@ func (s *TestSuite) TestKeeper_SetNAVAuthority_NoOpWhenUnchanged() {
 	after, err := s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err, "GetVault after no-op SetNAVAuthority should succeed")
 	s.Assert().Equal(before.NavAuthority, after.NavAuthority, "no-op should leave NavAuthority untouched")
+}
+
+func (s *TestSuite) TestKeeper_SetVaultNAV_EnforcesEntryCap() {
+	underlying := "capunder"
+	share := "capshares"
+
+	tests := []struct {
+		name          string
+		recordedCount uint64
+		denom         string
+		prePrice      bool
+		expErr        string
+		expCount      uint64
+	}{
+		{
+			name:          "well under the cap, new denom is priced",
+			recordedCount: 0,
+			denom:         "capasseta",
+			expCount:      1,
+		},
+		{
+			name:          "one slot left, new denom is priced",
+			recordedCount: types.MaxVaultNAVEntries - 1,
+			denom:         "capassetb",
+			expCount:      types.MaxVaultNAVEntries,
+		},
+		{
+			name:          "at the cap, a new denom is rejected",
+			recordedCount: types.MaxVaultNAVEntries,
+			denom:         "capassetc",
+			expErr:        fmt.Sprintf("already prices %d denoms (max %d)", types.MaxVaultNAVEntries, types.MaxVaultNAVEntries),
+			expCount:      types.MaxVaultNAVEntries,
+		},
+		{
+			name:          "over the cap, a new denom is rejected",
+			recordedCount: types.MaxVaultNAVEntries + 5,
+			denom:         "capassetd",
+			expErr:        fmt.Sprintf("already prices %d denoms (max %d)", types.MaxVaultNAVEntries+5, types.MaxVaultNAVEntries),
+			expCount:      types.MaxVaultNAVEntries + 5,
+		},
+		{
+			name:          "at the cap, repricing an already-priced denom is allowed",
+			recordedCount: types.MaxVaultNAVEntries,
+			denom:         "capassete",
+			prePrice:      true,
+			expCount:      types.MaxVaultNAVEntries,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := s.setupBaseVault(underlying, share)
+			s.requireSimpleMarker(tc.denom)
+
+			if tc.prePrice {
+				s.setVaultNAV(vault, tc.denom, sdk.NewInt64Coin(underlying, 1), 1)
+			}
+			s.Require().NoError(s.k.NAVCounts.Set(s.ctx, vault.GetAddress(), tc.recordedCount),
+				"failed to seed a recorded NAV entry count of %d", tc.recordedCount)
+
+			nav := types.NewVaultNAV(tc.denom, sdk.NewInt64Coin(underlying, 2), sdkmath.NewInt(1), "captest")
+			err := s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String())
+
+			if tc.expErr != "" {
+				s.Require().ErrorContains(err, tc.expErr,
+					"SetVaultNAV should reject %q once the vault records %d priced denoms", tc.denom, tc.recordedCount)
+				_, getErr := s.k.GetVaultNAV(s.ctx, vault.GetAddress(), tc.denom)
+				s.Require().ErrorIs(getErr, collections.ErrNotFound,
+					"a rejected NAV must not be written for denom %q", tc.denom)
+			} else {
+				s.Require().NoError(err, "SetVaultNAV should price %q when the vault records %d priced denoms", tc.denom, tc.recordedCount)
+			}
+
+			count, err := s.k.NAVEntryCount(s.ctx, vault.GetAddress())
+			s.Require().NoError(err, "failed to read the NAV entry count for vault %s", vault.Address)
+			s.Require().Equal(tc.expCount, count,
+				"NAV entry count mismatch for vault %s after setting %q", vault.Address, tc.denom)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_NAVEntryCount_TracksTheTable() {
+	underlying := "trackunder"
+	share := "trackshares"
+	denoms := []string{"trackasseta", "trackassetb", "trackassetc"}
+
+	vault := s.setupBaseVault(underlying, share)
+	for _, denom := range denoms {
+		s.requireSimpleMarker(denom)
+	}
+
+	assertCount := func(expected uint64, stage string) {
+		count, err := s.k.NAVEntryCount(s.ctx, vault.GetAddress())
+		s.Require().NoError(err, "failed to read the NAV entry count %s", stage)
+		s.Require().Equal(expected, count, "NAV entry count mismatch %s", stage)
+	}
+
+	assertCount(0, "before any denom is priced")
+
+	for i, denom := range denoms {
+		s.setVaultNAV(vault, denom, sdk.NewInt64Coin(underlying, 1), 1)
+		assertCount(uint64(i+1), "after pricing "+denom)
+	}
+
+	s.setVaultNAV(vault, denoms[0], sdk.NewInt64Coin(underlying, 7), 1)
+	assertCount(uint64(len(denoms)), "after repricing an already-priced denom")
+
+	s.Require().NoError(s.k.RemoveVaultNAV(s.ctx, vault, denoms[0], s.adminAddr.String()),
+		"failed to remove the NAV for %s", denoms[0])
+	assertCount(uint64(len(denoms))-1, "after removing one denom")
+
+	s.Require().NoError(s.k.NAVCounts.Set(s.ctx, vault.GetAddress(), 0),
+		"failed to force the recorded count to zero")
+	s.Require().NoError(s.k.RemoveVaultNAV(s.ctx, vault, denoms[1], s.adminAddr.String()),
+		"a NAV removal must still succeed when the recorded count already reads zero")
+	assertCount(0, "after removing a denom while the recorded count read zero")
 }

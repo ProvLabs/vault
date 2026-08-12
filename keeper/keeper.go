@@ -47,6 +47,9 @@ type Keeper struct {
 	NAVs collections.Map[collections.Pair[sdk.AccAddress, string], types.VaultNAV]
 	// TotalValues materializes each vault's total value in its underlying asset.
 	TotalValues collections.Map[sdk.AccAddress, math.Int]
+	// NAVCounts tracks how many denoms each vault prices, so MaxVaultNAVEntries can be enforced
+	// without walking the table on every write.
+	NAVCounts collections.Map[sdk.AccAddress, uint64]
 	// PayoutVerificationSet holds the vaults awaiting a payout verification sweep, each entry doubling
 	// as that vault's retry token.
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
@@ -94,6 +97,7 @@ func NewKeeper(
 		Vaults:                   collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		NAVs:                     collections.NewMap(builder, types.NAVsKeyPrefix, types.NAVsName, collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.VaultNAV](cdc)),
 		TotalValues:              collections.NewMap(builder, types.TotalValuesKeyPrefix, types.TotalValuesName, sdk.AccAddressKey, sdk.IntValue),
+		NAVCounts:                collections.NewMap(builder, types.NAVCountsKeyPrefix, types.NAVCountsName, sdk.AccAddressKey, collections.Uint64Value),
 		PayoutVerificationSet:    collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutVerificationCursor: collections.NewItem(builder, types.VaultPayoutVerificationCursorPrefix, types.VaultPayoutVerificationCursorName, collcodec.KeyToValueCodec(sdk.AccAddressKey)),
 		PayoutTimeoutQueue:       queue.NewPayoutTimeoutQueue(builder),

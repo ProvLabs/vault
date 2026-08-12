@@ -173,6 +173,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		}
 	}
 
+	if err := k.rebuildNAVCounts(ctx); err != nil {
+		panic(fmt.Errorf("failed to seed vault nav entry counts: %w", err))
+	}
+
 	if err := k.HydrateTotalValues(ctx); err != nil {
 		panic(fmt.Errorf("failed to seed vault total values: %w", err))
 	}

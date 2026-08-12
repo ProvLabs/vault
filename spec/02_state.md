@@ -23,6 +23,7 @@ Vaults are strictly **single-denom**: the **underlying asset** is the only accep
   - [Pending Swap-Out by ID Index (prefix 6)](#pending-swap-out-by-id-index-prefix-6)
   - [AUM Fee Address (prefix 8)](#aum-fee-address-prefix-8)
   - [Internal NAV Table (prefix 11)](#internal-nav-table-prefix-11)
+  - [NAV Entry Counts (prefix 13)](#nav-entry-counts-prefix-13)
 - [Deterministic Vault Addressing](#deterministic-vault-addressing)
 - [Genesis Notes](#genesis-notes)
   - [State Migration (v1 → v2)](#state-migration-v1--v2)
@@ -147,6 +148,32 @@ An entry may exist for a denom the vault does not hold: TVV values held balances
 
 `updated_block_height` and `updated_time` are stamped by the module on each `UpdateVaultNAV` and on every entry a `RepriceVault` batch writes. They are **informational only**. No valuation path compares them against block time, so an entry prices shares until the NAV authority restates it. Both fields survive a genesis export/import unchanged, so entry ages remain meaningful across a chain restart. See [NAV Freshness](01_concepts.md#nav-freshness) for the responsibility model.
 
+A vault may price at most `MaxVaultNAVEntries` (2000) denoms. The cap is enforced when an entry is created; repricing or removing an already-priced denom is always allowed, so a vault recorded above the cap by genesis or the migration can still be pruned back under it.
+
+The cap is **not** a gas bound. No metered path walks the NAV table: writing a price is a fixed number of store operations against the entry and its [count](#nav-entry-counts-prefix-13), reading TVV is a single read of the [materialized total](#materialized-total-vault-value-prefix-12), and unpausing reads that total rather than revaluing the table. What the cap bounds is the work nothing charges for:
+
+| Where the table is walked whole | What the cap limits |
+| --- | --- |
+| Genesis import and the v2→v3 migration | Deriving every vault's total value and NAV entry count walks each table once while the chain is starting or upgrading, under no gas meter |
+| The `total-value` invariant | Re-deriving a vault's total walks its table, and `x/crisis` runs invariants inside `EndBlock` on an invariant-enabled chain |
+| Genesis export | One exported entry per priced denom per vault |
+
+Each entry costs one NAV read plus one balance lookup in those walks, so a maxed table is 2000 of each — proportional and bounded, which is all the cap has to guarantee once no transaction pays for it.
+
+`MaxRepriceBatchSize` (1000) is a separate per-message bound on `RepriceVault`, so a maxed table takes two batches to restate. That is the flow the batch cap was written for: leaving `resume` unset carries an oversized restatement across several messages so the vault reopens exactly once.
+
+The cap is a hardcoded constant rather than a module parameter; raising it should become a governance decision (see [#76](https://github.com/ProvLabs/vault-internal/issues/76)).
+
+### NAV Entry Counts (prefix 13)
+
+The number of denoms each vault prices, so `MaxVaultNAVEntries` can be checked without walking the NAV table on every write. This is **derived state**: `SetVaultNAV` increments it when it creates an entry and `RemoveVaultNAV` decrements it, and the value is always reproducible by counting the vault's Internal NAV Table entries.
+
+- **Prefix:** `NAVCountsKeyPrefix` (13)
+- **Key:** `sdk.AccAddress` (vault)
+- **Value:** `uint64`
+
+A missing entry reads as zero. Genesis import and the v2→v3 migration derive every count from the NAV table, recording a pre-existing table above the cap as-is and logging it, so neither an import nor an upgrade fails over state that predates the cap.
+
 ### Materialized Total Vault Value (prefix 12)
 
 Each vault's total value, denominated in its underlying asset. This is **derived state**: authoritative for reads, but always reproducible from the vault's principal balances and its Internal NAV table. It exists so reading TVV costs one store read instead of one per priced denom.
@@ -215,7 +242,7 @@ The module's consensus version 1→2 migration flattens any pre-existing mixed-d
 
 ### State Migration (v2 → v3)
 
-The module's consensus version 2→3 migration materializes every vault's total value (prefix 12), which became module state alongside the materialized-TVV read path. It derives each total from current balances and the NAV table and stores it. No funds move and no vault configuration changes.
+The module's consensus version 2→3 migration materializes every vault's total value (prefix 12), which became module state alongside the materialized-TVV read path. It derives each total from current balances and the NAV table and stores it. It also derives every vault's NAV entry count (prefix 13), the value `MaxVaultNAVEntries` is enforced against. No funds move and no vault configuration changes.
 
 Seeding is required rather than optional, and is the only chance a pre-v3 vault gets: no consensus path derives a missing entry, so an unseeded vault cannot be read, cannot be moved against, and reports as broken to the `total-value` invariant — and because `x/crisis` panics on a broken invariant, an invariant-enabled chain would halt. The migration is idempotent, since it recomputes from the same source on every run.
 

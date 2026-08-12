@@ -95,6 +95,24 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 		return err
 	}
 
+	navKey := collections.Join(vault.GetAddress(), nav.Denom)
+	priced, err := k.NAVs.Has(ctx, navKey)
+	if err != nil {
+		return fmt.Errorf("failed to check for an existing NAV entry for denom %q on vault %s: %w", nav.Denom, vault.Address, err)
+	}
+
+	var entryCount uint64
+	if !priced {
+		entryCount, err = k.NAVEntryCount(ctx, vault.GetAddress())
+		if err != nil {
+			return err
+		}
+		if entryCount >= types.MaxVaultNAVEntries {
+			return fmt.Errorf("vault %s already prices %d denoms (max %d): remove an entry before pricing %q",
+				vault.Address, entryCount, types.MaxVaultNAVEntries, nav.Denom)
+		}
+	}
+
 	heldBalance := k.BankKeeper.GetBalance(ctx, vault.PrincipalMarkerAddress(), nav.Denom).Amount
 	valueAtOldPrice, err := k.denomValue(ctx, *vault, nav.Denom, heldBalance)
 	if err != nil {
@@ -103,8 +121,13 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 
 	nav.UpdatedBlockHeight = ctx.BlockHeight()
 	nav.UpdatedTime = ctx.BlockTime().UTC()
-	if err = k.NAVs.Set(ctx, collections.Join(vault.GetAddress(), nav.Denom), nav); err != nil {
+	if err = k.NAVs.Set(ctx, navKey, nav); err != nil {
 		return fmt.Errorf("failed to store vault NAV: %w", err)
+	}
+	if !priced {
+		if err = k.NAVCounts.Set(ctx, vault.GetAddress(), entryCount+1); err != nil {
+			return fmt.Errorf("failed to record NAV entry count for vault %s: %w", vault.Address, err)
+		}
 	}
 
 	valueAtNewPrice, err := k.denomValue(ctx, *vault, nav.Denom, heldBalance)
@@ -148,6 +171,92 @@ func (k *Keeper) requirePausedHeldReprice(ctx sdk.Context, vault *types.VaultAcc
 // denom. It returns collections.ErrNotFound when no entry exists.
 func (k *Keeper) GetVaultNAV(ctx sdk.Context, vaultAddr sdk.AccAddress, denom string) (types.VaultNAV, error) {
 	return k.NAVs.Get(ctx, collections.Join(vaultAddr, denom))
+}
+
+// NAVEntryCount returns how many denoms the vault prices. A vault with no recorded count prices
+// nothing, so a missing entry reads as zero rather than an error.
+func (k *Keeper) NAVEntryCount(ctx sdk.Context, vaultAddr sdk.AccAddress) (uint64, error) {
+	count, err := k.NAVCounts.Get(ctx, vaultAddr)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return 0, nil
+		}
+		return 0, fmt.Errorf("failed to read NAV entry count for vault %s: %w", vaultAddr, err)
+	}
+	return count, nil
+}
+
+// releaseNAVEntry drops the vault's NAV entry count by one after an entry is deleted. A count
+// already at zero is left alone, since refusing to remove a NAV over a miscount would strand
+// the entry. The last entry clears the record instead of storing zero, so the store holds only
+// what rebuildNAVCounts would derive.
+func (k *Keeper) releaseNAVEntry(ctx sdk.Context, vaultAddr sdk.AccAddress) error {
+	count, err := k.NAVEntryCount(ctx, vaultAddr)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		k.getLogger(ctx).Error("NAV entry removed while the recorded count was already zero",
+			"vault", vaultAddr.String(),
+		)
+		return nil
+	}
+	if count == 1 {
+		if err := k.NAVCounts.Remove(ctx, vaultAddr); err != nil {
+			return fmt.Errorf("failed to clear NAV entry count for vault %s: %w", vaultAddr, err)
+		}
+		return nil
+	}
+	if err := k.NAVCounts.Set(ctx, vaultAddr, count-1); err != nil {
+		return fmt.Errorf("failed to record NAV entry count for vault %s: %w", vaultAddr, err)
+	}
+	return nil
+}
+
+// rebuildNAVCounts derives every vault's NAV entry count from the NAV table itself. It backs both
+// genesis import and the migration that introduced the count, neither of which can trust a stored
+// value. A table already over the cap is recorded as-is and logged, so an import or upgrade never
+// fails over pre-existing state; that vault prices no new denoms until it falls back under the cap.
+func (k Keeper) rebuildNAVCounts(ctx sdk.Context) error {
+	if err := k.NAVCounts.Clear(ctx, nil); err != nil {
+		return fmt.Errorf("failed to clear vault NAV entry counts: %w", err)
+	}
+
+	var walkedVault sdk.AccAddress
+	var count uint64
+	recordWalkedVault := func() error {
+		if count == 0 {
+			return nil
+		}
+		if count > types.MaxVaultNAVEntries {
+			k.getLogger(ctx).Error("vault prices more denoms than the cap allows",
+				"vault", walkedVault.String(),
+				"nav_entries", count,
+				"max", types.MaxVaultNAVEntries,
+			)
+		}
+		if err := k.NAVCounts.Set(ctx, walkedVault, count); err != nil {
+			return fmt.Errorf("failed to record NAV entry count for vault %s: %w", walkedVault, err)
+		}
+		return nil
+	}
+
+	err := k.NAVs.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], _ types.VaultNAV) (bool, error) {
+		vaultAddr := key.K1()
+		if !vaultAddr.Equals(walkedVault) {
+			if err := recordWalkedVault(); err != nil {
+				return true, err
+			}
+			walkedVault, count = vaultAddr, 0
+		}
+		count++
+		return false, nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to rebuild vault NAV entry counts: %w", err)
+	}
+
+	return recordWalkedVault()
 }
 
 // checkSettlementNAVGuardrail requires an asset settlement to trade exactly at the
@@ -221,6 +330,9 @@ func (k *Keeper) RemoveVaultNAV(ctx sdk.Context, vault *types.VaultAccount, deno
 
 	if err := k.NAVs.Remove(ctx, collections.Join(vault.GetAddress(), denom)); err != nil {
 		return fmt.Errorf("failed to remove internal NAV for denom %q on vault %s: %w", denom, vault.Address, err)
+	}
+	if err := k.releaseNAVEntry(ctx, vault.GetAddress()); err != nil {
+		return err
 	}
 
 	if err := k.adjustTotalValue(ctx, *vault, valueLosingItsPrice.Neg()); err != nil {

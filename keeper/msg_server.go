@@ -587,7 +587,8 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 	return &types.MsgExpeditePendingSwapOutResponse{}, nil
 }
 
-// PauseVault pauses a vault, disabling all user-facing operations.
+// PauseVault pauses a vault, disabling all user-facing operations. The admin, the asset
+// manager, or the NAV authority may pause; only the first two may unpause.
 //
 // By default the pause is strict: it reconciles outstanding interest and fees
 // and snapshots the net TVV first, and any failure (e.g. insufficient reserves
@@ -609,8 +610,8 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if err != nil {
 		return nil, err
 	}
-	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
-		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	if err = vault.ValidatePauseAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate pause authority: %w", err)
 	}
 
 	if vault.Paused {
@@ -634,6 +635,8 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)
 	vault.Paused = true
 	vault.PausedReason = msg.Reason
+	vault.PausedBy = msg.Authority
+	vault.PausedForced = false
 
 	if err := k.haltVaultAccrual(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to halt vault accrual before pausing: %w", err)
@@ -671,31 +674,9 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("vault %s is not paused", msg.VaultAddress)
 	}
 
-	if err = k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate); err != nil {
-		return nil, fmt.Errorf("failed to update interest rates: %w", err)
+	if err = k.resumeVault(ctx, vault, msg.Authority); err != nil {
+		return nil, err
 	}
-
-	vault.PausedBalance = sdk.Coin{}
-	vault.Paused = false
-	vault.PausedReason = ""
-	if err = k.SetVaultAccount(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to set vault account: %w", err)
-	}
-
-	tvv, err := k.RecomputeTotalValue(ctx, *vault)
-	if err != nil {
-		return nil, fmt.Errorf("failed to recompute total vault value on unpause: %w", err)
-	}
-
-	if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
-	}
-
-	if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to enqueue vault fee timeout: %w", err)
-	}
-
-	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))
 
 	return &types.MsgUnpauseVaultResponse{}, nil
 }
@@ -966,6 +947,81 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	}
 
 	return &types.MsgUpdateVaultNAVResponse{}, nil
+}
+
+// RepriceVault applies a batch of internal NAV updates and, when Resume is set, unpauses
+// the vault in the same state transition. It is the batched form of UpdateVaultNAV and
+// enforces the identical per-entry rules, so repricing a denom the vault holds still
+// requires the pause window.
+//
+// Leaving Resume unset is what makes a restatement too large for one transaction possible:
+// successive batches land while the vault stays frozen, and only the final message resumes
+// it. With Resume set, the batch and the unpause commit together, so there is never a block
+// in which the vault is live, a new price is public, and the share price step has not landed.
+//
+// Resuming is gated on a strict pause this same NAV authority took; operator, forced, and
+// automatic pauses still require a management unpause. The gate is checked before any price
+// is written so a batch that cannot resume changes nothing.
+//
+// The reconcile settles accrued interest against the total vault value that held before the
+// batch, and is a no-op on a paused vault whose accrual is already halted.
+func (k msgServer) RepriceVault(goCtx context.Context, msg *types.MsgRepriceVaultRequest) (*types.MsgRepriceVaultResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault %s: %w", msg.VaultAddress, err)
+	}
+	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
+	}
+	if msg.Resume {
+		if err := requireNAVAuthorityResumable(vault, msg.Signer); err != nil {
+			return nil, err
+		}
+	}
+
+	navs := make([]types.VaultNAV, len(msg.Navs))
+	for i, update := range msg.Navs {
+		navs[i] = types.NewVaultNAV(update.Denom, update.Price, update.Volume, update.Source)
+		if err := k.requirePausedHeldReprice(ctx, vault, navs[i]); err != nil {
+			return nil, fmt.Errorf("NAV update at index %d: %w", i, err)
+		}
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before NAV batch: %w", err)
+	}
+
+	for i, nav := range navs {
+		if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
+			return nil, fmt.Errorf("failed to update vault NAV for denom %q at index %d: %w", nav.Denom, i, err)
+		}
+	}
+
+	if msg.Resume {
+		if err := k.resumeVault(ctx, vault, msg.Signer); err != nil {
+			return nil, err
+		}
+	}
+
+	return &types.MsgRepriceVaultResponse{}, nil
+}
+
+// requireNAVAuthorityResumable requires the vault's current pause to be a strict one the
+// signing NAV authority took itself, which is the only pause it may lift on its own.
+func requireNAVAuthorityResumable(vault *types.VaultAccount, signer string) error {
+	if !vault.Paused {
+		return fmt.Errorf("vault %s is not paused: pause it before repricing and resuming", vault.Address)
+	}
+	if vault.PausedForced {
+		return fmt.Errorf("vault %s is under a forced or automatic pause: the vault admin or asset manager must review and unpause it", vault.Address)
+	}
+	if vault.PausedBy != signer {
+		return fmt.Errorf("vault %s was paused by %q rather than the NAV authority: the vault admin or asset manager must unpause it", vault.Address, vault.PausedBy)
+	}
+	return nil
 }
 
 // RemoveVaultNAV deletes a vault's internal NAV entry for a denom the vault does not

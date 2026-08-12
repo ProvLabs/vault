@@ -1326,10 +1326,30 @@ func (s *TestSuite) setVaultNAV(vault *types.VaultAccount, denom string, price s
 // use this to stage it directly, leaving the handler's reconcile, balance snapshot, and
 // queue teardown to the tests that actually exercise pausing.
 func (s *TestSuite) pauseVault(vaultAddr sdk.AccAddress) *types.VaultAccount {
+	return s.pauseVaultBy(vaultAddr, "", false)
+}
+
+// pauseVaultBy stages a paused vault carrying the attribution the PauseVault handler
+// records: pausedBy is the initiating address, empty for an automatic pause, and forced
+// marks a pause that waived the strict reconcile and valuation gate. RepriceVault
+// gates its self-resume on both, so tests exercising that gate stage the pause here.
+func (s *TestSuite) pauseVaultBy(vaultAddr sdk.AccAddress, pausedBy string, forced bool) *types.VaultAccount {
 	vault, err := s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err, "should get vault %s to pause it", vaultAddr)
 	vault.Paused = true
+	vault.PausedBy = pausedBy
+	vault.PausedForced = forced
 	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should persist paused vault %s", vaultAddr)
+	return vault
+}
+
+// setNAVAuthority points the vault's NAV authority at a dedicated address, separating
+// pricing from vault management the way a vault running an external pricing oracle does.
+func (s *TestSuite) setNAVAuthority(vaultAddr sdk.AccAddress, authority string) *types.VaultAccount {
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should get vault %s to set its NAV authority", vaultAddr)
+	vault.NavAuthority = authority
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should persist NAV authority %q on vault %s", authority, vaultAddr)
 	return vault
 }
 

@@ -1008,6 +1008,8 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 				s.Require().True(vault.Paused, "vault should be paused after the critical failure")
 				vault.Paused = false
 				vault.PausedReason = ""
+				vault.PausedBy = ""
+				vault.PausedForced = false
 				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should successfully unpause vault")
 
 				retryTime, preserved, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, reqID)

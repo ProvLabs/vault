@@ -26,6 +26,10 @@ const (
 	// MaxAbsInterestRate is the absolute ceiling on any interest rate's magnitude (100.0 == 10,000% APR).
 	// It bounds r only; utils.ExpDec range-reduces the e^(rt) exponent, which elapsed time leaves unbounded.
 	MaxAbsInterestRate = "100.0"
+
+	// NoPauseAuthority is the PausedBy value for a pause no signer initiated, keeping the
+	// field parseable as the address the proto declares it to be. PausedForced gates resuming.
+	NoPauseAuthority = ""
 )
 
 var (
@@ -222,6 +226,15 @@ func (v VaultAccount) Validate() error {
 		if _, err := sdk.AccAddressFromBech32(v.NavAuthority); err != nil {
 			return fmt.Errorf("invalid nav authority address: %w", err)
 		}
+	}
+
+	if v.PausedBy != "" {
+		if _, err := sdk.AccAddressFromBech32(v.PausedBy); err != nil {
+			return fmt.Errorf("invalid paused by address: %w", err)
+		}
+	}
+	if !v.Paused && (v.PausedBy != "" || v.PausedForced) {
+		return fmt.Errorf("unpaused vault cannot carry pause attribution (paused_by=%q paused_forced=%t)", v.PausedBy, v.PausedForced)
 	}
 
 	if v.BridgeAddress != "" {
@@ -437,6 +450,15 @@ func (v VaultAccount) ValidateManagementAuthority(authority string) error {
 		return nil
 	}
 	return fmt.Errorf("unauthorized authority: %s", authority)
+}
+
+// ValidatePauseAuthority checks whether the given address may pause the vault. It widens
+// ValidateManagementAuthority to include the NAV authority; unpausing does not widen.
+func (v VaultAccount) ValidatePauseAuthority(authority string) error {
+	if authority == v.GetNAVAuthority() {
+		return nil
+	}
+	return v.ValidateManagementAuthority(authority)
 }
 
 // ValidateAssetManagerAuthority checks whether the given address is the vault's asset

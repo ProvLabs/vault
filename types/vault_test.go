@@ -509,6 +509,69 @@ func TestVaultAccount_Validate(t *testing.T) {
 			expectedErr: "bridge cannot be enabled without a bridge address",
 		},
 		{
+			name: "paused vault carrying attribution",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+				Paused:              true,
+				PausedBy:            validAdmin,
+				PausedForced:        true,
+			},
+			expectedErr: "",
+		},
+		{
+			name: "paused by an invalid address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+				Paused:              true,
+				PausedBy:            invalidDenom,
+			},
+			expectedErr: "invalid paused by address",
+		},
+		{
+			name: "unpaused vault still naming a pauser",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+				PausedBy:            validAdmin,
+			},
+			expectedErr: "unpaused vault cannot carry pause attribution",
+		},
+		{
+			name: "unpaused vault still marked force-paused",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+				PausedForced:        true,
+			},
+			expectedErr: "unpaused vault cannot carry pause attribution",
+		},
+		{
 			name: "asset manager set with valid address",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
@@ -914,6 +977,75 @@ func TestVaultAccount_ValidateNAVAuthority(t *testing.T) {
 				NavAuthority: tc.navAuthority,
 			}
 			err := vault.ValidateNAVAuthority(tc.signer)
+			if tc.expectedErr != "" {
+				require.Error(t, err, "expected an error for case: %s", tc.name)
+				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected substring for case: %s", tc.name)
+			} else {
+				require.NoError(t, err, "expected no error for case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func TestVaultAccount_ValidatePauseAuthority(t *testing.T) {
+	admin, oracle, other, _ := makeNAVAuthorityFixtures()
+	manager := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name         string
+		navAuthority string
+		assetManager string
+		authority    string
+		expectedErr  string
+	}{
+		{
+			name:         "admin may pause",
+			navAuthority: oracle,
+			assetManager: manager,
+			authority:    admin,
+		},
+		{
+			name:         "asset manager may pause",
+			navAuthority: oracle,
+			assetManager: manager,
+			authority:    manager,
+		},
+		{
+			name:         "nav authority may pause",
+			navAuthority: oracle,
+			assetManager: manager,
+			authority:    oracle,
+		},
+		{
+			name:         "admin may pause as the implicit nav authority",
+			navAuthority: "",
+			assetManager: "",
+			authority:    admin,
+		},
+		{
+			name:         "stranger may not pause",
+			navAuthority: oracle,
+			assetManager: manager,
+			authority:    other,
+			expectedErr:  "unauthorized authority",
+		},
+		{
+			name:         "asset manager may not pause when unset",
+			navAuthority: oracle,
+			assetManager: "",
+			authority:    manager,
+			expectedErr:  "unauthorized authority",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			vault := &types.VaultAccount{
+				Admin:        admin,
+				NavAuthority: tc.navAuthority,
+				AssetManager: tc.assetManager,
+			}
+			err := vault.ValidatePauseAuthority(tc.authority)
 			if tc.expectedErr != "" {
 				require.Error(t, err, "expected an error for case: %s", tc.name)
 				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected substring for case: %s", tc.name)

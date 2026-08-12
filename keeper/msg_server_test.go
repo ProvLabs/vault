@@ -6724,6 +6724,400 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_HeldRepriceRequiresPause() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_RepriceVault() {
+	underlying := "under"
+	share := "vaultshares"
+	vaultAddr := types.GetVaultAddress(share)
+	navAuthority := sdk.AccAddress("navAuthorityAddr____")
+
+	const (
+		seedPrice  = 2
+		seedVolume = 1
+		heldAmount = 1_000
+	)
+
+	tests := []struct {
+		name           string
+		heldDenoms     []string
+		unheldDenoms   []string
+		startPaused    bool
+		resume         bool
+		updates        []types.NAVUpdate
+		expectedPrices map[string]int64
+	}{
+		{
+			name:        "a single held asset is marked up and the vault resumes",
+			heldDenoms:  []string{"rwa"},
+			startPaused: true,
+			resume:      true,
+			updates: []types.NAVUpdate{
+				{Denom: "rwa", Price: sdk.NewInt64Coin(underlying, 4), Volume: sdkmath.NewInt(1), Source: "oracle"},
+			},
+			expectedPrices: map[string]int64{"rwa": 4},
+		},
+		{
+			name:        "a held asset is written down to zero and the vault resumes",
+			heldDenoms:  []string{"rwa"},
+			startPaused: true,
+			resume:      true,
+			updates: []types.NAVUpdate{
+				{Denom: "rwa", Price: sdk.NewInt64Coin(underlying, 0), Volume: sdkmath.NewInt(1), Source: "oracle"},
+			},
+			expectedPrices: map[string]int64{"rwa": 0},
+		},
+		{
+			name:        "a book of held loans is restated in one batch and the vault resumes",
+			heldDenoms:  []string{"loan1", "loan2", "loan3"},
+			startPaused: true,
+			resume:      true,
+			updates: []types.NAVUpdate{
+				{Denom: "loan1", Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(1), Source: "oracle"},
+				{Denom: "loan2", Price: sdk.NewInt64Coin(underlying, 1), Volume: sdkmath.NewInt(1), Source: "oracle"},
+				{Denom: "loan3", Price: sdk.NewInt64Coin(underlying, 9), Volume: sdkmath.NewInt(1), Source: "oracle"},
+			},
+			expectedPrices: map[string]int64{"loan1": 5, "loan2": 1, "loan3": 9},
+		},
+		{
+			name:         "a batch may price a denom the vault does not hold alongside one it does",
+			heldDenoms:   []string{"loan1"},
+			unheldDenoms: []string{"loan2"},
+			startPaused:  true,
+			resume:       true,
+			updates: []types.NAVUpdate{
+				{Denom: "loan1", Price: sdk.NewInt64Coin(underlying, 7), Volume: sdkmath.NewInt(1), Source: "oracle"},
+				{Denom: "loan2", Price: sdk.NewInt64Coin(underlying, 3), Volume: sdkmath.NewInt(1), Source: "oracle"},
+			},
+			expectedPrices: map[string]int64{"loan1": 7, "loan2": 3},
+		},
+		{
+			name:        "a batch without resume leaves the vault paused for a continuation",
+			heldDenoms:  []string{"loan1", "loan2"},
+			startPaused: true,
+			updates: []types.NAVUpdate{
+				{Denom: "loan1", Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(1), Source: "oracle"},
+				{Denom: "loan2", Price: sdk.NewInt64Coin(underlying, 6), Volume: sdkmath.NewInt(1), Source: "oracle"},
+			},
+			expectedPrices: map[string]int64{"loan1": 5, "loan2": 6},
+		},
+		{
+			name:         "a live vault may pre-price denoms it does not hold without pausing",
+			unheldDenoms: []string{"loan1", "loan2"},
+			updates: []types.NAVUpdate{
+				{Denom: "loan1", Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(1), Source: "oracle"},
+				{Denom: "loan2", Price: sdk.NewInt64Coin(underlying, 6), Volume: sdkmath.NewInt(1), Source: "oracle"},
+			},
+			expectedPrices: map[string]int64{"loan1": 5, "loan2": 6},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			vault := s.setupBaseVault(underlying, share)
+			for _, denom := range tc.heldDenoms {
+				s.requireSimpleMarker(denom)
+				s.fundPrincipal(vault, sdk.NewInt64Coin(denom, heldAmount))
+				s.setVaultNAV(vault, denom, sdk.NewInt64Coin(underlying, seedPrice), seedVolume)
+			}
+			for _, denom := range tc.unheldDenoms {
+				s.requireSimpleMarker(denom)
+			}
+			s.setNAVAuthority(vaultAddr, navAuthority.String())
+			if tc.startPaused {
+				s.pauseVaultBy(vaultAddr, navAuthority.String(), false)
+			}
+
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).RepriceVault(s.ctx, &types.MsgRepriceVaultRequest{
+				Signer:       navAuthority.String(),
+				VaultAddress: vaultAddr.String(),
+				Navs:         tc.updates,
+				Resume:       tc.resume,
+			})
+			s.Require().NoError(err, "RepriceVault should accept a %d-entry batch from the NAV authority", len(tc.updates))
+
+			for denom, expectedPrice := range tc.expectedPrices {
+				stored, storeErr := s.k.GetVaultNAV(s.ctx, vaultAddr, denom)
+				s.Require().NoError(storeErr, "the NAV entry for %s should be readable after the batch", denom)
+				s.Assert().Equal(expectedPrice, stored.Price.Amount.Int64(), "stored NAV price for %s after the batch", denom)
+			}
+
+			after, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "should get vault %s after RepriceVault", vaultAddr)
+			if tc.resume {
+				s.Assert().False(after.Paused, "RepriceVault with resume should leave the vault live so users can trade at the restated price")
+				s.Assert().Empty(after.PausedBy, "resuming should clear the pause attribution")
+				s.Assert().False(after.PausedForced, "resuming should clear the forced-pause marker")
+				return
+			}
+
+			s.Assert().Equal(tc.startPaused, after.Paused, "RepriceVault without resume must leave the pause state exactly as it found it")
+			if tc.startPaused {
+				s.Assert().Equal(navAuthority.String(), after.PausedBy, "a continuation batch must preserve the pause attribution so a later batch can still resume")
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_RepriceVault_ContinuationAcrossBatches() {
+	underlying := "under"
+	share := "vaultshares"
+	vaultAddr := types.GetVaultAddress(share)
+	navAuthority := sdk.AccAddress("navAuthorityAddr____")
+
+	const (
+		seedPrice  = 2
+		seedVolume = 1
+		heldAmount = 1_000
+	)
+
+	loans := []string{"loan1", "loan2", "loan3", "loan4"}
+	vault := s.setupBaseVault(underlying, share)
+	for _, denom := range loans {
+		s.requireSimpleMarker(denom)
+		s.fundPrincipal(vault, sdk.NewInt64Coin(denom, heldAmount))
+		s.setVaultNAV(vault, denom, sdk.NewInt64Coin(underlying, seedPrice), seedVolume)
+	}
+	s.setNAVAuthority(vaultAddr, navAuthority.String())
+	s.pauseVaultBy(vaultAddr, navAuthority.String(), false)
+
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+	repriceChunk := func(denoms []string, price int64, resume bool) error {
+		navs := make([]types.NAVUpdate, len(denoms))
+		for i, denom := range denoms {
+			navs[i] = types.NAVUpdate{Denom: denom, Price: sdk.NewInt64Coin(underlying, price), Volume: sdkmath.NewInt(1), Source: "oracle"}
+		}
+		_, err := msgServer.RepriceVault(s.ctx, &types.MsgRepriceVaultRequest{
+			Signer:       navAuthority.String(),
+			VaultAddress: vaultAddr.String(),
+			Navs:         navs,
+			Resume:       resume,
+		})
+		return err
+	}
+
+	s.Require().NoError(repriceChunk(loans[:2], 5, false), "the first continuation chunk should apply while the vault stays frozen")
+
+	midway, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should get vault %s between continuation chunks", vaultAddr)
+	s.Require().True(midway.Paused, "the vault must stay frozen between chunks so no user trades against a half-restated book")
+
+	s.Require().NoError(repriceChunk(loans[2:], 9, true), "the final chunk should apply and resume the vault")
+
+	final, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should get vault %s after the final chunk", vaultAddr)
+	s.Assert().False(final.Paused, "the vault should reopen once, on the chunk that carries resume")
+
+	for i, denom := range loans {
+		expectedPrice := int64(5)
+		if i >= 2 {
+			expectedPrice = 9
+		}
+		stored, storeErr := s.k.GetVaultNAV(s.ctx, vaultAddr, denom)
+		s.Require().NoError(storeErr, "the NAV entry for %s should be readable after the continuation", denom)
+		s.Assert().Equal(expectedPrice, stored.Price.Amount.Int64(), "stored NAV price for %s after the continuation", denom)
+	}
+}
+
+func (s *TestSuite) TestMsgServer_RepriceVault_Failures() {
+	underlying := "under"
+	share := "vaultshares"
+	heldDenom := "rwa"
+	vaultAddr := types.GetVaultAddress(share)
+	navAuthority := sdk.AccAddress("navAuthorityAddr____")
+	rotatedAuthority := sdk.AccAddress("rotatedAuthority____")
+
+	const (
+		seedPrice  = 2
+		seedVolume = 1
+		heldAmount = 1_000
+	)
+
+	tests := []struct {
+		name              string
+		stagePause        func()
+		signer            func() string
+		updates           []types.NAVUpdate
+		resume            bool
+		expectedErrSubstr string
+	}{
+		{
+			name:              "the vault admin cannot reprice once a NAV authority is set",
+			stagePause:        func() { s.pauseVaultBy(vaultAddr, s.adminAddr.String(), false) },
+			signer:            func() string { return s.adminAddr.String() },
+			resume:            true,
+			expectedErrSubstr: "is not the vault NAV authority",
+		},
+		{
+			name:              "a live vault has nothing to resume",
+			stagePause:        func() {},
+			signer:            func() string { return navAuthority.String() },
+			resume:            true,
+			expectedErrSubstr: "is not paused: pause it before repricing and resuming",
+		},
+		{
+			name:              "a live vault cannot reprice a held asset even without resuming",
+			stagePause:        func() {},
+			signer:            func() string { return navAuthority.String() },
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "a forced pause is reserved for management review",
+			stagePause:        func() { s.pauseVaultBy(vaultAddr, navAuthority.String(), true) },
+			signer:            func() string { return navAuthority.String() },
+			resume:            true,
+			expectedErrSubstr: "is under a forced or automatic pause",
+		},
+		{
+			name:              "an automatic pause is reserved for management review",
+			stagePause:        func() { s.pauseVaultBy(vaultAddr, "", true) },
+			signer:            func() string { return navAuthority.String() },
+			resume:            true,
+			expectedErrSubstr: "is under a forced or automatic pause",
+		},
+		{
+			name:              "an operator pause cannot be cleared by the NAV authority",
+			stagePause:        func() { s.pauseVaultBy(vaultAddr, s.adminAddr.String(), false) },
+			signer:            func() string { return navAuthority.String() },
+			resume:            true,
+			expectedErrSubstr: "rather than the NAV authority",
+		},
+		{
+			name: "a NAV authority rotated in after the pause cannot resume it",
+			stagePause: func() {
+				s.pauseVaultBy(vaultAddr, navAuthority.String(), false)
+				s.setNAVAuthority(vaultAddr, rotatedAuthority.String())
+			},
+			signer:            func() string { return rotatedAuthority.String() },
+			resume:            true,
+			expectedErrSubstr: "rather than the NAV authority",
+		},
+		{
+			name:       "a batch entry pricing the share denom is rejected",
+			stagePause: func() { s.pauseVaultBy(vaultAddr, navAuthority.String(), false) },
+			signer:     func() string { return navAuthority.String() },
+			resume:     true,
+			updates: []types.NAVUpdate{
+				{Denom: share, Price: sdk.NewInt64Coin(underlying, 4), Volume: sdkmath.NewInt(1), Source: "oracle"},
+			},
+			expectedErrSubstr: "cannot set NAV for vault share denom",
+		},
+		{
+			name:       "a batch fails whole when a later entry is bad",
+			stagePause: func() { s.pauseVaultBy(vaultAddr, navAuthority.String(), false) },
+			signer:     func() string { return navAuthority.String() },
+			resume:     true,
+			updates: []types.NAVUpdate{
+				{Denom: heldDenom, Price: sdk.NewInt64Coin(underlying, 4), Volume: sdkmath.NewInt(1), Source: "oracle"},
+				{Denom: share, Price: sdk.NewInt64Coin(underlying, 4), Volume: sdkmath.NewInt(1), Source: "oracle"},
+			},
+			expectedErrSubstr: "at index 1",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			s.setupHeldNAVVault(underlying, share, heldDenom, sdk.NewInt64Coin(underlying, seedPrice), seedVolume, heldAmount)
+			s.setNAVAuthority(vaultAddr, navAuthority.String())
+			tc.stagePause()
+
+			updates := tc.updates
+			if updates == nil {
+				updates = []types.NAVUpdate{
+					{Denom: heldDenom, Price: sdk.NewInt64Coin(underlying, 4), Volume: sdkmath.NewInt(1), Source: "oracle"},
+				}
+			}
+
+			wasPaused := func() bool {
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should get vault %s before RepriceVault", vaultAddr)
+				return vault.Paused
+			}()
+
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).RepriceVault(s.ctx, &types.MsgRepriceVaultRequest{
+				Signer:       tc.signer(),
+				VaultAddress: vaultAddr.String(),
+				Navs:         updates,
+				Resume:       tc.resume,
+			})
+			s.Require().ErrorContains(err, tc.expectedErrSubstr, "RepriceVault should refuse this request")
+
+			after, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "should get vault %s after the rejected RepriceVault", vaultAddr)
+			s.Assert().Equal(wasPaused, after.Paused,
+				"a rejected RepriceVault must leave the pause state untouched, so a failed batch can never reopen the vault mid-restatement")
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_RepriceVault_OperatorPauseAllowsRepriceWithoutResume() {
+	underlying := "under"
+	share := "vaultshares"
+	heldDenom := "rwa"
+	vaultAddr := types.GetVaultAddress(share)
+	navAuthority := sdk.AccAddress("navAuthorityAddr____")
+
+	s.setupHeldNAVVault(underlying, share, heldDenom, sdk.NewInt64Coin(underlying, 2), 1, 1_000)
+	s.setNAVAuthority(vaultAddr, navAuthority.String())
+	s.pauseVaultBy(vaultAddr, s.adminAddr.String(), false)
+
+	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).RepriceVault(s.ctx, &types.MsgRepriceVaultRequest{
+		Signer:       navAuthority.String(),
+		VaultAddress: vaultAddr.String(),
+		Navs: []types.NAVUpdate{
+			{Denom: heldDenom, Price: sdk.NewInt64Coin(underlying, 1), Volume: sdkmath.NewInt(1), Source: "oracle"},
+		},
+	})
+	s.Require().NoError(err, "the NAV authority should be able to write a held asset down during an operator pause, which is the incident-response flow")
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, heldDenom)
+	s.Require().NoError(err, "the NAV entry for %s should be readable after the write-down", heldDenom)
+	s.Assert().Equal(int64(1), stored.Price.Amount.Int64(), "the write-down should be applied during the operator pause")
+
+	after, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should get vault %s after the write-down", vaultAddr)
+	s.Assert().True(after.Paused, "an operator pause must survive a NAV authority reprice; only the admin or asset manager may lift it")
+	s.Assert().Equal(s.adminAddr.String(), after.PausedBy, "the operator's pause attribution must be preserved")
+}
+
+func (s *TestSuite) TestMsgServer_PauseVault_NAVAuthorityMayPauseButNotUnpause() {
+	underlying := "under"
+	share := "vaultshares"
+	vaultAddr := types.GetVaultAddress(share)
+	navAuthority := sdk.AccAddress("navAuthorityAddr____")
+
+	s.setupBaseVault(underlying, share)
+	s.setNAVAuthority(vaultAddr, navAuthority.String())
+
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+
+	_, err := msgServer.PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+		Authority:    navAuthority.String(),
+		VaultAddress: vaultAddr.String(),
+		Reason:       "observed a depeg on a priced asset",
+	})
+	s.Require().NoError(err, "the NAV authority should be able to pause, since a pricing oracle sees a depeg first")
+
+	paused, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should get vault %s after the NAV authority paused it", vaultAddr)
+	s.Require().True(paused.Paused, "the vault should be paused after the NAV authority paused it")
+	s.Assert().Equal(navAuthority.String(), paused.PausedBy, "the pause should be attributed to the NAV authority that took it")
+	s.Assert().False(paused.PausedForced, "a strict pause should not be marked forced")
+
+	_, err = msgServer.UnpauseVault(s.ctx, &types.MsgUnpauseVaultRequest{
+		Authority:    navAuthority.String(),
+		VaultAddress: vaultAddr.String(),
+	})
+	s.Require().ErrorContains(err, "unauthorized authority",
+		"the NAV authority must not be able to unpause outright; resuming is a management decision except through RepriceVault")
+
+	stillPaused, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should get vault %s after the rejected unpause", vaultAddr)
+	s.Assert().True(stillPaused.Paused, "the rejected unpause must leave the vault paused")
+}
+
 func (s *TestSuite) TestMsgServer_RemoveVaultNAV() {
 	underlying := "under"
 	share := "vaultshares"

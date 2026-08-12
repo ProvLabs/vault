@@ -100,7 +100,8 @@ func (k Keeper) migrateFlattenMixedDenomVaults(ctx sdk.Context) error {
 // persisted, falling back to the unvalidated SetAccount like forcePauseVault does. The
 // tolerated error rides out on EventVaultPaused.forced_error for an admin to correct.
 //
-// An already-paused vault keeps its frozen PausedBalance and original reason
+// An already-paused vault keeps its frozen PausedBalance and original reason, but the
+// pause becomes an unattributed forced one, so resuming it takes a management unpause.
 func (k Keeper) persistFlattenedVault(ctx sdk.Context, vault *types.VaultAccount) {
 	validationErr := k.SetVaultAccount(ctx, vault)
 	if validationErr == nil {
@@ -121,7 +122,7 @@ func (k Keeper) persistFlattenedVault(ctx sdk.Context, vault *types.VaultAccount
 		}
 	}
 
-	k.applyPausedState(ctx, vault, reason, pausedBalance)
+	k.applyPausedState(ctx, vault, reason, types.NoPauseAuthority, pausedBalance)
 
 	if err := k.haltVaultAccrual(ctx, vault); err != nil {
 		k.getLogger(ctx).Error("failed to halt accrual for invalid legacy vault; queue entries may remain",

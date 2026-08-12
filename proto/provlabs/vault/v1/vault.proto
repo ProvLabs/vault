@@ -81,6 +81,16 @@ message VaultAccount {
   // paused_reason is a human-readable string explaining why the vault was paused, particularly for automatic pauses.
   string paused_reason = 17;
 
+  // paused_by is the address that initiated the current pause, empty for an automatic
+  // pause and cleared on unpause. MsgRepriceVault consults it so the NAV authority
+  // can only resume a pause it took itself.
+  string paused_by = 30 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // paused_forced reports whether the current pause waived the strict reconcile and
+  // valuation gate, true for a forced MsgPauseVault and every automatic pause. A forced
+  // pause records a tolerated failure, so MsgRepriceVault refuses to resume one.
+  bool paused_forced = 31;
+
   // bridge_address is the single external address allowed to mint or burn shares on behalf
   // of this vault (e.g., for bridging to another chain). All mint/burn must flow through the
   // vault keeper, which enforces that marker supply never exceeds total_shares.

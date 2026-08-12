@@ -34,6 +34,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [UnpauseVault](#unpausevault)
 - [SetAssetManager](#setassetmanager)
 - [UpdateVaultNAV](#updatevaultnav)
+- [RepriceVault](#repricevault)
 - [RemoveVaultNAV](#removevaultnav)
 - [UpdateNAVAuthority](#updatenavauthority)
 - [AcceptAsset](#acceptasset)
@@ -68,10 +69,11 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `DepositPrincipalFunds`  | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; rejects a depositor on the underlying deny list; reconciles then deposit to principal marker.                                     |
 | `WithdrawPrincipalFunds` | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; reconciles then withdraw from principal marker.                                  |
 | `ExpeditePendingSwapOut` | Admin or Asset Manager            |                   ✅ |                 ✅ | No pause gating;                                                                                              |
-| `PauseVault`             | Admin or Asset Manager            |                   ✅ |                 ❌ | Strict by default: reconciles, snapshots `PausedBalance`, sets paused; aborts if reconcile/valuation fails. `force=true` pauses best-effort, tolerating failures and recording them on `EventVaultPaused`. |
-| `UnpauseVault`           | Admin or Asset Manager            |                   ❌ |                 ✅ | Clears `PausedBalance`, unpauses, emits with current TVV.                                                     |
+| `PauseVault`             | Admin, Asset Manager, or NAV authority |              ✅ |                 ❌ | Strict by default: reconciles, snapshots `PausedBalance`, sets paused; aborts if reconcile/valuation fails. `force=true` pauses best-effort, tolerating failures and recording them on `EventVaultPaused`. Records `paused_by` and `paused_forced`. The NAV authority may pause but has no matching unpause. |
+| `UnpauseVault`           | Admin or Asset Manager            |                   ❌ |                 ✅ | Clears `PausedBalance` and the pause attribution, unpauses, emits with current TVV.                           |
 | `SetAssetManager`        | Admin only                        |                   ✅ |                 ✅ | Sets or clears the delegated asset manager.                                                                   |
 | `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | **Paused only when repricing a denom the vault holds**, so no user can swap across the share price step; pricing an unheld denom or restating a held asset at its current unit price works while live. Upserts the internal NAV entry; the price is never mirrored to the marker module. Reconciles first when unpaused; leaves `PausedBalance` frozen when paused, so the new price takes effect at unpause. |
+| `RepriceVault`           | NAV authority only                |                   ✅ |                 ✅ | Batched `UpdateVaultNAV` with the same per-entry rules, so a held denom still needs a paused vault. `resume=true` also unpauses, and requires a strict pause this same NAV authority took; leaving it false keeps the vault frozen so an oversized restatement can continue across several messages. At most `MaxRepriceBatchSize` (1000) updates, no duplicate denoms. |
 | `RemoveVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Deletes the internal NAV entry for a denom the vault does not hold. Value-neutral in both states, since an unheld denom contributes nothing to total vault value. |
 | `UpdateNAVAuthority`     | Admin only                        |                   ✅ |                 ✅ | Rotates the address authorized to mutate the internal NAV table.                                              |
 | `AcceptAsset`            | Asset Manager only                |                   ✅ |                 ❌ | Rejected while paused (settlement would move value); otherwise reconciles first, requires an internal NAV entry and enforces its price exactly, then settles the `x/exchange` payment. Never writes the NAV table. |
@@ -293,7 +295,11 @@ Expediting also clears the request's `failure_count`, so it is the lever for for
 
 ## PauseVault
 
-Admin or Asset Manager. Pauses a vault, disabling swap-ins and swap-outs, and recording reason + balance snapshot.
+Admin, Asset Manager, or NAV authority. Pauses a vault, disabling swap-ins and swap-outs, and recording reason + balance snapshot.
+
+The NAV authority is included for two reasons. As a pricing oracle it is the first to observe an event that warrants freezing the vault, such as a depeg on an asset it prices, and freezing is the appropriate response. And repricing a held asset requires a pause window, so an authority that could not pause could not run its own repricing cadence. It gets no matching unpause: resuming is a management decision, except through [RepriceVault](#repricevault) for a pause it took itself.
+
+The handler records `paused_by` (the signer, or empty for an automatic pause) and `paused_forced` (true for `force = true` and for every automatic pause). Both are cleared on unpause. `RepriceVault` reads them to decide whether the NAV authority may resume the vault on its own.
 
 By default the pause is **strict**: it reconciles outstanding interest and fees and values the vault first, and any failure (insufficient reserves to settle positive interest, or a broken TVV/NAV conversion) aborts the request and leaves the vault unpaused. The failed transaction is the operator's signal that the vault is in an unexpected state.
 
@@ -308,7 +314,7 @@ Both paths remove the vault from the `PayoutVerificationSet` and from its `Payou
 
 ## UnpauseVault
 
-Admin or Asset Manager. Resumes a paused vault, clears paused balance, and recalculates NAV.
+Admin or Asset Manager. Resumes a paused vault, clears paused balance and pause attribution, and recalculates NAV. The NAV authority is deliberately excluded: it can pause, but resuming a vault outright stays a management decision.
 
 It also re-arms what pausing cleared: the vault is added back to the `PayoutVerificationSet` and a fresh fee timeout is enqueued, with both period starts set to the unpause block time so the paused span is never charged interest or AUM fees.
 
@@ -377,7 +383,7 @@ Passing an empty `asset_manager` clears the configured value.
 
 NAV authority only (the vault admin when no `nav_authority` is configured). Creates or updates the vault's **internal NAV entry** for a denom: the price of `volume` units of `denom`, denominated in the vault's underlying asset.
 
-Repricing an asset the vault **currently holds** requires the vault to be **paused**. A held asset is valued through this table, so its price step moves the share price, and on a live vault a user could swap in ahead of the step and out after it, taking the difference from the existing shareholders. Correcting a held asset's price is therefore a pause, reprice, unpause sequence, with swap-ins and swap-outs closed for the whole span.
+Repricing an asset the vault **currently holds** requires the vault to be **paused**. A held asset is valued through this table, so its price step moves the share price, and on a live vault a user could swap in ahead of the step and out after it, taking the difference from the existing shareholders. Correcting a held asset's price is therefore a pause, reprice, unpause sequence, with swap-ins and swap-outs closed for the whole span. [RepriceVault](#repricevault) is the batched form of this message and can fold the unpause into the same transaction for a NAV authority resuming its own pause.
 
 Two updates move no value and are accepted **whether or not the vault is paused**: pricing a denom the vault does not hold, and restating a held asset at the unit price it already carries (an unchanged `price / volume` ratio, so a re-post at a new volume or from a new source is allowed).
 
@@ -395,6 +401,43 @@ The vault does **not** have to hold the denom. The internal NAV table is a price
 
 * **Request:** `MsgUpdateVaultNAVRequest { signer, vault_address, denom, price, volume, source? }`
 * **Response:** `MsgUpdateVaultNAVResponse {}`
+
+---
+
+## RepriceVault
+
+NAV authority only. Applies a batch of internal NAV updates and, when `resume` is set, unpauses the vault in the same state transition.
+
+This is the **batched form of `UpdateVaultNAV`**, enforcing the identical per-entry rules: repricing a denom the vault holds requires the vault to be paused, while pricing an unheld denom or restating a held asset at its current unit price works on a live vault. What it adds is the batch and the optional resume.
+
+### The resume flag
+
+`resume = true` unpauses after the batch lands. This is what lets a NAV authority run a repricing cadence alone: splitting the reprice from the unpause costs a second signature and leaves the vault frozen until the admin or asset manager acts. Bundling them also closes a narrower gap, since there is no block in which the vault is live, a new price is public, and the share price step has not yet landed.
+
+`resume = false` (the default) applies the batch and leaves the pause exactly as it found it. Two flows need this:
+
+* **Continuation.** A book too large for one transaction is repriced by sending several batches with `resume` unset and a final one with `resume` set. The vault stays frozen for the whole restatement and reopens once, so no user ever trades against a half-restated book.
+* **Incident response.** The NAV authority can write a held asset down during a pause somebody else took — an operator pause after a depeg, say — without being able to lift that pause.
+
+### The self-resume gate
+
+Setting `resume` requires **all** of the following; otherwise the handler errors and nothing is written:
+
+* the vault is paused,
+* the pause is **not** forced (`paused_forced = false`), which excludes `force = true` pauses and every automatic pause,
+* `paused_by` equals the signer, which is also the current NAV authority — so an operator pause, and a pause taken before an `UpdateNAVAuthority` rotation, both fall back to a management unpause.
+
+The gate is checked **before** any price is written, so a batch that cannot resume changes nothing rather than repricing and then failing.
+
+### Ordering and events
+
+The reconcile runs first, settling accrued interest against the total vault value that held before the batch; it is a no-op on a paused vault whose accrual is already halted. Prices are then written in order, and the resume, if requested, clears `PausedBalance` and the pause attribution, recomputes total vault value from live balances and the new prices, and re-arms the payout verification and fee timeout exactly as `UnpauseVault` does. `EventNAVUpdated` is emitted per update, followed by a single `EventVaultUnpaused` when resuming.
+
+* At least one update is required, at most `MaxRepriceBatchSize` (1000), and a denom may appear only once.
+* Each update carries the same `denom`, `price`, `volume`, and optional `source` fields that `UpdateVaultNAV` takes, under the same rules.
+
+* **Request:** `MsgRepriceVaultRequest { signer, vault_address, navs[], resume }` where each nav is `NAVUpdate { denom, price, volume, source? }`
+* **Response:** `MsgRepriceVaultResponse {}`
 
 ---
 

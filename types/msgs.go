@@ -23,6 +23,12 @@ const MaxNAVSourceLength = 200
 // price, so an unbounded price makes total vault value overflow and stay underivable.
 const MaxNAVComponentBits = 128
 
+// MaxRepriceBatchSize bounds the NAV updates in one MsgRepriceVault. Each entry costs a
+// balance read and two valuations, so the cap keeps a single message from being decoded and
+// validated at unbounded cost before gas metering can charge for it. It is set well above a
+// realistic book of priced positions.
+const MaxRepriceBatchSize = 1_000
+
 // ValidateNAVComponentMagnitudes rejects a NAV price amount or volume that would overflow valuation.
 // Genesis import skips such an entry rather than refusing to start, so this is checked separately.
 func ValidateNAVComponentMagnitudes(price sdk.Coin, volume sdkmath.Int) error {
@@ -71,6 +77,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMaxSwapInValueRequest)(nil),
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
 	(*MsgUpdateVaultNAVRequest)(nil),
+	(*MsgRepriceVaultRequest)(nil),
 	(*MsgRemoveVaultNAVRequest)(nil),
 	(*MsgUpdateNAVAuthorityRequest)(nil),
 	(*MsgAcceptAssetRequest)(nil),
@@ -595,6 +602,57 @@ func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
 	}
 	if len(m.Source) > MaxNAVSourceLength {
 		return fmt.Errorf("source too long (expected <= %d, actual: %d)", MaxNAVSourceLength, len(m.Source))
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgRepriceVaultRequest. Whether the
+// vault is paused, and by whom, is stateful and enforced by the keeper.
+func (m MsgRepriceVaultRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return fmt.Errorf("invalid signer address: %q: %w", m.Signer, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if len(m.Navs) == 0 {
+		return fmt.Errorf("at least one NAV update is required")
+	}
+	if len(m.Navs) > MaxRepriceBatchSize {
+		return fmt.Errorf("too many NAV updates (expected <= %d, actual: %d)", MaxRepriceBatchSize, len(m.Navs))
+	}
+	seen := make(map[string]struct{}, len(m.Navs))
+	for i, nav := range m.Navs {
+		if err := nav.Validate(); err != nil {
+			return fmt.Errorf("invalid NAV update at index %d: %w", i, err)
+		}
+		if _, duplicate := seen[nav.Denom]; duplicate {
+			return fmt.Errorf("duplicate NAV update for denom %q at index %d", nav.Denom, i)
+		}
+		seen[nav.Denom] = struct{}{}
+	}
+	return nil
+}
+
+// Validate performs stateless validation on a single NAVUpdate within a reprice batch.
+func (n NAVUpdate) Validate() error {
+	if err := sdk.ValidateDenom(n.Denom); err != nil {
+		return fmt.Errorf("invalid denom: %q: %w", n.Denom, err)
+	}
+	if err := n.Price.Validate(); err != nil {
+		return fmt.Errorf("invalid price coin %v: %w", n.Price, err)
+	}
+	if n.Denom == n.Price.Denom {
+		return fmt.Errorf("NAV denom %q and price denom must differ", n.Denom)
+	}
+	if n.Volume.IsNil() || !n.Volume.IsPositive() {
+		return fmt.Errorf("volume must be positive")
+	}
+	if err := ValidateNAVComponentMagnitudes(n.Price, n.Volume); err != nil {
+		return err
+	}
+	if len(n.Source) > MaxNAVSourceLength {
+		return fmt.Errorf("source too long (expected <= %d, actual: %d)", MaxNAVSourceLength, len(n.Source))
 	}
 	return nil
 }

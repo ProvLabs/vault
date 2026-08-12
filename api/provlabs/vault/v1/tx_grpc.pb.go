@@ -48,6 +48,7 @@ const (
 	Msg_UpdateParams_FullMethodName           = "/provlabs.vault.v1.Msg/UpdateParams"
 	Msg_UpdateVaultAUMFeeBips_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateVaultAUMFeeBips"
 	Msg_UpdateVaultNAV_FullMethodName         = "/provlabs.vault.v1.Msg/UpdateVaultNAV"
+	Msg_RepriceVault_FullMethodName           = "/provlabs.vault.v1.Msg/RepriceVault"
 	Msg_RemoveVaultNAV_FullMethodName         = "/provlabs.vault.v1.Msg/RemoveVaultNAV"
 	Msg_UpdateNAVAuthority_FullMethodName     = "/provlabs.vault.v1.Msg/UpdateNAVAuthority"
 	Msg_AcceptAsset_FullMethodName            = "/provlabs.vault.v1.Msg/AcceptAsset"
@@ -107,10 +108,12 @@ type MsgClient interface {
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
 	// PauseVault pauses user-facing swap operations for a vault and records a reason.
-	// May be signed by the vault admin or the configured asset manager.
+	// May be signed by the vault admin, the configured asset manager, or the NAV authority.
 	PauseVault(ctx context.Context, in *MsgPauseVaultRequest, opts ...grpc.CallOption) (*MsgPauseVaultResponse, error)
 	// UnpauseVault re-enables user-facing swap operations for a vault.
-	// May be signed by the vault admin or the configured asset manager.
+	// May be signed by the vault admin or the configured asset manager. The NAV authority
+	// cannot unpause a vault outright; it resumes its own repricing pause through
+	// RepriceVault.
 	UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
 	SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error)
@@ -130,6 +133,10 @@ type MsgClient interface {
 	// UpdateVaultNAV creates or updates a vault's internal net asset value entry for a denom.
 	// Must be signed by the vault's NAV authority.
 	UpdateVaultNAV(ctx context.Context, in *MsgUpdateVaultNAVRequest, opts ...grpc.CallOption) (*MsgUpdateVaultNAVResponse, error)
+	// RepriceVault applies a batch of internal NAV updates to a vault, optionally unpausing it
+	// in the same step. Must be signed by the vault's NAV authority, and only resumes a strict
+	// pause that same authority took.
+	RepriceVault(ctx context.Context, in *MsgRepriceVaultRequest, opts ...grpc.CallOption) (*MsgRepriceVaultResponse, error)
 	// RemoveVaultNAV deletes a vault's internal net asset value entry for a denom the vault
 	// does not hold, revoking the authorization to acquire it at that price.
 	// Must be signed by the vault's NAV authority.
@@ -445,6 +452,16 @@ func (c *msgClient) UpdateVaultNAV(ctx context.Context, in *MsgUpdateVaultNAVReq
 	return out, nil
 }
 
+func (c *msgClient) RepriceVault(ctx context.Context, in *MsgRepriceVaultRequest, opts ...grpc.CallOption) (*MsgRepriceVaultResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgRepriceVaultResponse)
+	err := c.cc.Invoke(ctx, Msg_RepriceVault_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) RemoveVaultNAV(ctx context.Context, in *MsgRemoveVaultNAVRequest, opts ...grpc.CallOption) (*MsgRemoveVaultNAVResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgRemoveVaultNAVResponse)
@@ -538,10 +555,12 @@ type MsgServer interface {
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)
 	// PauseVault pauses user-facing swap operations for a vault and records a reason.
-	// May be signed by the vault admin or the configured asset manager.
+	// May be signed by the vault admin, the configured asset manager, or the NAV authority.
 	PauseVault(context.Context, *MsgPauseVaultRequest) (*MsgPauseVaultResponse, error)
 	// UnpauseVault re-enables user-facing swap operations for a vault.
-	// May be signed by the vault admin or the configured asset manager.
+	// May be signed by the vault admin or the configured asset manager. The NAV authority
+	// cannot unpause a vault outright; it resumes its own repricing pause through
+	// RepriceVault.
 	UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
 	SetBridgeAddress(context.Context, *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error)
@@ -561,6 +580,10 @@ type MsgServer interface {
 	// UpdateVaultNAV creates or updates a vault's internal net asset value entry for a denom.
 	// Must be signed by the vault's NAV authority.
 	UpdateVaultNAV(context.Context, *MsgUpdateVaultNAVRequest) (*MsgUpdateVaultNAVResponse, error)
+	// RepriceVault applies a batch of internal NAV updates to a vault, optionally unpausing it
+	// in the same step. Must be signed by the vault's NAV authority, and only resumes a strict
+	// pause that same authority took.
+	RepriceVault(context.Context, *MsgRepriceVaultRequest) (*MsgRepriceVaultResponse, error)
 	// RemoveVaultNAV deletes a vault's internal net asset value entry for a denom the vault
 	// does not hold, revoking the authorization to acquire it at that price.
 	// Must be signed by the vault's NAV authority.
@@ -672,6 +695,9 @@ func (UnimplementedMsgServer) UpdateVaultAUMFeeBips(context.Context, *MsgUpdateV
 }
 func (UnimplementedMsgServer) UpdateVaultNAV(context.Context, *MsgUpdateVaultNAVRequest) (*MsgUpdateVaultNAVResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultNAV not implemented")
+}
+func (UnimplementedMsgServer) RepriceVault(context.Context, *MsgRepriceVaultRequest) (*MsgRepriceVaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RepriceVault not implemented")
 }
 func (UnimplementedMsgServer) RemoveVaultNAV(context.Context, *MsgRemoveVaultNAVRequest) (*MsgRemoveVaultNAVResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveVaultNAV not implemented")
@@ -1228,6 +1254,24 @@ func _Msg_UpdateVaultNAV_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RepriceVault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRepriceVaultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RepriceVault(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RepriceVault_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RepriceVault(ctx, req.(*MsgRepriceVaultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_RemoveVaultNAV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgRemoveVaultNAVRequest)
 	if err := dec(in); err != nil {
@@ -1422,6 +1466,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateVaultNAV",
 			Handler:    _Msg_UpdateVaultNAV_Handler,
+		},
+		{
+			MethodName: "RepriceVault",
+			Handler:    _Msg_RepriceVault_Handler,
 		},
 		{
 			MethodName: "RemoveVaultNAV",

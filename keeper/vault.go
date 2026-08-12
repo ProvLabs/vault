@@ -535,22 +535,58 @@ func (k *Keeper) SetWithdrawalDelay(ctx sdk.Context, vault *types.VaultAccount, 
 	return nil
 }
 
-// applyPausedState performs the in-memory paused-state transition shared by the
-// operator-initiated PauseVault and the automatic autoPauseVault. It snapshots the
-// frozen balance, marks the vault paused with the supplied reason, and zeroes the
-// accruing interest rate while emitting the corresponding EventVaultInterestChange
-// so both paths stop interest accrual identically. It intentionally does not persist
-// the account: the caller chooses SetVaultAccount (validated) or SetAccount
-// (validation-skipped) depending on whether the vault may be in an invalid state.
-func (k *Keeper) applyPausedState(ctx sdk.Context, vault *types.VaultAccount, reason string, pausedBalance sdk.Coin) {
+// applyPausedState performs the in-memory paused-state transition shared by the two
+// emergency pause paths, forcePauseVault and autoPauseVault, so both stop interest
+// accrual identically. Both waive the strict reconcile and valuation gate, so it marks the
+// pause forced; pausedBy is types.NoPauseAuthority when no signer initiated the pause. It
+// intentionally does not persist the account: the caller chooses SetVaultAccount (validated)
+// or SetAccount (validation-skipped) depending on whether the vault may be in an invalid state.
+func (k *Keeper) applyPausedState(ctx sdk.Context, vault *types.VaultAccount, reason, pausedBy string, pausedBalance sdk.Coin) {
 	if pausedBalance.Amount.IsNil() {
 		pausedBalance.Amount = sdkmath.ZeroInt()
 	}
 	vault.PausedBalance = pausedBalance
 	vault.Paused = true
 	vault.PausedReason = reason
+	vault.PausedBy = pausedBy
+	vault.PausedForced = true
 	vault.CurrentInterestRate = types.ZeroInterestRate
 	k.emitEvent(ctx, types.NewEventVaultInterestChange(vault.GetAddress().String(), types.ZeroInterestRate, vault.DesiredInterestRate))
+}
+
+// resumeVault clears the paused state, re-arms interest and fee accrual from the current
+// block time so the paused span is never charged, and emits EventVaultUnpaused. Shared by
+// UnpauseVault and RepriceVault; the caller authorizes the resume.
+func (k *Keeper) resumeVault(ctx sdk.Context, vault *types.VaultAccount, authority string) error {
+	if err := k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate); err != nil {
+		return fmt.Errorf("failed to update interest rates: %w", err)
+	}
+
+	vault.PausedBalance = sdk.Coin{}
+	vault.Paused = false
+	vault.PausedReason = ""
+	vault.PausedBy = ""
+	vault.PausedForced = false
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	tvv, err := k.RecomputeTotalValue(ctx, *vault)
+	if err != nil {
+		return fmt.Errorf("failed to recompute total vault value on unpause: %w", err)
+	}
+
+	if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {
+		return fmt.Errorf("failed to enqueue vault payout verification: %w", err)
+	}
+
+	if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
+		return fmt.Errorf("failed to enqueue vault fee timeout: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultUnpaused(vault.Address, authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))
+
+	return nil
 }
 
 // autoPauseVault sets a vault's state to paused, records the reason, persists it to state,
@@ -570,7 +606,7 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 		tvv = sdkmath.ZeroInt()
 	}
 
-	k.applyPausedState(ctx, vault, reason, sdk.NewCoin(vault.UnderlyingAsset, tvv))
+	k.applyPausedState(ctx, vault, reason, types.NoPauseAuthority, sdk.NewCoin(vault.UnderlyingAsset, tvv))
 
 	if err := k.haltVaultAccrual(ctx, vault); err != nil {
 		k.getLogger(ctx).Error("failed to halt vault accrual during auto-pause", "vault_address", vault.GetAddress().String(), "error", err)
@@ -615,7 +651,7 @@ func (k *Keeper) forcePauseVault(ctx sdk.Context, vault *types.VaultAccount, aut
 		tvv = sdkmath.ZeroInt()
 	}
 
-	k.applyPausedState(ctx, vault, reason, sdk.NewCoin(vault.UnderlyingAsset, tvv))
+	k.applyPausedState(ctx, vault, reason, authority, sdk.NewCoin(vault.UnderlyingAsset, tvv))
 
 	if err := k.haltVaultAccrual(ctx, vault); err != nil {
 		forcedErrors = append(forcedErrors, fmt.Sprintf("halt accrual failed: %v", err))

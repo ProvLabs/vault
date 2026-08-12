@@ -1121,7 +1121,7 @@ func (s *TestSuite) TestApplyPausedState_PausedBalanceAmountIsNeverNil() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			reason := "applying paused state"
-			s.k.TestAccessor_applyPausedState(s.T(), s.ctx, v, reason, tc.pausedBalance)
+			s.k.TestAccessor_applyPausedState(s.T(), s.ctx, v, reason, s.adminAddr.String(), tc.pausedBalance)
 
 			s.Require().False(v.PausedBalance.Amount.IsNil(), "paused balance amount must never be nil after applyPausedState; a nil math.Int panics on any read and applyPausedState is reachable from the EndBlocker")
 			s.Require().NoError(v.PausedBalance.Validate(), "paused balance %s should be a valid coin after applyPausedState", v.PausedBalance)
@@ -1129,6 +1129,8 @@ func (s *TestSuite) TestApplyPausedState_PausedBalanceAmountIsNeverNil() {
 			s.Assert().Equal(under, v.PausedBalance.Denom, "paused balance denom should be the vault underlying asset")
 			s.Assert().True(v.Paused, "vault should be marked paused")
 			s.Assert().Equal(reason, v.PausedReason, "paused reason mismatch")
+			s.Assert().Equal(s.adminAddr.String(), v.PausedBy, "applyPausedState should record the pause initiator")
+			s.Assert().True(v.PausedForced, "applyPausedState serves the emergency pause paths, which are always forced")
 			s.Assert().Equal(types.ZeroInterestRate, v.CurrentInterestRate, "applyPausedState should zero the current interest rate")
 		})
 	}

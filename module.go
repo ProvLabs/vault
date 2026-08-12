@@ -599,6 +599,25 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
+					RpcMethod: "RepriceVault",
+					Use:       "reprice [signer] [vault_address] [navs...]",
+					Alias:     []string{"rv"},
+					Short:     "Apply a batch of internal NAV updates, optionally unpausing the vault",
+					Long:      "Restate the internal net asset value of one or more denoms on a vault. Each nav is a JSON object with denom, price, volume, and an optional source. Repricing a denom the vault holds requires the vault to be paused, exactly as update-vault-nav does. Pass --resume to unpause in the same transaction, which requires a strict pause this same NAV authority took; an operator, forced, or automatic pause still needs the admin or asset manager to unpause. Leave --resume off to reprice and stay paused, which is how a book too large for one transaction is repriced across several.",
+					Example:   fmt.Sprintf(`%s reprice %s %s '{"denom":"usdc","price":{"denom":"nhash","amount":"1000000"},"volume":"1000000","source":"my-oracle"}' --resume`, txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: fieldSigner},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: "navs", Varargs: true},
+					},
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"resume": {
+							Name:  "resume",
+							Usage: "Unpause the vault after applying the batch. Requires a strict pause taken by this NAV authority.",
+						},
+					},
+				},
+				{
 					RpcMethod: "RemoveVaultNAV",
 					Use:       "remove-vault-nav [signer] [vault_address] [denom]",
 					Alias:     []string{"rvn"},

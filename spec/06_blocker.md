@@ -266,6 +266,7 @@ Any non-zero delay also carries a jitter of `request_id % SwapOutRetryJitterSpre
 * A paused vault freezes its value at the `PausedBalance` snapshot, so operations that would change that value are rejected:
 
   * **UpdateVaultNAV** remains available, and is in fact the only state in which a denom the vault holds may be repriced. The new price is ignored by the frozen valuation until unpause, when `PausedBalance` is cleared and total vault value is recomputed from live balances and the NAV table.
+  * **RepriceVault** is available only while paused, and only to a NAV authority resuming a strict pause it took itself. It writes a batch of prices and performs that same unpause recomputation in one state transition.
   * **AcceptAsset** is rejected — settlement moves principal funds and the vault's value.
   * **RejectAsset** remains available — it only cancels a pending payment and refunds the source's escrow, with no vault state change.
 * Admins can still:

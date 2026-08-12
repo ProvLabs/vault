@@ -36,6 +36,7 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 - Admin address, share denom, underlying asset, deprecated **payment denom** (inert; always equal to the underlying asset — enforced at creation, by validation, and by the v1→v2 migration for pre-existing vaults)  
 - Interest configuration: `CurrentInterestRate`, `DesiredInterestRate`, optional `MinInterestRate`/`MaxInterestRate` bounds  
 - Swap toggles, `WithdrawalDelaySeconds` (capped at `MaxWithdrawalDelay`, two years, by account validation so genesis import and migration cannot exceed the bound the message handlers enforce), pause flags/reason and `PausedBalance` snapshot  
+- **Pause attribution:** `paused_by` (the address that took the current pause, empty for an automatic one) and `paused_forced` (true when the pause waived the strict reconcile and valuation gate). Both are cleared on unpause, and validation rejects an unpaused vault that still carries either. `MsgRepriceVault` reads them to decide whether the NAV authority may resume the vault itself.  
 - **Swap Limits:** `min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, and `max_swap_out_value` (measured in underlying asset)
 - **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
@@ -136,7 +137,7 @@ The address authorized to receive collected AUM technology fees.
 
 ### Internal NAV Table (prefix 11)
 
-Per-vault price entries for asset denoms the vault holds or is authorized to acquire. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written only by the NAV authority (`MsgUpdateVaultNAV`, which requires a paused vault to reprice a denom the vault holds) and removed either by the authority (`MsgRemoveVaultNAV`, restricted to denoms the vault does not hold) or by an outbound `MsgAcceptAsset` that drains the denom from the principal. Settlement never writes a price.
+Per-vault price entries for asset denoms the vault holds or is authorized to acquire. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written only by the NAV authority (`MsgUpdateVaultNAV`, which requires a paused vault to reprice a denom the vault holds, and `MsgRepriceVault`, which writes a batch of them and unpauses in the same state transition) and removed either by the authority (`MsgRemoveVaultNAV`, restricted to denoms the vault does not hold) or by an outbound `MsgAcceptAsset` that drains the denom from the principal. Settlement never writes a price.
 
 An entry may exist for a denom the vault does not hold: TVV values held balances against this table, so an unheld denom contributes nothing until the asset arrives at the principal marker.
 

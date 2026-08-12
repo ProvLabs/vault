@@ -2126,6 +2126,195 @@ func maxNAVComponent() sdkmath.Int {
 	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), types.MaxNAVComponentBits), big.NewInt(1)))
 }
 
+func TestMsgRepriceVaultRequest_ValidateBasic(t *testing.T) {
+	addr := NewTestAddress()
+	validNAV := func(denom string) types.NAVUpdate {
+		return types.NAVUpdate{
+			Denom:  denom,
+			Price:  sdk.NewInt64Coin("under", 100),
+			Volume: sdkmath.NewInt(1),
+			Source: "oracle",
+		}
+	}
+	batchOf := func(n int) []types.NAVUpdate {
+		navs := make([]types.NAVUpdate, n)
+		for i := range navs {
+			navs[i] = validNAV(fmt.Sprintf("loan%d", i))
+		}
+		return navs
+	}
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid single update",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("rwa")},
+			},
+		},
+		{
+			name: "valid batch of distinct denoms",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("loan1"), validNAV("loan2"), validNAV("loan3")},
+			},
+		},
+		{
+			name: "batch at the size ceiling",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         batchOf(types.MaxRepriceBatchSize),
+			},
+		},
+		{
+			name: "batch one entry above the size ceiling",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         batchOf(types.MaxRepriceBatchSize + 1),
+			},
+			expectedErr: "too many NAV updates",
+		},
+		{
+			name: "invalid signer address",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       "not-an-address",
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("rwa")},
+			},
+			expectedErr: "invalid signer address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: "not-an-address",
+				Navs:         []types.NAVUpdate{validNAV("rwa")},
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "empty batch has nothing to reprice",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+			},
+			expectedErr: "at least one NAV update is required",
+		},
+		{
+			name: "duplicate denom in the batch is ambiguous",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("rwa"), validNAV("rwa")},
+			},
+			expectedErr: `duplicate NAV update for denom "rwa" at index 1`,
+		},
+		{
+			name: "invalid denom in the batch reports its index",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs:         []types.NAVUpdate{validNAV("rwa"), validNAV("bad denom")},
+			},
+			expectedErr: "invalid NAV update at index 1: invalid denom",
+		},
+		{
+			name: "invalid price coin in the batch",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.Coin{Denom: "under", Amount: sdkmath.NewInt(-1)},
+					Volume: sdkmath.NewInt(1),
+				}},
+			},
+			expectedErr: "invalid price coin",
+		},
+		{
+			name: "zero price is allowed statelessly so a held asset can be written down",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewInt64Coin("under", 0),
+					Volume: sdkmath.NewInt(1),
+				}},
+			},
+		},
+		{
+			name: "denom equals price denom",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewInt64Coin("rwa", 100),
+					Volume: sdkmath.NewInt(1),
+				}},
+			},
+			expectedErr: `NAV denom "rwa" and price denom must differ`,
+		},
+		{
+			name: "nil volume",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom: "rwa",
+					Price: sdk.NewInt64Coin("under", 100),
+				}},
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "negative volume",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewInt64Coin("under", 100),
+					Volume: sdkmath.NewInt(-1),
+				}},
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "source too long",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewInt64Coin("under", 100),
+					Volume: sdkmath.NewInt(1),
+					Source: strings.Repeat("a", types.MaxNAVSourceLength+1),
+				}},
+			},
+			expectedErr: "source too long",
+		},
+		{
+			name: "price amount one bit above the magnitude ceiling",
+			msg: types.MsgRepriceVaultRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Navs: []types.NAVUpdate{{
+					Denom:  "rwa",
+					Price:  sdk.NewCoin("under", maxNAVComponent().AddRaw(1)),
+					Volume: sdkmath.NewInt(1),
+				}},
+			},
+			expectedErr: "NAV price amount",
+		},
+	})
+}
+
 func TestMsgRemoveVaultNAVRequest_ValidateBasic(t *testing.T) {
 	addr := NewTestAddress()
 

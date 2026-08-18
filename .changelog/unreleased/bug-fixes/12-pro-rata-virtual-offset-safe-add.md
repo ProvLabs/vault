@@ -1,1 +1,0 @@
-* Use `SafeAdd` when applying the virtual asset and share offsets in `CalculateSharesProRata` and `CalculateRedeemProRata`, so totals within the virtual offset of the 256-bit integer maximum return a wrapped error instead of panicking on the redeem path, which has no recover [PR 270](https://github.com/provlabs/vault/pull/270).

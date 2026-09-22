@@ -25,6 +25,8 @@
  * Requires Node 18+ (global fetch). No third-party dependencies.
  */
 
+import { pathToFileURL } from "node:url";
+
 // ---------------------------------------------------------------------------
 // Wire types (JSON shape produced by the gRPC-gateway; field names are snake_case)
 // ---------------------------------------------------------------------------
@@ -230,7 +232,7 @@ async function main(): Promise<void> {
 }
 
 // Only run the CLI when executed directly, so the exports can be imported elsewhere.
-const isDirectRun = process.argv[1] !== undefined && import.meta.url === new URL(`file://${process.argv[1]}`).href;
+const isDirectRun = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (isDirectRun) {
   main().catch((err) => {
     console.error(err instanceof Error ? err.message : err);
